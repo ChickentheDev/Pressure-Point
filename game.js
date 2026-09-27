@@ -125,7 +125,9 @@ const floatingTexts = [];
 const camera = {shake:0, x:0, y:0};
 
 function roundRect(x, y, w, h, r){
-  const rr = Math.min(r, w/2, h/2);
+  // arcTo() throws IndexSizeError on a negative radius, which would kill the render loop
+  w = Math.max(0, w); h = Math.max(0, h);
+  const rr = Math.max(0, Math.min(r, w/2, h/2));
   ctx.beginPath();
   ctx.moveTo(x+rr, y);
   ctx.arcTo(x+w, y, x+w, y+h, rr);
@@ -818,6 +820,18 @@ function fireWeaponFor(player, time, target){ if(!target) return; if(player.relo
   if(audio.ctx && time - (w.lastSound||0) > 0.06){ w.lastSound = time; const freq = w.type==='heavy'?120:w.type==='shotgun'?180:w.type==='rifle'?240:320; audio.beep(freq,0.04,'square',0.03); }
 }
 
+function killEnemy(index, ownerId){
+  const e = enemies[index];
+  if(!e) return;
+  awardToPlayerById(ownerId, e.xp, e.money);
+  addParticle({x:e.x,y:e.y,life:0.35,r:16,color:'#ff5d5d'});
+  addShake(e.isBoss ? 12 : 3);
+  audio.beep(140,0.06,'triangle',0.04);
+  // drop money pickups
+  for(let k=0;k<e.money;k++){ moneyDrops.push({x:e.x+rand(-10,10), y:e.y+rand(-10,10), r:5, life:6, t:0}); }
+  enemies.splice(index,1);
+}
+
 function awardToPlayerById(id, xp, money){ const p = players.find(x=>x.id===id) || players[0]; p.xp += xp; p.currency += money; while(p.xp >= p.xpNext){ levelUp(p); } }
 
 function switchWeaponFor(player, dir){
@@ -1152,6 +1166,8 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
       addParticle({x:e.x, y:e.y, life:0.08, r:4, color:'#ff8c42'});
     }
     if(e.status.slow > 0){ e.status.slow -= dt; }
+    // burn ticks and shock chains can drop hp to <= 0 without a bullet hit; kill the enemy here
+    if(e.hp <= 0){ killEnemy(i, e.lastHitBy); continue; }
 
     const slowMult = e.status.slow > 0 ? 0.6 : 1;
     const ang = Math.atan2(target.y - e.y, target.x - e.x);
@@ -1161,6 +1177,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
     // bullets collision
     for(let j=bullets.length-1;j>=0;j--){ const b = bullets[j]; const dist = Math.hypot(b.x - e.x, b.y - e.y); if(dist < e.r + 3){
             e.hp -= b.damage;
+            e.lastHitBy = b.ownerId;
             const dealt = Math.max(1, Math.round(Math.min(b.damage, b.damage + e.hp)));
             floatingTexts.push({x:e.x, y:e.y-6, vx:rand(-12,12), vy:-40, life:0.8, text: dealt, color: b.crit ? '#ffd166' : palette.textLight});
             addShake(b.crit ? 4 : 1.5);
@@ -1181,13 +1198,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
             addParticle({x:e.x,y:e.y,life:0.2, r:8, color:'#ffd166'}); const ownerId = b.ownerId;
             if(b.pierce > 0){ b.pierce--; } else { bullets.splice(j,1); } if(e.hp <= 0){ // die
             // reward to owner if available, else nearest player
-            awardToPlayerById(ownerId, e.xp, e.money);
-            addParticle({x:e.x,y:e.y,life:0.35,r:16,color:'#ff5d5d'});
-            addShake(e.isBoss ? 12 : 3);
-            audio.beep(140,0.06,'triangle',0.04);
-            // drop money pickups
-            for(let k=0;k<e.money;k++){ moneyDrops.push({x:e.x+rand(-10,10), y:e.y+rand(-10,10), r:5, life:6, t:0}); }
-            enemies.splice(i,1); break; } }
+            killEnemy(i, ownerId); break; } }
     }
 
     // collision with player
