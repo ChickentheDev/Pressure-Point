@@ -1,0 +1,163 @@
+{
+ "player": {
+  "p1_down": {
+   "src": "assets/sprites/player_p1_down.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "p1_up": {
+   "src": "assets/sprites/player_p1_up.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "p1_side": {
+   "src": "assets/sprites/player_p1_side.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "p2_down": {
+   "src": "assets/sprites/player_p2_down.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "p2_up": {
+   "src": "assets/sprites/player_p2_up.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "p2_side": {
+   "src": "assets/sprites/player_p2_side.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  }
+ },
+ "enemies": {
+  "runner": {
+   "src": "assets/sprites/enemy_runner.png",
+   "fw": 20,
+   "fh": 20,
+   "frames": 4
+  },
+  "bruiser": {
+   "src": "assets/sprites/enemy_bruiser.png",
+   "fw": 26,
+   "fh": 26,
+   "frames": 4
+  },
+  "spitter": {
+   "src": "assets/sprites/enemy_spitter.png",
+   "fw": 22,
+   "fh": 22,
+   "frames": 4
+  },
+  "boss": {
+   "src": "assets/sprites/enemy_sandworm.png",
+   "fw": 52,
+   "fh": 56,
+   "frames": 6
+  }
+ },
+ "weapons": {
+  "flame": {
+   "src": "assets/sprites/weapon_flame.png",
+   "fw": 32,
+   "fh": 14,
+   "frames": 1
+  },
+  "arc": {
+   "src": "assets/sprites/weapon_arc.png",
+   "fw": 30,
+   "fh": 14,
+   "frames": 1
+  },
+  "rail": {
+   "src": "assets/sprites/weapon_rail.png",
+   "fw": 38,
+   "fh": 12,
+   "frames": 1
+  },
+  "mine": {
+   "src": "assets/sprites/weapon_mine.png",
+   "fw": 28,
+   "fh": 16,
+   "frames": 1
+  },
+  "sprayer": {
+   "src": "assets/sprites/weapon_sprayer.png",
+   "fw": 30,
+   "fh": 14,
+   "frames": 1
+  }
+ },
+ "items": {
+  "src": "assets/sprites/ui_items.png",
+  "fw": 16,
+  "fh": 16,
+  "frames": 8,
+  "ids": [
+   "plating",
+   "overclock",
+   "precision",
+   "vamp",
+   "belt",
+   "boots",
+   "luck",
+   "pierce"
+  ]
+ },
+ "stats": {
+  "src": "assets/sprites/ui_stats.png",
+  "fw": 12,
+  "fh": 12,
+  "frames": 19,
+  "ids": [
+   "level",
+   "hp",
+   "armor",
+   "lifesteal",
+   "damage",
+   "dmgpct",
+   "atkspd",
+   "crit",
+   "elemental",
+   "speed",
+   "accuracy",
+   "mag",
+   "pierce",
+   "recoil",
+   "critdmg",
+   "luck",
+   "danger",
+   "enemies",
+   "coin"
+  ]
+ },
+ "decals": {
+  "src": "assets/sprites/ground_decals.png",
+  "fw": 16,
+  "fh": 16,
+  "frames": 8,
+  "ids": [
+   "pebble",
+   "pebbles",
+   "crack",
+   "bone",
+   "grass",
+   "twig",
+   "rock",
+   "leaf"
+  ]
+ },
+ "tree": {
+  "src": "assets/sprites/tree.png",
+  "fw": 26,
+  "fh": 32,
+  "frames": 1
+ }
+}

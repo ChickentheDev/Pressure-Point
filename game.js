@@ -83,6 +83,12 @@ const SPRITE_DEFS = {
   w_minigun:   {src:'Minigun.png',      crop:[2,5,117,108],    pixel:false},
   w_harpoon:   {src:'Harpoongun.png',   crop:[8,24,48,18],     pixel:true},
   w_dmr:       {src:'LongshotDMR.png',  crop:[2,24,58,16],     pixel:true},
+  // [brad-fx] v0.56 pixel art for the five weapons that had none (tools/gen_sprites.py)
+  w_flame:     {src:'assets/sprites/weapon_flame.png',   crop:[0,0,32,14], pixel:true},
+  w_arc:       {src:'assets/sprites/weapon_arc.png',     crop:[0,0,30,14], pixel:true},
+  w_rail:      {src:'assets/sprites/weapon_rail.png',    crop:[0,0,38,12], pixel:true},
+  w_mine:      {src:'assets/sprites/weapon_mine.png',    crop:[0,0,28,16], pixel:true},
+  w_sprayer:   {src:'assets/sprites/weapon_sprayer.png', crop:[0,0,30,14], pixel:true},
 };
 const sprites = {};
 for(const [key, def] of Object.entries(SPRITE_DEFS)){
@@ -140,7 +146,8 @@ function drawGroundShadow(x, y, rx, ry){
   ctx.restore();
 }
 // in-hand length (px) for each weapon sprite, keeps weapons visually consistent regardless of PNG size
-const weaponHandLength = { pistol:20, blade:24, smg:26, rifle:28, shotgun:28, harpoon:30, dmr:32, heavy:30, rpg:32, minigun:30 };
+const weaponHandLength = { pistol:20, blade:24, smg:26, rifle:28, shotgun:28, harpoon:30, dmr:32, heavy:30, rpg:32, minigun:30,
+  flame:30, arc:28, rail:36, mine:26, sprayer:28 };   // [brad-fx] last row: v0.56 weapon art
 
 // UI font helper so every canvas screen uses the same family
 const UI_FONT = '"Trebuchet MS", "Segoe UI", system-ui, sans-serif';
@@ -1497,6 +1504,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
 
 // Drawing helpers reuse earlier drawing but adapt to multi-player
 function drawBackground(){
+  if(window.FX && FX.drawGround()) return;   // [brad-fx] v0.56 warm ground with doodle decals (Map.png kept as fallback)
   const grad = ctx.createLinearGradient(0,0,W,H);
   grad.addColorStop(0, palette.bg1);
   grad.addColorStop(0.55, palette.bg3);
@@ -1692,7 +1700,8 @@ function drawPlayers(){
     const blink = p.iFrames > 0 && p.dashTimer <= 0 && Math.floor(state.animTime * 20) % 2 === 0;
     ctx.save();
     if(blink) ctx.globalAlpha = 0.55;
-    const drawn = drawSprite(key, null, 46, {flipX, flash});   // 1:1 with the 64px source art
+    // [brad-fx] animated v0.56 sprite sheets (fx.js); falls back to the original PNGs
+    const drawn = (window.FX && FX.drawPlayer(p, i, key, flipX, flash, moving)) || drawSprite(key, null, 46, {flipX, flash});
     ctx.restore();
     if(!drawn){
       // fallback body
@@ -1750,6 +1759,7 @@ function drawBar(x, y, w, h, frac, c1, c2, label){
 }
 
 function drawCoin(x, y, r){
+  if(window.FX && FX.drawMaterialIcon(x, y, r)) return;   // [brad-fx] same green gem as the pickups
   ctx.fillStyle = palette.outline;
   ctx.beginPath(); ctx.arc(x, y, r+1.5, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = palette.uiGreen;
@@ -1814,15 +1824,21 @@ function drawHUD(){
   }
 
   // --- top-right: player 2 card (below the DOM pause button)
-  if(players[1]) drawPlayerCard(players[1], VW - 262, 62, 250, 'PLAYER 2', '#ff6b6b');
+  // [brad-ui] (b) keep it clear of the DOM Pause button at every HUD scale (0.8 at 800x600 overlapped)
+  if(players[1]){
+    let p2y = 62;
+    if(pauseBtn && pauseBtn.style.display !== 'none'){ const pb = pauseBtn.getBoundingClientRect(); if(pb.height) p2y = Math.max(p2y, (pb.bottom + 10) / S); }
+    drawPlayerCard(players[1], VW - 262, p2y, 250, 'PLAYER 2', '#ff6b6b');
+  }
 
   // --- bottom-left: weapon + ammo, dash
   const w = getWeaponFor(p);
-  const by = VH - 70;
-  panel(12, by, 250, 58, palette.uiLight, palette.outline, 12);
+  // [brad-ui] (d) card is 66 tall so the ammo line has room above the bottom border
+  const by = VH - 78;
+  panel(12, by, 250, 66, palette.uiLight, palette.outline, 12);
   ctx.fillStyle = 'rgba(190,215,255,0.16)';
-  roundRect(20, by + 8, 58, 42, 8); ctx.fill();
-  drawWeaponIcon(w, 24, by + 14, 50, 30);
+  roundRect(20, by + 9, 58, 48, 8); ctx.fill();
+  drawWeaponIcon(w, 24, by + 18, 50, 30);
   ctx.font = uiFont(13, 'bold');
   ctx.fillStyle = palette.text;
   ctx.fillText(w.name, 88, by + 23);
@@ -1836,19 +1852,19 @@ function drawHUD(){
   if(!w.melee){
     const magMax = Math.max(1, (w.mag||0) + p.magBonus);
     if(p.reloading > 0){
-      drawBar(88, by + 34, 160, 10, 1 - p.reloading / Math.max(0.01, w.reload), '#ffd166', '#ffb44c', '');
-      ctx.font = uiFont(10, 'bold'); ctx.fillStyle = '#ffd166'; ctx.fillText('RELOADING', 88, by + 55);
+      drawBar(88, by + 32, 160, 10, 1 - p.reloading / Math.max(0.01, w.reload), '#ffd166', '#ffb44c', '');
+      ctx.font = uiFont(10, 'bold'); ctx.fillStyle = '#ffd166'; ctx.fillText('RELOADING', 88, by + 53);
     } else {
-      drawBar(88, by + 34, 160, 10, p.ammoInMag / magMax, palette.uiAccent, palette.uiGreen, '');
-      ctx.font = uiFont(10); ctx.fillStyle = palette.textLight; ctx.fillText(`${p.ammoInMag} / ${magMax}`, 88, by + 55);
+      drawBar(88, by + 32, 160, 10, p.ammoInMag / magMax, palette.uiAccent, palette.uiGreen, '');
+      ctx.font = uiFont(10); ctx.fillStyle = palette.textLight; ctx.fillText(`${p.ammoInMag} / ${magMax}`, 88, by + 53);
     }
   } else {
     ctx.font = uiFont(10); ctx.fillStyle = palette.textLight; ctx.fillText('Melee', 88, by + 42);
   }
   if(w.overheatMax){
-    drawBar(170, by + 50, 78, 4, w.heat / w.overheatMax, '#ffd166', '#ff5d5d', '');
+    drawBar(170, by + 48, 78, 4, w.heat / w.overheatMax, '#ffd166', '#ff5d5d', '');
   }
-  const dy = by - 40;
+  const dy = by - 42;
   panel(12, dy, 170, 32, palette.uiLight, palette.outline, 10, {shadow:false});
   ctx.font = uiFont(12, 'bold');
   ctx.fillStyle = palette.text;
@@ -1880,23 +1896,10 @@ function getUpgradeLayout(){
   return {px, py, panelW, panelH, cards};
 }
 
-function getShopCardRect(def, i){
-  const cols = 3, gap = 12;
-  const cardW = (def.w - 32 - gap * (cols - 1)) / cols;
-  const cardH = Math.max(110, Math.min(140, (def.h - 84 - gap) / 2));
-  const col = i % cols, row = Math.floor(i / cols);
-  return {x: def.x + 16 + col * (cardW + gap), y: def.y + 70 + row * (cardH + gap), w: cardW, h: cardH};
-}
-
-function getShopButtons(){
-  const panels = getShopPanels();
-  const bottom = Math.max(...panels.map(p => p.y + p.h));
-  const y = Math.min(H - 48, bottom + 14);
-  return {
-    reroll: {x: W/2 - 156, y, w: 148, h: 38},
-    next:   {x: W/2 + 8,   y, w: 148, h: 38},
-  };
-}
+// [brad-ui] v0.56: the shop layout lives in ui.js (ShopUI). These delegates keep game.js click
+// handling and the shop drawing on the same rects.
+function getShopCardRect(def, i){ return ShopUI.cardRect(def, i); }
+function getShopButtons(){ return ShopUI.buttons(); }
 function inRect(mx, my, r){ return mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h; }
 
 function drawButton(r, label, {primary=false, disabled=false}={}){
@@ -1941,10 +1944,11 @@ function drawUpgradeSelector(){
     const c = L.cards[i];
     const hover = inRect(input.mx, input.my, c);
     anyHover = anyHover || hover;
-    const lift = hover ? -4 : 0;
+    // [brad-ui] (f) the card face rises inside its own rect on hover, so the lifted card is exactly the click area
+    const lift = hover ? 0 : 4;
     ctx.save();
     ctx.translate(0, lift);
-    panel(c.x, c.y, c.w, c.h, hover ? '#2a4259' : palette.uiMid, hover ? choice.tier.color : palette.outline, 12);
+    panel(c.x, c.y, c.w, c.h - 4, hover ? '#2a4259' : palette.uiMid, hover ? choice.tier.color : palette.outline, 12);
     // tier band
     ctx.fillStyle = choice.tier.color;
     roundRect(c.x + 8, c.y + 8, c.w - 16, 6, 3); ctx.fill();
@@ -1960,150 +1964,24 @@ function drawUpgradeSelector(){
     ctx.fillText(`+${Math.round((choice.tier.mult-1)*100)}%`, c.x + c.w/2, c.y + 106);
     ctx.font = uiFont(10);
     ctx.fillStyle = palette.textLight;
-    ctx.fillText(hover ? 'Click to pick' : `Tier multiplier x${choice.tier.mult}`, c.x + c.w/2, c.y + c.h - 14);
+    ctx.fillText(hover ? 'Click to pick' : `Tier multiplier x${choice.tier.mult}`, c.x + c.w/2, c.y + c.h - 18);
     ctx.textAlign = 'start';
     ctx.restore();
   }
   canvas.style.cursor = anyHover ? 'pointer' : 'default';
 }
 
+// [brad-ui] v0.56 Brotato-style shop screen, drawn by ui.js; Tab still opens the full stats view
 function drawShop(){
   if(state.phase !== 'shop') return;
   if(state.shopView === 'stats'){
     drawStatsMenu();
     return;
   }
-  const a = state.shopAnim || 1;
-  const fog = ctx.createRadialGradient(W/2, H/2, 80, W/2, H/2, Math.max(W,H)*0.6);
-  fog.addColorStop(0, `rgba(0,0,0,${0.45*a})`);
-  fog.addColorStop(1, `rgba(0,0,0,${0.78*a})`);
-  ctx.fillStyle = fog;
-  ctx.fillRect(0,0,W,H);
-
-  let anyHover = false;
-  for(const p of getShopPanels()){
-    if(drawShopPanel(p)) anyHover = true;
-  }
-  const B = getShopButtons();
-  const canReroll = players[0].currency >= shop.rerollCost;
-  if(drawButton(B.reroll, `Reroll  $${shop.rerollCost}`, {disabled: !canReroll})) anyHover = true;
-  const nextLabel = state.wave + 1 >= state.maxWave ? 'Boss Wave ▶' : `Wave ${Math.min(state.maxWave, state.wave + 1)} ▶`;
-  if(drawButton(B.next, nextLabel, {primary: true})) anyHover = true;
-  ctx.font = uiFont(11);
-  ctx.fillStyle = palette.textLight;
-  ctx.textAlign = 'center';
-  ctx.fillText('Click to buy  •  Right-click to lock  •  Tab: stats  •  Enter: next wave', W/2, Math.min(H - 6, B.reroll.y + B.reroll.h + 22));
-  ctx.textAlign = 'start';
-  canvas.style.cursor = anyHover ? 'pointer' : 'default';
+  ShopUI.draw();
 }
 
-function getShopPanels(){
-  const panelH = Math.min(400, H*0.74);
-  const py = (H - panelH)/2 - 20 + (1-(state.shopAnim||1))*50;
-  if(state.coop && players[1]){
-    const gap = 14;
-    const panelW = Math.min(580, (W - gap*3) / 2);
-    return [
-      {x: W/2 - gap/2 - panelW, y: py, w: panelW, h: panelH, player: players[0], title: 'P1 SHOP'},
-      {x: W/2 + gap/2, y: py, w: panelW, h: panelH, player: players[1], title: 'P2 SHOP'},
-    ];
-  }
-  const panelW = Math.min(800, W*0.92);
-  return [{x: (W-panelW)/2, y: py, w: panelW, h: panelH, player: players[0], title: 'SHOP'}];
-}
-
-function drawShopPanel(def){
-  const {x: px, y: py, w: panelW, h: panelH, player: p, title} = def;
-  panel(px, py, panelW, panelH, palette.uiLight, palette.outline, 16);
-  ctx.fillStyle = palette.uiAccent;
-  ctx.font = uiFont(20, 'bold');
-  ctx.fillText(title, px+18, py+32);
-  ctx.font = uiFont(12);
-  ctx.fillStyle = palette.textLight;
-  ctx.fillText(`Wave ${state.wave} cleared`, px+18, py+52);
-  // wallet
-  ctx.font = uiFont(16, 'bold');
-  const coinsTxt = `${p.currency}`;
-  const tw = ctx.measureText(coinsTxt).width;
-  ctx.fillStyle = 'rgba(4,7,13,0.5)';
-  roundRect(px + panelW - tw - 58, py + 16, tw + 42, 28, 14); ctx.fill();
-  drawCoin(px + panelW - tw - 40, py + 30, 7);
-  ctx.fillStyle = palette.text;
-  ctx.fillText(coinsTxt, px + panelW - tw - 28, py + 36);
-
-  let hoverAny = false;
-  for(let i=0;i<shop.items.length;i++){
-    const c = getShopCardRect(def, i);
-    const {x, y, w: cw, h: ch} = c;
-    const isHover = inRect(input.mx, input.my, c);
-    hoverAny = hoverAny || isHover;
-    const it = shop.items[i];
-    const locked = !!shop.locked[i];
-    ctx.save();
-    ctx.translate(0, isHover ? -3 : 0);
-    const rarity = it && it.data ? rarities.find(r=>r.id === (it.rarity || it.data.rarity)) : null;
-    const rc = (rarity && rarity.color) || palette.uiMid;
-    panel(x, y, cw, ch, isHover ? '#243a50' : palette.uiMid, isHover ? rc : (i === shop.selection ? 'rgba(72,224,194,0.55)' : palette.outline), 12);
-    if(!it || !it.data){
-      ctx.fillStyle = 'rgba(255,255,255,0.25)';
-      ctx.font = uiFont(11, 'bold');
-      ctx.fillText('EMPTY', x+16, y+26);
-      ctx.restore();
-      continue;
-    }
-    // rarity stripe + label
-    ctx.fillStyle = rc;
-    roundRect(x + 8, y + 8, 5, ch - 16, 2.5); ctx.fill();
-    ctx.font = uiFont(13, 'bold');
-    ctx.fillStyle = palette.text;
-    ctx.save();
-    ctx.beginPath(); ctx.rect(x + 18, y, cw - 26, ch); ctx.clip();
-    ctx.fillText(it.data.name, x+20, y+24);
-    ctx.restore();
-    ctx.font = uiFont(9, 'bold');
-    ctx.fillStyle = rc;
-    const rname = (it.rarity || it.data.rarity) === 'red' ? 'LEGENDARY' : String(it.rarity || it.data.rarity).toUpperCase();
-    ctx.fillText(`${rname} ${it.type === 'weapon' ? 'WEAPON' : 'ITEM'}`, x+20, y+37);
-
-    if(it.type === 'weapon'){
-      ctx.fillStyle = 'rgba(190,215,255,0.16)';
-      roundRect(x + 20, y + 44, 58, 36, 8); ctx.fill();
-      drawWeaponIcon(it.data, x + 24, y + 48, 50, 28);
-      const wInst = it.preview || (it.preview = createWeaponInstance(it.data, it.rarity || it.data.rarity));
-      ctx.font = uiFont(10);
-      ctx.fillStyle = palette.textLight;
-      const sx = x + 88;
-      ctx.fillText(`DMG ${wInst.damage}${wInst.pellets ? '×' + wInst.pellets : ''}`, sx, y+54);
-      ctx.fillText(`ROF ${wInst.fireRate.toFixed(2)}s`, sx, y+67);
-      ctx.fillText(`MAG ${wInst.mag}  RLD ${wInst.reload.toFixed(1)}s`, sx, y+80);
-    } else {
-      ctx.fillStyle = 'rgba(190,215,255,0.16)';
-      roundRect(x + 20, y + 44, 30, 30, 8); ctx.fill();
-      drawItemIcon(it.data.id, x + 27, y + 51);
-      ctx.font = uiFont(10);
-      ctx.fillStyle = palette.textLight;
-      wrapText(it.data.desc, x + 58, y + 56, cw - 68, 13, 3);
-    }
-    // price badge (green if affordable, gray if not)
-    const canAfford = p.currency >= it.price;
-    const bx = x + 20, byy = y + ch - 32;
-    panel(bx, byy, 76, 22, canAfford ? '#2dbba0' : '#2a3a4c', palette.outline, 10, {shadow:false, highlight:false});
-    ctx.font = uiFont(12, 'bold');
-    ctx.fillStyle = canAfford ? '#041018' : '#8aa0b8';
-    ctx.textAlign = 'center';
-    ctx.fillText(`$${it.price}`, bx + 38, byy + 16);
-    ctx.textAlign = 'start';
-    // lock badge
-    if(locked){
-      const lx = x + cw - 60, ly = y + ch - 32;
-      panel(lx, ly, 48, 22, '#ffd166', palette.outline, 10, {shadow:false, highlight:false});
-      ctx.font = uiFont(10, 'bold'); ctx.fillStyle = '#2b1e10';
-      ctx.textAlign = 'center'; ctx.fillText('LOCKED', lx + 24, ly + 15); ctx.textAlign = 'start';
-    }
-    ctx.restore();
-  }
-  return hoverAny;
-}
+function getShopPanels(){ return ShopUI.panels(); }   // [brad-ui] one panel: the shopping player's card area
 
 function drawStatsMenu(){
   const p = players[0];
@@ -2173,8 +2051,8 @@ function drawStatsMenu(){
 }
 
 function drawEffects(){
-  // money drops
-  for(const m of moneyDrops){
+  // money drops ([brad-fx] v0.56 green material gems with bob/pulse/swoop in fx.js; old squares are the fallback)
+  if(!(window.FX && FX.drawMoney())) for(const m of moneyDrops){
     const bob = Math.sin(m.t * 10) * 2.4;
     ctx.shadowColor = 'rgba(124,255,107,0.7)';
     ctx.shadowBlur = 12;
@@ -2204,7 +2082,8 @@ function drawEffects(){
     ctx.translate(tr.x, tr.y);
     const sway = Math.sin(state.animTime * 1.5 + tr.x * 0.05) * 0.03;
     ctx.rotate(sway);
-    if(!drawSprite('tree', 46, null, {anchorY: 0.62})){     // 1:1 with the 64px source art
+    // [brad-fx] v0.56 tree in the ground palette (fx.js); the original Tree.png is the fallback
+    if(!(window.FX && FX.drawTree()) && !drawSprite('tree', 46, null, {anchorY: 0.62})){     // 1:1 with the 64px source art
       ctx.fillStyle = '#3b2a1a'; ctx.fillRect(-4, 4, 8, 16);
       ctx.fillStyle = palette.outline;
       ctx.beginPath(); ctx.arc(0,-4,tr.r+2,0,Math.PI*2); ctx.fill();
@@ -2246,7 +2125,9 @@ function drawEffects(){
     ctx.translate(e.x, e.y);
     ctx.scale(wob, wob);
     // yellow "light" enemy (spitter) uses EnemyLight.png, drawn 1:1 with its pixel art
-    const useSprite = e.id === 'spitter' && drawSprite('enemyLight', null, 36, {flipX: e.face < 0, flash});
+    // [brad-fx] animated v0.56 enemy sheets (fx.js) return the sprite's half-height; else the old art
+    const fxTop = window.FX ? FX.drawEnemy(e, flash) : 0;
+    const useSprite = fxTop > 0 || (e.id === 'spitter' && drawSprite('enemyLight', null, 36, {flipX: e.face < 0, flash}));
     if(!useSprite){
       ctx.fillStyle = palette.outline;
       ctx.beginPath(); ctx.arc(0,0,e.r+2,0,Math.PI*2); ctx.fill();
@@ -2263,7 +2144,7 @@ function drawEffects(){
     }
 
     // hp bar (only once damaged, keeps crowds readable)
-    const barTop = useSprite ? -22 : -e.r-10;
+    const barTop = fxTop > 0 ? -fxTop - 6 : useSprite ? -22 : -e.r-10;
     if(e.hp < e.maxHp || e.isBoss){
       ctx.fillStyle = palette.outline;
       roundRect(-e.r-2, barTop, e.r*2+4, 6, 3); ctx.fill();
@@ -2277,13 +2158,18 @@ function drawEffects(){
     ctx.restore();
   }
 
-  // particles
+  // particles ([brad-fx] v0.56: soft additive glows instead of flat discs; fx.js adds the sparks)
+  ctx.save();
+  if(window.FX) ctx.globalCompositeOperation = 'lighter';
   for(const p of particles){
+    const a = Math.max(0, Math.min(1, p.life*5));
+    if(window.FX && FX.glow(p.color, p.x, p.y, p.r * 1.6, a * 0.7)) continue;
     ctx.fillStyle = p.color;
-    ctx.globalAlpha = Math.max(0, p.life*5);
+    ctx.globalAlpha = a;
     ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
     ctx.globalAlpha = 1;
   }
+  ctx.restore();
 }
 
 function drawWaveBanner(){
@@ -2366,6 +2252,7 @@ function drawGameOver(){
 }
 
 function draw(){
+  if(window.FX) FX.frame();   // [brad-fx] effects bookkeeping (draw-side only)
   ctx.clearRect(0,0,W,H);
   drawBackground();
   if(state.phase === 'menu'){
@@ -2379,22 +2266,27 @@ function draw(){
   ctx.save();
   ctx.translate(camera.x, camera.y);
   drawEffects();
+  if(window.FX) FX.drawUnder();   // [brad-fx] dash trail
   drawPlayers();
+  if(window.FX) FX.drawOver();    // [brad-fx] particles, glows, muzzle flash, tracers
   ctx.restore();
-  drawHUD();
-  drawWaveBanner();
+  // [brad-ui] the HUD is hidden behind the shop (it shows wallet/stats itself) and the game-over screen
+  if(state.phase !== 'shop' && state.phase !== 'gameover'){ drawHUD(); drawWaveBanner(); }
   drawUpgradeSelector();
   drawShop();
   if(state.paused){
     ctx.fillStyle = 'rgba(0,0,0,0.45)';
     ctx.fillRect(0,0,W,H);
-    panel(W/2-120, H/2-40, 240, 80, palette.uiLight, palette.outline, 14);
+    // [brad-ui] (e) during level-up the PAUSED box goes above the level-up panel, not over it
+    let pcy = H/2;
+    if(state.phase === 'upgrade'){ const Lu = getUpgradeLayout(); if(Lu.py - 100 >= 8) pcy = Lu.py - 50; }
+    panel(W/2-120, pcy-40, 240, 80, palette.uiLight, palette.outline, 14);
     ctx.fillStyle = palette.text;
     ctx.font = uiFont(18,'bold');
     ctx.textAlign = 'center';
-    ctx.fillText('PAUSED', W/2, H/2);
+    ctx.fillText('PAUSED', W/2, pcy);
     ctx.font = uiFont(12);
-    ctx.fillText('Press P to resume', W/2, H/2 + 18);
+    ctx.fillText('Press P to resume', W/2, pcy + 18);
     ctx.textAlign = 'start';
   }
   const anchor = players[0];
@@ -2414,7 +2306,8 @@ function draw(){
     drawGameOver();
   } else {
     restartBtn.style.display = 'none';
-    if(pauseBtn && state.phase !== 'menu') pauseBtn.style.display = 'block';
+    // [brad-ui] no Pause button over the shop (nothing runs there and it covered the Stats panel)
+    if(pauseBtn && state.phase !== 'menu') pauseBtn.style.display = state.phase === 'shop' ? 'none' : 'block';
   }
 }
 

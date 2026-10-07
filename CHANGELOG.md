@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.56 ALPHA — 2026-10-07 (graphics division)
+- New animated pixel-art player: a blue armored suit (red for Player 2) with a 4-frame walk cycle facing up, down and sideways (mirrored for left). The body is 28 px wide, the same as the player hitbox.
+- New original enemy art in a chunky, thick-outlined, earthy style, each sprite sized to its hitbox with a drop shadow so it reads on the ground: Runner is a mauve raptor with a spiky back and a 4-frame run, Bruiser is a spiky dino head with yellow bumps that hops and chomps, Spitter is a teal-headed mosquito with flapping wings and a curled body that drips green spit, and the wave 20 Overlord boss is now a spiked sandworm swaying out of a dirt mound, bursting up from the ground when it spawns. Frozen enemies animate at half speed.
+- New map look: flat warm grey-brown ground with sparse, low-contrast doodles (pebbles, cracks, bones, grass tufts, twigs), drawn once offscreen so it costs nothing per frame. Trees are recoloured to match. The old Map.png stays in the repo.
+- Money drops are now bright green glowing gems with a dark outline in a few shapes and random rotations. They bob, pulse and stretch as they swoop toward you inside the normal pickup range. The HUD and shop currency icon use the same gem. Pickup range and values are unchanged.
+- Added weapon art for the Flamethrower, Arc Thrower, Railgun, Mine Layer and Frost Sprayer, so every weapon now has a sprite in your hands, on the HUD and in the shop.
+- New effects: hit sparks in the weapon's element colour, death bursts with debris, smoke and a shockwave ring, muzzle flashes, short bullet tracers, glowing fire/ice/shock bullets, fire/ice/shock glows on affected enemies (embers, frost and lightning arcs), and a blue after-image trail when you dash. The old flat particles now render as soft glows.
+- Particle effects scale back automatically in big waves (fewer particles per event above 40/80/140 enemies, plus a hard cap), and they follow the Graphics preset and Particle FX settings.
+- Redesigned the between-waves shop in the style of Brotato: a "Shop (Wave N)" title, the wallet centred at the top, a REROLL button at the top right, and item cards with an icon tile, a type line, green/red stats (weapons are compared with your current weapon), a rarity-coloured border with a glow, a price pill, and a Lock button under each card. There is also a Stats panel with Primary and Secondary tabs, an Items grid with stack counts, a Weapons (n/6) grid, a next-wave info line with badges, and a big Go (Wave N+1) button. The layout adapts to 800x600, 1280x720 and portrait 600x1000 windows.
+- Co-op shop: P1/P2 tabs choose who is shopping, so each player gets full-size cards, their own wallet, stats, items and weapons instead of two cramped half-width shops.
+- A locked card shows a padlock on its icon and a dashed outline, and its Lock button turns into a yellow "Locked" button. Nothing covers the price anymore.
+- Hovering a shop or level-up card lifts it inside its own click area, so the highlighted card is exactly what you can click.
+- The co-op Player 2 card always sits below the Pause button, including at the smallest (0.8) HUD scale.
+- The HUD and wave banner are no longer drawn over the game-over screen or the shop, and the Pause button is hidden in the shop.
+- The weapon card is a little taller, so the ammo count no longer touches its bottom border.
+- Pausing during level-up shows the PAUSED box above the level-up panel, and the pause/mute toast now appears near the bottom of the screen instead of over the panel.
+
 ## v0.54 ALPHA — 2026-10-07
 - Fixed enemies standing on top of the player being impossible to hit. Bullets now use a swept hit test from the player's centre, so point-blank shots land and fast bullets can no longer skip past small enemies.
 - Shock-chain kills now reward the player whose shot started the chain (co-op).

@@ -133,8 +133,9 @@ input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:po
 .restart-btn:hover{transform:translateX(-50%) translateY(-2px)}
 .restart-btn:active{transform:translateX(-50%) translateY(2px)}
 
+/* v0.56 (e): toast sits low (above the dash/weapon cards) so it never covers the level-up panel */
 #msg{
-  top:auto;bottom:24%;transform:translateX(-50%);
+  top:auto;bottom:96px;transform:translateX(-50%);max-width:calc(100vw - 32px);white-space:nowrap;
   padding:10px 18px;font-size:14px;font-weight:700;color:var(--text);
   border-radius:12px;animation:toast-in 180ms ease-out;pointer-events:none;
 }
