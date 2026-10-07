@@ -10,6 +10,7 @@
 - Enemies pushed apart by the crowd or knocked back by hits can no longer be shoved outside the arena (before, a crowd in a corner pushed many enemies off-screen).
 - Holding Space to fire no longer also presses the Pause button after you have clicked it.
 - The Harpoon can hit the same enemy again with its pierce, as it did before v0.54, so its single-target damage is back (v0.54 had cut it to about a third against the boss).
+- Docs: README controls corrected (Dash is `Shift` for P1 and `U` for P2, not `Space`); the `F`/`H`/`R` and weapon-switch keys are marked as planned; Auto Shoot / Mouse Aim behaviour documented; added the missing v0.51 changelog entry.
 - Pausing now freezes the animation clock, screen shake and the wave banner.
 - The dash cooldown resets when you start a new run.
 - Shop cards are never narrower than 160px: each shop uses 3, 2 or 1 columns to fit, and the two co-op shops stack vertically in tall, narrow windows. Long names and stats are trimmed with an ellipsis, weapon stats wrap onto an extra line when needed, and the LOCKED badge no longer covers the price.
@@ -25,6 +26,7 @@
 - Opening `Index.html` directly (file://) or in the desktop app no longer loads the WASM loader, which removes the CORS console error.
 - Fixed Auto Shoot off: you now fire only while holding the mouse button (or Space), instead of firing when the mouse moves and not when you click.
 - Fixed Mouse Aim off being ignored: auto-aim now always targets the nearest enemy, whatever the mouse does.
+- With Mouse Aim on, you aim at the cursor while the mouse is moving or the button is held (otherwise auto-aim picks the nearest enemy). With Auto Shoot on, moving the mouse makes you fire at the cursor.
 - Piercing bullets hit each enemy once and carry on to the next one instead of spending their pierce on the same enemy.
 
 ## v0.53 ALPHA — 2026-10-07
@@ -38,6 +40,13 @@
 - Fixed the game freezing mid-wave (often around wave 7) when an enemy was killed by burn or shock damage instead of a bullet. Those enemies were never removed, and drawing their negative-width health bar crashed the game loop.
 - Enemies killed by burn or shock now die normally and reward the player who last hit them.
 - Rounded UI boxes can no longer crash the renderer when given a negative size.
+
+## v0.51 ALPHA — 2026-03-02
+- Balance: improved shop economy (better reroll costs), stronger luck scaling, smoother difficulty progression.
+- Bug fixes: object pooling for memory management, safer collision detection, dash cooldown sync fix.
+- UI/UX: FPS counter (`F`), keyboard shortcuts help (`H`), better visual feedback and critical-hit effects.
+- Performance: object pooling to cut garbage collection, steadier frame rate, faster collision checks.
+- Note: these changes ship as `game-improvements.js` (see `IMPROVEMENTS.md` and `INTEGRATION_EXAMPLE.js`); `Index.html` does not load that file yet, so the `F` and `H` keys don't work in the game.
 
 ## v0.50 ALPHA — 2026-02-14
 - Swapped to a teal/blue neon menu color scheme.

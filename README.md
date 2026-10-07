@@ -37,25 +37,37 @@ Recommended: modern Chromium-based browser for best audio/visual support.
 
 ### Player 1
 - Move: `WASD`
-- Switch weapons: `Q` / `E` or `1–5`
-- Dash: `Space`
+- Dash: `Shift`
+- Aim and fire: see **Auto Shoot / Mouse Aim** below
+- Fire (when Auto Shoot is off): hold the left mouse button or `Space`
+- The last weapon you bought is the one you use
 
 ### Player 2 (co-op)
 - Move: Arrow keys
-- Dash: `Space`
+- Dash: `U`
+- Always auto-aims at the nearest enemy and auto-fires
+
+### Auto Shoot / Mouse Aim (Settings)
+- **Auto Shoot on**: you fire whenever there is a target.
+- **Auto Shoot off**: you fire only while holding the left mouse button or `Space`.
+- **Mouse Aim on**: you aim at the cursor while the mouse is moving or the button is held; otherwise you auto-aim at the nearest enemy. With Auto Shoot on, moving the mouse makes you fire at the cursor.
+- **Mouse Aim off**: you always auto-aim at the nearest enemy (or a tree), whatever the mouse does.
 
 ### Shop
-- Click card to buy
-- Right-click card to **lock**
-- Press `Tab` to toggle **Stats**
-- Press `R` or click **Reroll** to refresh shop
+- Click a card to buy (or `←`/`→` to select and `Space` to buy)
+- Right-click a card to **lock** it
+- Click **Reroll** to refresh the shop
+- `Tab` toggles **Stats**
+- `Enter` or **Next wave** starts the next wave
 
 ### General Controls
-- `F` — Toggle FPS counter
-- `H` — Toggle keyboard shortcuts help
 - `M` — Mute/Unmute audio
 - `P` — Pause/Resume
-- `Enter` — Start wave / Confirm
+
+### Planned (not in the game yet)
+- Weapon switching with `Q` / `E` or `1–5`
+- `R` to reroll the shop
+- `F` FPS counter and `H` keyboard-shortcuts help (these live in `game-improvements.js`, which `Index.html` does not load yet)
 
 ## Wave System
 - Wave 1 starts at **10 enemies**.
@@ -97,7 +109,7 @@ Shows:
 ## Performance
 - **Target**: 55-60 FPS on modern browsers
 - **Optimizations**: Object pooling, efficient collision detection, reduced garbage collection
-- **Monitoring**: Built-in FPS counter (press `F` to toggle)
+- **Monitoring**: FPS counter (`F`) is planned; it lives in `game-improvements.js`, which is not loaded yet
 
 ## Development
 To integrate the v0.51 improvements into the main game:
