@@ -986,6 +986,28 @@ function separateEnemies(dt){
   }
 }
 
+// Safety net: an entity with a NaN/Infinity position can't be hit or collide and would stall a wave.
+// Enemies with a bad position are moved back to an arena edge; enemies with bad hp/speed are removed
+// (they still count as spawned, so the wave can finish). Bad bullets are dropped, bad players recentred.
+const nonFiniteStats = { enemiesRepaired: 0, enemiesRemoved: 0, bullets: 0, players: 0 };
+function repairNonFinite(){
+  const fin = Number.isFinite;
+  for(let i=enemies.length-1;i>=0;i--){
+    const e = enemies[i];
+    if(!fin(e.hp) || !fin(e.speed) || !fin(e.r)){ enemies.splice(i,1); nonFiniteStats.enemiesRemoved++; continue; }
+    if(!fin(e.x) || !fin(e.y)){
+      const edge = (Math.random()*4)|0;
+      e.x = edge===0 ? -20 : edge===1 ? W+20 : Math.random()*W;
+      e.y = edge===2 ? -20 : edge===3 ? H+20 : Math.random()*H;
+      e.vx = 0; e.vy = 0;
+      nonFiniteStats.enemiesRepaired++;
+    }
+    if(!fin(e.vx) || !fin(e.vy)){ e.vx = 0; e.vy = 0; }
+  }
+  for(let i=bullets.length-1;i>=0;i--){ const b = bullets[i]; if(!fin(b.x) || !fin(b.y) || !fin(b.vx) || !fin(b.vy)){ bullets.splice(i,1); nonFiniteStats.bullets++; } }
+  for(const p of players){ if(!fin(p.x) || !fin(p.y)){ p.x = W/2; p.y = H/2; nonFiniteStats.players++; } }
+}
+
 function getNearestEnemyTo(x,y){ let best=null, bd=Infinity; for(const e of enemies){ const d=(e.x-x)**2 + (e.y-y)**2; if(d<bd){ bd=d; best=e; } } return best; }
 function getNearestTreeTo(x,y){ let best=null, bd=Infinity; for(const tr of trees){ const d=(tr.x-x)**2 + (tr.y-y)**2; if(d<bd){ bd=d; best=tr; } } return best; }
 
@@ -1342,6 +1364,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
   }
 
   // enemies
+  repairNonFinite();
   for(let i=enemies.length-1;i>=0;i--){ const e=enemies[i]; // choose nearest alive player to chase
     const alivePlayers = players.filter(p=>!p.dead);
     if(alivePlayers.length === 0) continue;
