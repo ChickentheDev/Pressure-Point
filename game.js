@@ -39,8 +39,10 @@ resize();
 
 // Input handling (keyboard + mouse)
 const input = {keys:{}, mx: W/2, my: H/2, mouseDown:false, lastMove:0};
-window.addEventListener('keydown', e=>{ if(e.key === 'Tab') e.preventDefault(); input.keys[e.key.toLowerCase()] = true; });
-window.addEventListener('keyup', e=>{ input.keys[e.key.toLowerCase()] = false; });
+// Space is the fire key in game: stop it from scrolling or activating a focused button (e.g. Pause)
+const inGame = () => typeof state !== 'undefined' && state.phase !== 'menu' && (!menuEl || menuEl.style.display === 'none');
+window.addEventListener('keydown', e=>{ if(e.key === 'Tab' || (e.key === ' ' && inGame())) e.preventDefault(); input.keys[e.key.toLowerCase()] = true; });
+window.addEventListener('keyup', e=>{ if(e.key === ' ' && inGame()) e.preventDefault(); input.keys[e.key.toLowerCase()] = false; });
 canvas.addEventListener('mousemove', e=>{ const r = canvas.getBoundingClientRect(); input.mx = e.clientX - r.left; input.my = e.clientY - r.top; input.lastMove = performance.now()/1000; });
 canvas.addEventListener('mousedown', e=>{ input.mouseDown = true; });
 window.addEventListener('mouseup', e=>{ input.mouseDown = false; });
@@ -430,7 +432,7 @@ const rarities = [
 
 const weapons = [
   {id:'pistol', name:'Cobalt Pistol', type:'sidearm', rarity:'common', fireRate:0.22, bulletSpeed:700, spread:0.05, damage:14, mag:12, reload:1.1, recoil:0.8, color:'#8be9ff'},
-  {id:'harpoon', name:'Harpoon Gun', type:'rifle', rarity:'rare', fireRate:0.45, bulletSpeed:900, spread:0.0, damage:28, mag:4, reload:1.6, recoil:1.2, color:'#9be7ff', pierce:2},
+  {id:'harpoon', name:'Harpoon Gun', type:'rifle', rarity:'rare', fireRate:0.45, bulletSpeed:900, spread:0.0, damage:28, mag:4, reload:1.6, recoil:1.2, color:'#9be7ff', pierce:2, rehit:true},   // rehit: a harpoon can hit the same enemy again with its pierce (pre-v0.54 behaviour)
   {id:'rifle', name:'Pulse Rifle', type:'rifle', rarity:'rare', fireRate:0.12, bulletSpeed:860, spread:0.02, damage:12, mag:30, reload:1.4, recoil:1.1, color:'#9bff7b'},
   {id:'shotgun', name:'Grav Shotgun', type:'shotgun', rarity:'rare', fireRate:0.6, bulletSpeed:520, spread:0.5, damage:10, pellets:7, mag:6, reload:1.8, recoil:1.4, color:'#ffd166'},
   {id:'heavy', name:'Titan Cannon', type:'heavy', rarity:'red', fireRate:0.9, bulletSpeed:520, spread:0.08, damage:34, mag:4, reload:2.3, recoil:1.8, color:'#ff7b7b', explosive:true, elemental:'fire'},
@@ -555,7 +557,7 @@ const classes = classArchetypes.map(a=>({
 
 // End-of-wave stat upgrades
 const upgradeStats = [
-  {id:'atkspd', name:'Attack Speed', apply:(p, mult)=>{ p.reloadSpeed *= mult; }},
+  {id:'atkspd', name:'Attack Speed', apply:(p, mult)=>{ p.reloadSpeed /= mult; }},   // reloadSpeed scales shot delay and reload time: lower = faster
   {id:'baseDmg', name:'Base Damage', apply:(p, mult)=>{ p.damageBonus += Math.floor((mult-1)*10); }},
   {id:'hp', name:'Max HP', apply:(p, mult)=>{ p.baseMaxHp += Math.max(4, Math.round((mult-1)*40)); p.hp = p.baseMaxHp; }},
   {id:'lifesteal', name:'Life Steal', apply:(p, mult)=>{ p.lifesteal = Math.min(0.5, p.lifesteal + (mult-1)*0.05); }},
@@ -945,6 +947,13 @@ const SEP_OFFSETS = [0,0, -1,-1, 0,-1, 1,-1, -1,0, 1,0, -1,1, 0,1, 1,1];
 const SEP_SPACING = 0.9;        // allow a little overlap so packs still look tight
 const sepGrid = new Map();
 let sepFrame = 0;
+// After a push (separation/knockback): don't let an enemy end up outside [r, W-r] x [r, H-r]. An enemy
+// that was already outside (just spawned off-screen) may stay where it was but isn't pushed further out.
+function keepInArena(e, oldX, oldY){
+  const r = e.r || 0;
+  if(e.x < r) e.x = Math.max(e.x, Math.min(oldX, r)); else if(e.x > W - r) e.x = Math.min(e.x, Math.max(oldX, W - r));
+  if(e.y < r) e.y = Math.max(e.y, Math.min(oldY, r)); else if(e.y > H - r) e.y = Math.min(e.y, Math.max(oldY, H - r));
+}
 function separateEnemies(dt){
   const n = enemies.length;
   if(n < 2) return;
@@ -981,8 +990,10 @@ function separateEnemies(dt){
         const push = (min - d) * k * 0.5;
         const ma = a.isBoss ? 0.1 : 1, mb = b.isBoss ? 0.1 : 1;
         const wa = ma / (ma + mb) * 2, wb = mb / (ma + mb) * 2;   // the lighter one moves more
+        const ax = a.x, ay = a.y, bx0 = b.x, by0 = b.y;
         a.x -= dx * push * wb; a.y -= dy * push * wb;
         b.x += dx * push * wa; b.y += dy * push * wa;
+        keepInArena(a, ax, ay); keepInArena(b, bx0, by0);
       }
     }
   }
@@ -1036,7 +1047,9 @@ function applyKnockback(e, dirX, dirY, damage){
 }
 function integrateEnemyKnockback(e, dt){
   if(!e.kx && !e.ky) return;
+  const ox = e.x, oy = e.y;
   e.x += e.kx * dt; e.y += e.ky * dt;
+  keepInArena(e, ox, oy);
   const f = Math.exp(-KNOCKBACK_FRICTION * dt);
   e.kx *= f; e.ky *= f;
   if(Math.abs(e.kx) < 1 && Math.abs(e.ky) < 1){ e.kx = 0; e.ky = 0; }
@@ -1045,7 +1058,7 @@ function integrateEnemyKnockback(e, dt){
 function getNearestEnemyTo(x,y){ let best=null, bd=Infinity; for(const e of enemies){ const d=(e.x-x)**2 + (e.y-y)**2; if(d<bd){ bd=d; best=e; } } return best; }
 function getNearestTreeTo(x,y){ let best=null, bd=Infinity; for(const tr of trees){ const d=(tr.x-x)**2 + (tr.y-y)**2; if(d<bd){ bd=d; best=tr; } } return best; }
 
-function fireWeaponFor(player, time, target){ if(!target) return; if(player.reloading>0) return; const w = getWeaponFor(player); if(w.overheated) return; const fireRate = w.fireRate * player.reloadSpeed; if(time - (w.last||0) < fireRate) return; if(player.ammoInMag <= 0){ player.reloading = w.reload; audio.beep(240,0.08,'sawtooth',0.04); return; }
+function fireWeaponFor(player, time, target){ if(!target) return; if(player.reloading>0) return; const w = getWeaponFor(player); if(w.overheated) return; const fireRate = w.fireRate * player.reloadSpeed; if(time - (w.last||0) < fireRate) return; if(player.ammoInMag <= 0){ player.reloading = w.reload * player.reloadSpeed; audio.beep(240,0.08,'sawtooth',0.04); return; }
   w.last = time; player.ammoInMag -= 1; player.kick = Math.max(player.kick, 0.08 * w.recoil);
   if(w.overheatMax){
     w.heat += w.overheatPerShot;
@@ -1069,7 +1082,7 @@ function fireWeaponFor(player, time, target){ if(!target) return; if(player.relo
     const elemental = w.elemental || (w.explosive ? 'fire' : null);
     // px/py = previous position for the swept hit test. A new bullet starts its sweep at the player's
     // centre, so an enemy overlapping the player (inside the muzzle offset) still gets hit.
-    bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, px: player.x, py: player.y, fresh: true, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, pierce: (w.pierce||0) + (player.pierceBonus||0) });
+    bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, px: player.x, py: player.y, fresh: true, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, pierce: (w.pierce||0) + (player.pierceBonus||0), rehit: !!w.rehit });
   }
   addParticle({x:player.x + Math.cos(angle)*16, y:player.y + Math.sin(angle)*16, life:0.15, r: w.type==='heavy'?18:w.type==='shotgun'?14:10, color:w.color});
   if(audio.ctx && time - (w.lastSound||0) > 0.06){ w.lastSound = time; const freq = w.type==='heavy'?120:w.type==='shotgun'?180:w.type==='rifle'?240:320; audio.beep(freq,0.04,'square',0.03); }
@@ -1160,6 +1173,7 @@ renderDangerButtons();
 renderClassButtons();
 if(pauseBtn){
   pauseBtn.addEventListener('click', ()=>{
+    pauseBtn.blur();   // so Space/Enter don't re-trigger it later
     if(state.phase === 'menu' || state.phase === 'gameover') return;
     togglePause();
   });
@@ -1433,6 +1447,9 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
     let killed = false;
     for(let j=bullets.length-1;j>=0;j--){ const b = bullets[j];
           if(b.hits && b.hits.includes(e)) continue;   // a piercing bullet hits each enemy once
+          // rehit weapons (Harpoon): hitting the same enemy again needs the bullet to still be inside it
+          // (the pre-v0.54 point test), so its single-target damage matches the old behaviour
+          if(b.rehit && b.lastHit === e && Math.hypot(b.x - e.x, b.y - e.y) >= e.r + BULLET_HIT_R) continue;
           if(segmentHitsCircle(b.px ?? b.x, b.py ?? b.y, b.x, b.y, e.x, e.y, e.r + BULLET_HIT_R)){
             e.hp -= b.damage;
             e.lastHitBy = b.ownerId;
@@ -1458,7 +1475,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
               }
             }
             addParticle({x:e.x,y:e.y,life:0.2, r:8, color:'#ffd166'}); const ownerId = b.ownerId;
-            if(b.pierce > 0){ b.pierce--; (b.hits || (b.hits = [])).push(e); } else { bullets.splice(j,1); } if(e.hp <= 0){ // die
+            if(b.pierce > 0){ b.pierce--; if(b.rehit) b.lastHit = e; else (b.hits || (b.hits = [])).push(e); } else { bullets.splice(j,1); } if(e.hp <= 0){ // die
             // reward to owner if available, else nearest player
             killEnemy(i, ownerId); killed = true; break; } }
     }

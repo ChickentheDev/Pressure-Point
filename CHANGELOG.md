@@ -6,6 +6,10 @@
 - Smoother movement: the player now accelerates up to full speed in about a quarter of a second and glides briefly to a stop instead of starting and stopping instantly. Leaving a dash keeps your momentum.
 - Enemy knockback: hits push enemies back based on damage and enemy size (small runners move most, bosses barely move), and the push fades out with friction. Sustained fire only slows a charging enemy a little (a runner reaches a Flamethrower user in about 1.75s instead of 1.4s), so balance stays close.
 - Screen shake is toned down: all shake is scaled to 60%, capped lower and fades faster, bullet hits shake less, and touching an enemy gives one kick instead of maximum shake every frame.
+- Fixed the Attack Speed upgrade slowing your fire rate instead of speeding it up. Reload time now also uses your fire-rate/reload stat (classes and items that promise faster reloads now deliver).
+- Enemies pushed apart by the crowd or knocked back by hits can no longer be shoved outside the arena (before, a crowd in a corner pushed many enemies off-screen).
+- Holding Space to fire no longer also presses the Pause button after you have clicked it.
+- The Harpoon can hit the same enemy again with its pierce, as it did before v0.54, so its single-target damage is back (v0.54 had cut it to about a third against the boss).
 - Pausing now freezes the animation clock, screen shake and the wave banner.
 - The dash cooldown resets when you start a new run.
 - Shop cards are never narrower than 160px: each shop uses 3, 2 or 1 columns to fit, and the two co-op shops stack vertically in tall, narrow windows. Long names and stats are trimmed with an ellipsis, weapon stats wrap onto an extra line when needed, and the LOCKED badge no longer covers the price.
