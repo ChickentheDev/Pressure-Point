@@ -1475,29 +1475,22 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
   }
   if(floatingTexts.length > MAX_FLOATING_TEXTS){ floatingTexts.splice(0, floatingTexts.length - MAX_FLOATING_TEXTS); }
 
-  // manual/priority mouse fire: if mouse moved recently, aim at cursor and allow fire regardless of auto-toggle
-  const now = t;
-  const mouseRecent = (now - input.lastMove) < 0.35;
-  if(state.phase === 'wave' && players[0] && !players[0].dead && mouseRecent){
-    const p = players[0];
-    const target = {x: input.mx, y: input.my};
-    p.angle = Math.atan2(target.y - p.y, target.x - p.x);
-    if(input.mouseDown || !settings.autoShoot){
-      fireWeaponFor(p, t, target);
-    }
-  }
-
-  // auto-fire for players (player1 only if mouse idle or auto enabled)
-  for(let i=0;i<players.length;i++){
-    const p = players[i]; if(p.dead) continue;
-    if(i===0 && mouseRecent && !settings.autoShoot) continue;
-    if(i===0 && !settings.autoShoot && !mouseRecent) continue;
-    if(i===0 && mouseRecent) continue;
-    const nearest = getNearestEnemyTo(p.x,p.y) || getNearestTreeTo(p.x,p.y);
-    if(nearest && state.phase === 'wave'){
-      const target = aimPointFor(p, nearest);
-      if(i!==0 || !settings.mouseAim || !mouseRecent){ p.angle = Math.atan2(target.y - p.y, target.x - p.x); }
-      fireWeaponFor(p, t, target);
+  // Player firing.
+  //  Auto Shoot on: fire whenever there is a target. Auto Shoot off (P1): fire only while the mouse button
+  //  or Space is held. Mouse Aim on (P1): aim at the cursor while the mouse is in use (moved in the last
+  //  0.35s or button held), otherwise auto-target. Mouse Aim off: always auto-target the nearest enemy
+  //  (or tree), whatever the mouse does. P2 always auto-targets and auto-fires.
+  const mouseRecent = (performance.now()/1000 - input.lastMove) < 0.35;
+  if(state.phase === 'wave'){
+    for(let i=0;i<players.length;i++){
+      const p = players[i]; if(p.dead) continue;
+      let target = null;
+      if(i===0 && settings.mouseAim && (mouseRecent || input.mouseDown)){ target = {x: input.mx, y: input.my}; }
+      else { const nearest = getNearestEnemyTo(p.x,p.y) || getNearestTreeTo(p.x,p.y); if(nearest) target = aimPointFor(p, nearest); }
+      if(!target) continue;
+      p.angle = Math.atan2(target.y - p.y, target.x - p.x);
+      const wantsFire = i !== 0 || settings.autoShoot || input.mouseDown || !!input.keys[' '];
+      if(wantsFire) fireWeaponFor(p, t, target);
     }
   }
 }

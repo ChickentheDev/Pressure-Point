@@ -4,6 +4,7 @@ A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canva
 
 ## Latest Update (v0.54)
 - **Combat fixes**: Enemies on top of you can be hit again, fast bullets no longer pass through small enemies, shock-chain kills credit the right co-op player, and a killed enemy can't hurt you on the same frame.
+- **Controls**: Auto Shoot off fires only while you hold the mouse button or Space; Mouse Aim off always auto-targets the nearest enemy.
 - **Game feel**: Enemies spread out instead of stacking on one spot, and auto-aim leads moving targets a little.
 - **WASM shop**: Start no longer freezes when the game is served over http. The C# shop is only used once it has loaded the game data; otherwise the JS shop takes over. Opening the game from a file no longer logs a CORS error.
 

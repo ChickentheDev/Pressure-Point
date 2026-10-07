@@ -7,6 +7,8 @@
 - Enemies now gently push apart instead of stacking on one spot, and auto-aim leads moving targets a little.
 - Fixed the page freezing on Start when the game is served over http with the C# WASM module. The game no longer calls the WASM shop before it has loaded and accepted the weapon/item data, converts the data and results between the JS and C# formats, and falls back to the JS shop if the module fails or takes longer than 10 seconds.
 - Opening `Index.html` directly (file://) or in the desktop app no longer loads the WASM loader, which removes the CORS console error.
+- Fixed Auto Shoot off: you now fire only while holding the mouse button (or Space), instead of firing when the mouse moves and not when you click.
+- Fixed Mouse Aim off being ignored: auto-aim now always targets the nearest enemy, whatever the mouse does.
 - Piercing bullets hit each enemy once and carry on to the next one instead of spending their pierce on the same enemy.
 
 ## v0.53 ALPHA — 2026-10-07
