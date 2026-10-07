@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.52 ALPHA — 2026-10-07
+- Fixed the game freezing mid-wave (often around wave 7) when an enemy was killed by burn or shock damage instead of a bullet. Those enemies were never removed, and drawing their negative-width health bar crashed the game loop.
+- Enemies killed by burn or shock now die normally and reward the player who last hit them.
+- Rounded UI boxes can no longer crash the renderer when given a negative size.
+
 ## v0.50 ALPHA — 2026-02-14
 - Swapped to a teal/blue neon menu color scheme.
 - Integrated new weapon sprite models for `Minigun`, `Pulse Rifle`, `RPG`, `Shotgun`, and `Titan Cannon`.
