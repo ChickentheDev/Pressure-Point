@@ -405,7 +405,7 @@ function createPlayer(x,y){ return {
   ownedWeapons: [], weaponIndex:0, ammoInMag:12, reloading:0, kick:0,
   currency:0, id: Math.random().toString(36).slice(2,8), hitFlash:0,
   items: [], dead: false, pierceBonus:0,
-  dashTimer:0, dashCooldown:0, dashDir:0, iFrames:0,
+  dashTimer:0, dashCooldown:0, dashDir:0, iFrames:0, vx:0, vy:0,
   classId: 'ironheart', className: 'Ironheart',
   lastHitTime:0, hitCooldown:0.5,
 }; }
@@ -690,9 +690,11 @@ function applyUpgradeChoice(choice){
 
 function rand(min,max){return Math.random()*(max-min)+min}
 
+// Screen shake (toned down in v0.55): every request is scaled, the total is capped and decays faster.
+const SHAKE_SCALE = 0.6, SHAKE_MAX = 8, SHAKE_DECAY = 20, SHAKE_PX_PER_UNIT = 0.35;
 function addShake(amount){
   if(!settings.screenShake) return;
-  camera.shake = Math.min(10, camera.shake + amount);
+  camera.shake = Math.min(SHAKE_MAX, camera.shake + amount * SHAKE_SCALE);
 }
 
 function updateCamera(dt){
@@ -700,9 +702,9 @@ function updateCamera(dt){
     camera.shake = 0; camera.x = 0; camera.y = 0;
     return;
   }
-  camera.shake = Math.max(0, camera.shake - dt * 16);
+  camera.shake = Math.max(0, camera.shake - dt * SHAKE_DECAY);
   const a = Math.random() * Math.PI * 2;
-  const m = camera.shake * 0.4;
+  const m = camera.shake * SHAKE_PX_PER_UNIT;
   camera.x = Math.cos(a) * m;
   camera.y = Math.sin(a) * m;
 }
@@ -1008,6 +1010,38 @@ function repairNonFinite(){
   for(const p of players){ if(!fin(p.x) || !fin(p.y)){ p.x = W/2; p.y = H/2; nonFiniteStats.players++; } }
 }
 
+// ---- Physics (v0.55). Kept separate from drawing so visual work can merge independently. ----------
+// Player: velocity eases toward the input direction (acceleration) and back to zero (deceleration).
+const PLAYER_ACCEL = 12, PLAYER_DECEL = 16;    // 1/s: higher = snappier (95% of target in ~0.25s / ~0.19s)
+function updatePlayerVelocity(p, dx, dy, dt){
+  const tx = dx * p.baseSpeed, ty = dy * p.baseSpeed;
+  const k = 1 - Math.exp(-((dx || dy) ? PLAYER_ACCEL : PLAYER_DECEL) * dt);
+  p.vx = (p.vx || 0) + (tx - (p.vx || 0)) * k;
+  p.vy = (p.vy || 0) + (ty - (p.vy || 0)) * k;
+  if(Math.abs(p.vx) < 0.5 && !dx) p.vx = 0;
+  if(Math.abs(p.vy) < 0.5 && !dy) p.vy = 0;
+}
+// Enemies: bullets add a knockback velocity proportional to damage / mass; friction bleeds it off.
+// Tuned so sustained fire pushes back at well under a quarter of enemy run speed (balance stays close).
+const KNOCKBACK_PER_DMG = 1.6, KNOCKBACK_MAX = 220, KNOCKBACK_FRICTION = 8;
+function enemyMass(e){ const m = (e.r / 12) ** 2; return e.isBoss ? m * 6 : m; }
+function applyKnockback(e, dirX, dirY, damage){
+  const len = Math.hypot(dirX, dirY);
+  if(!(len > 0) || !(damage > 0)) return;
+  const imp = damage * KNOCKBACK_PER_DMG / enemyMass(e);
+  e.kx = (e.kx || 0) + dirX / len * imp;
+  e.ky = (e.ky || 0) + dirY / len * imp;
+  const sp = Math.hypot(e.kx, e.ky);
+  if(sp > KNOCKBACK_MAX){ e.kx *= KNOCKBACK_MAX / sp; e.ky *= KNOCKBACK_MAX / sp; }
+}
+function integrateEnemyKnockback(e, dt){
+  if(!e.kx && !e.ky) return;
+  e.x += e.kx * dt; e.y += e.ky * dt;
+  const f = Math.exp(-KNOCKBACK_FRICTION * dt);
+  e.kx *= f; e.ky *= f;
+  if(Math.abs(e.kx) < 1 && Math.abs(e.ky) < 1){ e.kx = 0; e.ky = 0; }
+}
+
 function getNearestEnemyTo(x,y){ let best=null, bd=Infinity; for(const e of enemies){ const d=(e.x-x)**2 + (e.y-y)**2; if(d<bd){ bd=d; best=e; } } return best; }
 function getNearestTreeTo(x,y){ let best=null, bd=Infinity; for(const tr of trees){ const d=(tr.x-x)**2 + (tr.y-y)**2; if(d<bd){ bd=d; best=tr; } } return best; }
 
@@ -1140,7 +1174,7 @@ startBtn.addEventListener('click', ()=>{
   const chosenClass = classes.find(x=>x.id === state.classId) || classes[0];
   applyClassToPlayer(players[0], chosenClass);
   if(players[1]) applyClassToPlayer(players[1], chosenClass);
-  for(const p of players){ p.dashCooldown = 0; p.dashTimer = 0; p.iFrames = 0; }   // fresh dash each run
+  for(const p of players){ p.dashCooldown = 0; p.dashTimer = 0; p.iFrames = 0; p.vx = 0; p.vy = 0; }   // fresh dash + no leftover momentum each run
   menuEl.style.display = 'none';
   if(pauseBtn){ pauseBtn.style.display = 'block'; pauseBtn.textContent = 'Pause'; }
   state.phase = 'wave';
@@ -1267,10 +1301,14 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
       const speed = p.baseSpeed * 3.2;
       p.x += Math.cos(p.dashDir) * speed * dt;
       p.y += Math.sin(p.dashDir) * speed * dt;
+      // leave the dash carrying normal run speed in the dash direction
+      p.vx = Math.cos(p.dashDir) * p.baseSpeed; p.vy = Math.sin(p.dashDir) * p.baseSpeed;
     } else {
-      p.x += dx * p.baseSpeed * dt; p.y += dy * p.baseSpeed * dt;
+      updatePlayerVelocity(p, dx, dy, dt);
+      p.x += p.vx * dt; p.y += p.vy * dt;
     }
-    p.x = Math.max(0, Math.min(W, p.x)); p.y = Math.max(0, Math.min(H, p.y));
+    if(p.x < 0 || p.x > W){ p.x = Math.max(0, Math.min(W, p.x)); p.vx = 0; }
+    if(p.y < 0 || p.y > H){ p.y = Math.max(0, Math.min(H, p.y)); p.vy = 0; }
     if(p.reloading > 0){ p.reloading -= dt; if(p.reloading <= 0){ refreshAmmoFor(p); audio.beep(320,0.05,'triangle',0.04); } }
     if(p.kick > 0) p.kick -= dt * 2.5; if(p.hitFlash > 0) p.hitFlash -= dt;
   }
@@ -1389,6 +1427,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
     e.vy = Math.sin(ang) * e.speed * slowMult;
     e.x += e.vx * dt;
     e.y += e.vy * dt;
+    integrateEnemyKnockback(e, dt);
 
     // bullets collision (swept: previous -> current bullet position vs enemy radius + bullet radius)
     let killed = false;
@@ -1397,10 +1436,11 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
           if(segmentHitsCircle(b.px ?? b.x, b.py ?? b.y, b.x, b.y, e.x, e.y, e.r + BULLET_HIT_R)){
             e.hp -= b.damage;
             e.lastHitBy = b.ownerId;
+            applyKnockback(e, b.vx, b.vy, b.damage);
             e.hitFlash = 0.1; // visual only
             const dealt = Math.max(1, Math.round(Math.min(b.damage, b.damage + e.hp)));
             floatingTexts.push({x:e.x, y:e.y-6, vx:rand(-12,12), vy:-40, life:0.8, text: dealt, color: b.crit ? '#ffd166' : palette.textLight});
-            addShake(b.crit ? 4 : 1.5);
+            addShake(b.crit ? 2 : 0.5);
             // elemental status
             if(b.elemental === 'fire'){
               e.status.burn = Math.max(e.status.burn, 2.5);
@@ -1431,8 +1471,8 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
       const d = Math.hypot(p.x - e.x, p.y - e.y);
       if(d < p.r + e.r){
         p.hp -= Math.max(1, (e.dmg - p.armor) * dt);
+        addShake(p.hitFlash > 0 ? 0.3 : 5);   // a kick on first contact, not a constant max shake
         p.hitFlash = 0.12;
-        addShake(6);
         if(p.hp <= 0){
           p.hp = 0;
           p.dead = true;

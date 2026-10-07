@@ -4,6 +4,7 @@ A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canva
 
 ## Latest Update (v0.55)
 - **Stability**: Enemies with corrupted positions or health are repaired or removed so a wave can always finish.
+- **Physics feel**: Smooth player acceleration and deceleration, mass-based enemy knockback with friction, and calmer screen shake.
 - **Fixes**: Pausing freezes animations and the wave banner; the dash cooldown resets on a new run.
 - **UI**: Shop cards keep a readable width in small windows (co-op shops stack in narrow windows), badges no longer overlap, hover no longer shifts cards away from their click area, and the HUD no longer collides with the Pause button or the game-over screen.
 
@@ -104,7 +105,7 @@ To integrate the v0.51 improvements into the main game:
 3. See `IMPROVEMENTS.md` for complete documentation
 
 ## Changelog
-- **v0.55** (2026-10-07): NaN safety net, pause freezes animations, dash cooldown reset on new run, shop/HUD layout fixes for small windows
+- **v0.55** (2026-10-07): Player acceleration, enemy knockback, calmer screen shake, NaN safety net, pause freezes animations, dash cooldown reset on new run, shop/HUD layout fixes for small windows
 - **v0.54** (2026-10-07): Point-blank and swept bullet hits, co-op chain-kill credit, enemy separation, auto-aim lead, WASM Start freeze fix
 - **v0.53** (2026-10-07): Sprite and UI polish (all sprite art, crisp rendering, rebuilt HUD/shop/level-up, working Auto Shoot/Mouse Aim settings)
 - **v0.52** (2026-10-07): Fixed mid-wave freeze when burn/shock damage kills an enemy

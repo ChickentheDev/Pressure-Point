@@ -3,6 +3,9 @@
 ## v0.55 ALPHA — 2026-10-07
 - Investigated the "wave never completed" runs (Gravelord waves 11-13, Arc Thrower at danger 3 wave 18). They were not caused by v0.54 and the game never stalled: v0.53 fails the same runs with every enemy stacked on exactly one point, while v0.54 keeps enemies apart and keeps killing, just too slowly for the test's 200-second limit. The test moved the player in a circle faster than any class can run (about 330 px/s), so slow shots trailed a pack following inside the circle. The test harness now moves the player at its real speed and only reports a stall when nothing spawns or dies for 60 seconds.
 - Added a safety net: an enemy with a broken (NaN) position is moved back to the arena edge, an enemy with broken health is removed so the wave can still finish, and broken bullets are dropped.
+- Smoother movement: the player now accelerates up to full speed in about a quarter of a second and glides briefly to a stop instead of starting and stopping instantly. Leaving a dash keeps your momentum.
+- Enemy knockback: hits push enemies back based on damage and enemy size (small runners move most, bosses barely move), and the push fades out with friction. Sustained fire only slows a charging enemy a little (a runner reaches a Flamethrower user in about 1.75s instead of 1.4s), so balance stays close.
+- Screen shake is toned down: all shake is scaled to 60%, capped lower and fades faster, bullet hits shake less, and touching an enemy gives one kick instead of maximum shake every frame.
 - Pausing now freezes the animation clock, screen shake and the wave banner.
 - The dash cooldown resets when you start a new run.
 - Shop cards are never narrower than 160px: each shop uses 3, 2 or 1 columns to fit, and the two co-op shops stack vertically in tall, narrow windows. Long names and stats are trimmed with an ellipsis, weapon stats wrap onto an extra line when needed, and the LOCKED badge no longer covers the price.
