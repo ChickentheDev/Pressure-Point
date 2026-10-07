@@ -1,8 +1,11 @@
-# Brotato-lite (Expanded) — v0.51 ALPHA
+# Brotato-lite (Expanded) — v0.52 ALPHA
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Update (v0.51)
+## Latest Update (v0.52)
+- **Bug fix**: The game no longer freezes mid-wave (often around wave 7) when fire or shock weapons kill an enemy. Burn and shock kills now count properly and reward the right player.
+
+## Previous Update (v0.51)
 **Major improvements across balance, bugs, UI/UX, and performance!** 🎮
 
 - **Balance**: Improved shop economy (better reroll costs), enhanced luck scaling, smoother difficulty progression
@@ -11,12 +14,6 @@ A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canva
 - **Performance**: Object pooling reduces garbage collection by ~90%, stable 55-60 FPS, optimized collision detection
 
 📖 **See [IMPROVEMENTS.md](IMPROVEMENTS.md) for complete details and integration guide.**
-
-## Previous Update (v0.50)
-- Swapped UI to a deep teal/blue neon scheme for menus and settings.
-- Integrated new weapon sprite models (`Shotgun`, `Pulse Rifle`, `RPG`, `Titan Cannon`, `Minigun`).
-- Auto-target now falls back to trees when no enemies are present.
-- Optimized runtime loops by removing repeated alive-player allocations and caching shop weapon previews.
 
 ## What’s Included
 - **Wave system**: Wave 1 → Wave 20 with scaling enemy counts and difficulty.
@@ -109,6 +106,7 @@ To integrate the v0.51 improvements into the main game:
 3. See `IMPROVEMENTS.md` for complete documentation
 
 ## Changelog
+- **v0.52** (2026-10-07): Fixed mid-wave freeze when burn/shock damage kills an enemy
 - **v0.51** (2026-03-02): Major improvements to balance, bugs, UI/UX, and performance
 - **v0.50**: UI refresh, new weapon sprites, auto-target improvements, runtime optimizations
 
