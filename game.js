@@ -1108,6 +1108,7 @@ startBtn.addEventListener('click', ()=>{
   const chosenClass = classes.find(x=>x.id === state.classId) || classes[0];
   applyClassToPlayer(players[0], chosenClass);
   if(players[1]) applyClassToPlayer(players[1], chosenClass);
+  for(const p of players){ p.dashCooldown = 0; p.dashTimer = 0; p.iFrames = 0; }   // fresh dash each run
   menuEl.style.display = 'none';
   if(pauseBtn){ pauseBtn.style.display = 'block'; pauseBtn.textContent = 'Pause'; }
   state.phase = 'wave';
@@ -1181,9 +1182,6 @@ canvas.addEventListener('click', (e)=>{
 // Core update loop
 function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover') return;
   if(menuEl && menuEl.style.display !== 'none') return;
-  state.animTime += dt;
-  updateCamera(dt);
-  if(state.waveBanner > 0) state.waveBanner = Math.max(0, state.waveBanner - dt);
   if(input.keys['p']){
     input.keys['p'] = false;
     togglePause();
@@ -1194,6 +1192,10 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
     flashMsg(audio.muted ? 'Audio muted (M)' : 'Audio unmuted', 1.1);
   }
   if(state.paused) return;
+  // animation clock, camera shake and the wave banner stop while paused
+  state.animTime += dt;
+  updateCamera(dt);
+  if(state.waveBanner > 0) state.waveBanner = Math.max(0, state.waveBanner - dt);
   // players movement
   for(let idx=0; idx<players.length; idx++){
     const p = players[idx]; if(p.dead) continue; let dx=0, dy=0;

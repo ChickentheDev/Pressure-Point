@@ -1,16 +1,15 @@
-# Brotato-lite (Expanded) — v0.54 ALPHA
+# Brotato-lite (Expanded) — v0.55 ALPHA
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Update (v0.54)
+## Latest Update (v0.55)
+- **Fixes**: Pausing freezes animations and the wave banner; the dash cooldown resets on a new run.
+
+## Previous Update (v0.54)
 - **Combat fixes**: Enemies on top of you can be hit again, fast bullets no longer pass through small enemies, shock-chain kills credit the right co-op player, and a killed enemy can't hurt you on the same frame.
 - **Controls**: Auto Shoot off fires only while you hold the mouse button or Space; Mouse Aim off always auto-targets the nearest enemy.
 - **Game feel**: Enemies spread out instead of stacking on one spot, and auto-aim leads moving targets a little.
 - **WASM shop**: Start no longer freezes when the game is served over http. The C# shop is only used once it has loaded the game data; otherwise the JS shop takes over. Opening the game from a file no longer logs a CORS error.
-
-## Previous Update (v0.53)
-- **Sprites**: Every weapon and enemy uses its art, drawn crisp, with shadows, hit flashes, facing and walk animation.
-- **UI**: Rebuilt HUD, shop and level-up screens; clicks now match the drawn cards; Auto Shoot and Mouse Aim settings work.
 
 ## What’s Included
 - **Wave system**: Wave 1 → Wave 20 with scaling enemy counts and difficulty.
@@ -103,6 +102,7 @@ To integrate the v0.51 improvements into the main game:
 3. See `IMPROVEMENTS.md` for complete documentation
 
 ## Changelog
+- **v0.55** (2026-10-07): Pause freezes animations, dash cooldown reset on new run
 - **v0.54** (2026-10-07): Point-blank and swept bullet hits, co-op chain-kill credit, enemy separation, auto-aim lead, WASM Start freeze fix
 - **v0.53** (2026-10-07): Sprite and UI polish (all sprite art, crisp rendering, rebuilt HUD/shop/level-up, working Auto Shoot/Mouse Aim settings)
 - **v0.52** (2026-10-07): Fixed mid-wave freeze when burn/shock damage kills an enemy

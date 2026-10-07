@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.55 ALPHA — 2026-10-07
+- Pausing now freezes the animation clock, screen shake and the wave banner.
+- The dash cooldown resets when you start a new run.
+
 ## v0.54 ALPHA — 2026-10-07
 - Fixed enemies standing on top of the player being impossible to hit. Bullets now use a swept hit test from the player's centre, so point-blank shots land and fast bullets can no longer skip past small enemies.
 - Shock-chain kills now reward the player whose shot started the chain (co-op).
