@@ -1,19 +1,15 @@
-# Brotato-lite (Expanded) — v0.52 ALPHA
+# Brotato-lite (Expanded) — v0.54 ALPHA
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Update (v0.52)
-- **Bug fix**: The game no longer freezes mid-wave (often around wave 7) when fire or shock weapons kill an enemy. Burn and shock kills now count properly and reward the right player.
+## Latest Update (v0.54)
+- **Combat fixes**: Enemies on top of you can be hit again, fast bullets no longer pass through small enemies, shock-chain kills credit the right co-op player, and a killed enemy can't hurt you on the same frame.
+- **Game feel**: Enemies spread out instead of stacking on one spot, and auto-aim leads moving targets a little.
+- **WASM shop**: Start no longer freezes when the game is served over http. The C# shop is only used once it has loaded the game data; otherwise the JS shop takes over. Opening the game from a file no longer logs a CORS error.
 
-## Previous Update (v0.51)
-**Major improvements across balance, bugs, UI/UX, and performance!** 🎮
-
-- **Balance**: Improved shop economy (better reroll costs), enhanced luck scaling, smoother difficulty progression
-- **Bug Fixes**: Object pooling for memory management, safe collision detection, fixed dash cooldown sync
-- **UI/UX**: FPS counter (`F` key), keyboard shortcuts help (`H` key), enhanced visual feedback, critical hit effects
-- **Performance**: Object pooling reduces garbage collection by ~90%, stable 55-60 FPS, optimized collision detection
-
-📖 **See [IMPROVEMENTS.md](IMPROVEMENTS.md) for complete details and integration guide.**
+## Previous Update (v0.53)
+- **Sprites**: Every weapon and enemy uses its art, drawn crisp, with shadows, hit flashes, facing and walk animation.
+- **UI**: Rebuilt HUD, shop and level-up screens; clicks now match the drawn cards; Auto Shoot and Mouse Aim settings work.
 
 ## What’s Included
 - **Wave system**: Wave 1 → Wave 20 with scaling enemy counts and difficulty.
@@ -106,6 +102,8 @@ To integrate the v0.51 improvements into the main game:
 3. See `IMPROVEMENTS.md` for complete documentation
 
 ## Changelog
+- **v0.54** (2026-10-07): Point-blank and swept bullet hits, co-op chain-kill credit, enemy separation, auto-aim lead, WASM Start freeze fix
+- **v0.53** (2026-10-07): Sprite and UI polish (all sprite art, crisp rendering, rebuilt HUD/shop/level-up, working Auto Shoot/Mouse Aim settings)
 - **v0.52** (2026-10-07): Fixed mid-wave freeze when burn/shock damage kills an enemy
 - **v0.51** (2026-03-02): Major improvements to balance, bugs, UI/UX, and performance
 - **v0.50**: UI refresh, new weapon sprites, auto-target improvements, runtime optimizations

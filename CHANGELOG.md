@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.54 ALPHA — 2026-10-07
+- Fixed enemies standing on top of the player being impossible to hit. Bullets now use a swept hit test from the player's centre, so point-blank shots land and fast bullets can no longer skip past small enemies.
+- Shock-chain kills now reward the player whose shot started the chain (co-op).
+- An enemy killed by a bullet no longer deals contact damage in the same frame.
+- Enemies now gently push apart instead of stacking on one spot, and auto-aim leads moving targets a little.
+- Fixed the page freezing on Start when the game is served over http with the C# WASM module. The game no longer calls the WASM shop before it has loaded and accepted the weapon/item data, converts the data and results between the JS and C# formats, and falls back to the JS shop if the module fails or takes longer than 10 seconds.
+- Opening `Index.html` directly (file://) or in the desktop app no longer loads the WASM loader, which removes the CORS console error.
+- Piercing bullets hit each enemy once and carry on to the next one instead of spending their pierce on the same enemy.
+
+## v0.53 ALPHA — 2026-10-07
+- All weapon art is now used, including the Harpoon, DMR and Grav Shotgun sprites, and the yellow Spitter enemy has its own sprite.
+- Pixel art is drawn crisp instead of blurry. Characters and trees get drop shadows, hit flashes, facing, a walk bob and a dash blink; co-op players get P1/P2 rings and labels.
+- Rebuilt the HUD (player card with HP/XP/level/coins, wave counter with enemies-left bar, weapon card with ammo/reload/heat, dash meter), the shop (wallet, rarity labels, lock badges, Reroll and Next-wave buttons) and the level-up cards.
+- Fixed shop and level-up cards only being clickable on part of the drawn card.
+- The Auto Shoot and Mouse Aim settings are now wired to the game, menus and settings resize with the window, and the restart button no longer overlaps the game-over panels.
+
 ## v0.52 ALPHA — 2026-10-07
 - Fixed the game freezing mid-wave (often around wave 7) when an enemy was killed by burn or shock damage instead of a bullet. Those enemies were never removed, and drawing their negative-width health bar crashed the game loop.
 - Enemies killed by burn or shock now die normally and reward the player who last hit them.

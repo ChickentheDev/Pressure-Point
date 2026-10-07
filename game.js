@@ -283,7 +283,12 @@ const audio = {
 };
 window.addEventListener('mousedown', ()=>{ audio.init(); audio.startBgm(); }, {once:true});
 const stubSystems = { ready: Promise.resolve(), isStub:true };
-function getSystems(){ return window.SystemsWasm || stubSystems; }
+// C# WASM systems (shop roller). Index.html only injects wasm/systems.loader.js over http(s); it loads
+// asynchronously, after this script. Until it has loaded AND accepted our weapon/item data, everything
+// uses the JS implementation, so Start never waits on (or hangs in) the WASM module.
+// status: off (file://, Electron, DISABLE_WASM) | loading | ready | failed
+const wasmSystems = { status: window.__systemsWasmWanted ? 'loading' : 'off', api: null, reason: '' };
+function getSystems(){ return wasmSystems.status === 'ready' ? wasmSystems.api : stubSystems; }
 
 function togglePause(){
   state.paused = !state.paused;
@@ -443,13 +448,78 @@ const items = [
   {id:'pierce', name:'Piercing Bullet', rarity:'rare', price:70, desc:'+1 Pierce for all shots', effects:{pierceAdd:1}},
 ];
 
-// push weapon/item data to WASM module when ready
-getSystems().ready.then(()=>{
-  const sys = getSystems();
-  if(sys.loadData){
-    sys.loadData(JSON.stringify(weapons), JSON.stringify(items));
+// ---- WASM shop bridge ----------------------------------------------------------------------------
+// The C# records (wasm/BrotatoSystems/Extra.cs) use PascalCase properties and int enums, so the JS data
+// has to be converted before LoadData, and RollShop results ({Type, Data:{Id..}, Rarity, Price}) have to
+// be mapped back to the JS objects buildShop expects ({type, data, rarity, price}).
+const WASM_RARITY = { common:0, rare:1, epic:2, red:3 };        // C# Rarity: Common, Rare, Epic, Legendary
+const WASM_TIMEOUT_MS = 10000;
+function wasmDamageType(w){ return w.elemental==='fire' ? 1 : w.elemental==='ice' ? 2 : w.elemental==='shock' ? 3 : w.explosive ? 4 : 0; }
+function wasmWeaponData(){
+  return weapons.map(w=>({ Id:w.id, Name:w.name, Type:wasmDamageType(w), Damage:w.damage, FireDelay:w.fireRate, Spread:w.spread||0,
+    Magazine:Math.round(w.mag||1), Reload:w.reload||1, Explosive:!!w.explosive, Melee:!!w.melee, AltMode:null,
+    Rarity:WASM_RARITY[w.rarity] ?? 0, BasePrice:weaponPrices[w.id] || 100 }));
+}
+function wasmItemData(){
+  return items.map(it=>{
+    const mods = {};
+    for(const [k,v] of Object.entries(it.effects||{})){ if(typeof v === 'number' && isFinite(v)) mods[k] = v; }
+    return { Id:it.id, Name:it.name, Rarity:WASM_RARITY[it.rarity] ?? 0, Description:it.desc||'', StatMods:mods };
+  });
+}
+// Map one RollShop entry back to a JS shop entry. Unknown ids are dropped. Price uses the JS formula so
+// the shop costs the same whichever roller produced it.
+function normalizeWasmPick(p){
+  if(!p || typeof p !== 'object') return null;
+  const type = p.Type ?? p.type;
+  const data = p.Data ?? p.data;
+  const id = data && (data.Id ?? data.id);
+  if(!id) return null;
+  if(type === 'weapon'){
+    const w = weapons.find(x=>x.id === id); if(!w) return null;
+    return { type:'weapon', data:w, rarity:w.rarity, price:Math.round((weaponPrices[w.id]||100) * rarityMult(w.rarity)) };
   }
-}).catch(()=>{});
+  if(type === 'item'){
+    const it = items.find(x=>x.id === id); if(!it) return null;
+    return { type:'item', data:it, rarity:it.rarity, price:Math.round(it.price * rarityMult(it.rarity)) };
+  }
+  return null;
+}
+function wasmFail(reason){
+  if(wasmSystems.status === 'ready') return;
+  wasmSystems.status = 'failed'; wasmSystems.api = null; wasmSystems.reason = reason;
+  console.info('[systems] using JS shop:', reason);
+}
+function attachWasmSystems(api){
+  if(wasmSystems.status !== 'loading') return;           // off, already attached, or gave up (timeout)
+  if(!api || api.isStub || typeof api.loadData !== 'function' || typeof api.rollShop !== 'function'){ wasmFail('WASM module unavailable'); return; }
+  const w = wasmWeaponData(), it = wasmItemData();
+  // ShopRoller.Roll loops forever when its pools are empty, so never let it run without data.
+  if(!w.length || !it.length){ wasmFail('no shop data'); return; }
+  let loaded = false;
+  try { loaded = api.loadData(JSON.stringify(w), JSON.stringify(it)) !== false; } catch(err){ loaded = false; }
+  if(!loaded){ wasmFail('LoadData failed'); return; }
+  // probe once: the pools are non-empty now, so this terminates; reject the module if results are unusable
+  let probe = null;
+  try { probe = api.rollShop(1, 0, null); } catch(err){ probe = null; }
+  if(!Array.isArray(probe) || probe.length !== 1 || !normalizeWasmPick(probe[0])){ wasmFail('RollShop returned unusable data'); return; }
+  wasmSystems.api = api; wasmSystems.status = 'ready';
+  console.info('[systems] WASM shop ready');
+}
+// returns normalized picks from the WASM roller, or null (caller falls back to the JS roller)
+function rollShopWasm(count, luck){
+  if(wasmSystems.status !== 'ready' || count <= 0) return null;
+  try {
+    const raw = wasmSystems.api.rollShop(count|0, Math.max(0, Math.floor(luck||0)), null);
+    if(!Array.isArray(raw)) return null;
+    return raw.map(normalizeWasmPick).filter(Boolean);
+  } catch(err){ console.warn('rollShop failed, using JS shop', err); return null; }
+}
+if(wasmSystems.status === 'loading'){
+  window.addEventListener('systemswasm', (ev)=>attachWasmSystems(ev.detail || window.SystemsWasm));
+  if(window.SystemsWasm && !window.SystemsWasm.isStub) attachWasmSystems(window.SystemsWasm);  // loaded before us
+  setTimeout(()=>{ if(wasmSystems.status === 'loading') wasmFail('timed out after ' + WASM_TIMEOUT_MS + 'ms'); }, WASM_TIMEOUT_MS);
+}
 
 // Class definitions (50 variants)
 const classArchetypes = [
@@ -706,10 +776,9 @@ function buildShop(){
     return picks.some(it => it && it.type === candidate.type && it.data.id === candidate.data.id);
   };
 
-  // allow WASM/system override
-  const sys = getSystems();
+  // allow WASM/system override (only once the module is loaded and has our data; see attachWasmSystems)
   const emptyCount = picks.filter(x=>!x).length;
-  const wasmPicks = sys && sys.rollShop ? sys.rollShop(emptyCount, luck, null) : null;
+  const wasmPicks = rollShopWasm(emptyCount, luck);
   if(Array.isArray(wasmPicks) && wasmPicks.length){
     for(const pick of wasmPicks){
       if(!pick || isDuplicate(pick)) continue;
@@ -835,6 +904,78 @@ function spawnBoss(){
   addParticle({x, y, life:0.6, r:28, color: '#ff6b6b'});
 }
 
+// Swept bullet test: does the segment (px,py)->(x,y) pass within r of (cx,cy)? Stops fast bullets
+// tunnelling through small enemies and catches point-blank hits.
+const BULLET_HIT_R = 3;
+function segmentHitsCircle(px, py, x, y, cx, cy, r){
+  const sx = x - px, sy = y - py;
+  const len2 = sx*sx + sy*sy;
+  let u = len2 > 0 ? ((cx - px)*sx + (cy - py)*sy) / len2 : 0;
+  u = u < 0 ? 0 : u > 1 ? 1 : u;
+  const dx = px + sx*u - cx, dy = py + sy*u - cy;
+  return dx*dx + dy*dy <= r*r;
+}
+// Modest aim lead for auto-aim: aim part of the way toward where a moving enemy will be when the shot
+// arrives. Targets without a velocity (trees, the mouse cursor) are returned unchanged.
+const AIM_LEAD = 0.6, AIM_LEAD_MAX_T = 0.5;
+function aimPointFor(player, target){
+  if(!target || !(target.vx || target.vy)) return target;
+  const w = getWeaponFor(player);
+  const speed = (w && w.bulletSpeed) || 600;
+  const tHit = Math.min(AIM_LEAD_MAX_T, Math.hypot(target.x - player.x, target.y - player.y) / speed) * AIM_LEAD;
+  return { x: target.x + target.vx * tHit, y: target.y + target.vy * tHit };
+}
+// Light enemy separation: a soft push between overlapping enemies, using a uniform grid so each enemy
+// only checks nearby cells (and at most SEP_MAX_PER_CELL enemies per cell). Bosses barely move.
+const SEP_CELL = 56;            // >= largest pair of radii that can overlap (boss 36 + bruiser 16)
+const SEP_MAX_PER_CELL = 8;   // neighbour cap per grid cell (9 cells -> at most 72 checks per enemy)
+const SEP_OFFSETS = [0,0, -1,-1, 0,-1, 1,-1, -1,0, 1,0, -1,1, 0,1, 1,1];
+const SEP_SPACING = 0.9;        // allow a little overlap so packs still look tight
+const sepGrid = new Map();
+let sepFrame = 0;
+function separateEnemies(dt){
+  const n = enemies.length;
+  if(n < 2) return;
+  sepGrid.clear();
+  for(let i=0;i<n;i++){
+    const e = enemies[i];
+    const key = (Math.floor(e.x / SEP_CELL) + 512) * 4096 + (Math.floor(e.y / SEP_CELL) + 512);
+    let cell = sepGrid.get(key); if(!cell){ cell = []; sepGrid.set(key, cell); } cell.push(e);
+  }
+  const k = Math.min(0.5, dt * 8);  // fraction of the overlap resolved per frame (soft)
+  sepFrame = (sepFrame + 1) % 1048576;
+  for(let i=0;i<n;i++){
+    const a = enemies[i];
+    const cx = Math.floor(a.x / SEP_CELL), cy = Math.floor(a.y / SEP_CELL);
+    // inside a crowded cell start at an offset that varies per enemy and per frame, so with the cap
+    // every pair still gets checked within a few frames
+    for(let c=0; c<9; c++){
+      const gx = cx + SEP_OFFSETS[c*2], gy = cy + SEP_OFFSETS[c*2+1];
+      const cell = sepGrid.get((gx + 512) * 4096 + (gy + 512));
+      if(!cell) continue;
+      const len = cell.length, off = (i + sepFrame * SEP_MAX_PER_CELL) % len;
+      let checks = 0;
+      for(let m=0; m<len && checks < SEP_MAX_PER_CELL; m++){
+        const b = cell[(off + m) % len];
+        if(b === a) continue;
+        checks++;
+        let dx = b.x - a.x, dy = b.y - a.y;
+        const min = (a.r + b.r) * SEP_SPACING;
+        const d2 = dx*dx + dy*dy;
+        if(d2 >= min*min) continue;
+        let d = Math.sqrt(d2);
+        if(d < 0.001){ const ang = Math.random() * Math.PI * 2; dx = Math.cos(ang); dy = Math.sin(ang); d = 0; }
+        else { dx /= d; dy /= d; }
+        const push = (min - d) * k * 0.5;
+        const ma = a.isBoss ? 0.1 : 1, mb = b.isBoss ? 0.1 : 1;
+        const wa = ma / (ma + mb) * 2, wb = mb / (ma + mb) * 2;   // the lighter one moves more
+        a.x -= dx * push * wb; a.y -= dy * push * wb;
+        b.x += dx * push * wa; b.y += dy * push * wa;
+      }
+    }
+  }
+}
+
 function getNearestEnemyTo(x,y){ let best=null, bd=Infinity; for(const e of enemies){ const d=(e.x-x)**2 + (e.y-y)**2; if(d<bd){ bd=d; best=e; } } return best; }
 function getNearestTreeTo(x,y){ let best=null, bd=Infinity; for(const tr of trees){ const d=(tr.x-x)**2 + (tr.y-y)**2; if(d<bd){ bd=d; best=tr; } } return best; }
 
@@ -860,7 +1001,9 @@ function fireWeaponFor(player, time, target){ if(!target) return; if(player.relo
     const elementalBonus = (w.elemental || w.explosive) ? (player.elementalBonus || 0) : 0;
     dmg *= (1 + elementalBonus);
     const elemental = w.elemental || (w.explosive ? 'fire' : null);
-    bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, pierce: (w.pierce||0) + (player.pierceBonus||0) });
+    // px/py = previous position for the swept hit test. A new bullet starts its sweep at the player's
+    // centre, so an enemy overlapping the player (inside the muzzle offset) still gets hit.
+    bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, px: player.x, py: player.y, fresh: true, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, pierce: (w.pierce||0) + (player.pierceBonus||0) });
   }
   addParticle({x:player.x + Math.cos(angle)*16, y:player.y + Math.sin(angle)*16, life:0.15, r: w.type==='heavy'?18:w.type==='shotgun'?14:10, color:w.color});
   if(audio.ctx && time - (w.lastSound||0) > 0.06){ w.lastSound = time; const freq = w.type==='heavy'?120:w.type==='shotgun'?180:w.type==='rifle'?240:320; audio.beep(freq,0.04,'square',0.03); }
@@ -1166,15 +1309,14 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
   }
 
   // bullets update
-  for(let i=bullets.length-1;i>=0;i--){ const b=bullets[i]; b.x += b.vx*dt; b.y += b.vy*dt; b.life -= dt; if(b.life<=0 || b.x<-50 || b.x>W+50 || b.y<-50 || b.y>H+50 || bullets.length>MAX_BULLETS) bullets.splice(i,1); }
+  for(let i=bullets.length-1;i>=0;i--){ const b=bullets[i]; if(b.fresh){ b.fresh = false; } else { b.px = b.x; b.py = b.y; } b.x += b.vx*dt; b.y += b.vy*dt; b.life -= dt; if(b.life<=0 || b.x<-50 || b.x>W+50 || b.y<-50 || b.y>H+50 || bullets.length>MAX_BULLETS) bullets.splice(i,1); }
 
   // bullets vs trees (destructibles)
   for(let i=bullets.length-1;i>=0;i--){
     const b = bullets[i];
     for(let j=trees.length-1;j>=0;j--){
       const tr = trees[j];
-      const dist = Math.hypot(b.x - tr.x, b.y - tr.y);
-      if(dist < tr.r + 4){
+      if(segmentHitsCircle(b.px ?? b.x, b.py ?? b.y, b.x, b.y, tr.x, tr.y, tr.r + 4)){
         tr.hp -= b.damage;
         if(tr.hp <= 0){
           spawnFruit(tr.x, tr.y);
@@ -1208,11 +1350,16 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
     // visual only: facing + hit flash timer
     e.face = Math.cos(ang) < 0 ? -1 : 1;
     if(e.hitFlash > 0) e.hitFlash -= dt;
-    e.x += Math.cos(ang) * e.speed * slowMult * dt;
-    e.y += Math.sin(ang) * e.speed * slowMult * dt;
+    e.vx = Math.cos(ang) * e.speed * slowMult;   // kept for auto-aim lead
+    e.vy = Math.sin(ang) * e.speed * slowMult;
+    e.x += e.vx * dt;
+    e.y += e.vy * dt;
 
-    // bullets collision
-    for(let j=bullets.length-1;j>=0;j--){ const b = bullets[j]; const dist = Math.hypot(b.x - e.x, b.y - e.y); if(dist < e.r + 3){
+    // bullets collision (swept: previous -> current bullet position vs enemy radius + bullet radius)
+    let killed = false;
+    for(let j=bullets.length-1;j>=0;j--){ const b = bullets[j];
+          if(b.hits && b.hits.includes(e)) continue;   // a piercing bullet hits each enemy once
+          if(segmentHitsCircle(b.px ?? b.x, b.py ?? b.y, b.x, b.y, e.x, e.y, e.r + BULLET_HIT_R)){
             e.hp -= b.damage;
             e.lastHitBy = b.ownerId;
             e.hitFlash = 0.1; // visual only
@@ -1230,14 +1377,17 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
               const chain = enemies.find(en => en !== e && Math.hypot(en.x - e.x, en.y - e.y) < 80);
               if(chain){
                 chain.hp -= b.damage * 0.6;
+                chain.lastHitBy = b.ownerId;   // so a chain kill credits the shooter (co-op)
+                chain.hitFlash = 0.1;
                 addParticle({x:chain.x,y:chain.y,life:0.2, r:8, color:'#b27bff'});
               }
             }
             addParticle({x:e.x,y:e.y,life:0.2, r:8, color:'#ffd166'}); const ownerId = b.ownerId;
-            if(b.pierce > 0){ b.pierce--; } else { bullets.splice(j,1); } if(e.hp <= 0){ // die
+            if(b.pierce > 0){ b.pierce--; (b.hits || (b.hits = [])).push(e); } else { bullets.splice(j,1); } if(e.hp <= 0){ // die
             // reward to owner if available, else nearest player
-            killEnemy(i, ownerId); break; } }
+            killEnemy(i, ownerId); killed = true; break; } }
     }
+    if(killed) continue;   // enemy was removed: no contact damage from it this frame
 
     // collision with player
     for(const p of players){
@@ -1260,6 +1410,8 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
       }
     }
   }
+
+  separateEnemies(dt);
 
   const alivePlayers = players.filter(p=>!p.dead);
 
@@ -1341,8 +1493,9 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
     if(i===0 && mouseRecent && !settings.autoShoot) continue;
     if(i===0 && !settings.autoShoot && !mouseRecent) continue;
     if(i===0 && mouseRecent) continue;
-    const target = getNearestEnemyTo(p.x,p.y) || getNearestTreeTo(p.x,p.y);
-    if(target && state.phase === 'wave'){
+    const nearest = getNearestEnemyTo(p.x,p.y) || getNearestTreeTo(p.x,p.y);
+    if(nearest && state.phase === 'wave'){
+      const target = aimPointFor(p, nearest);
       if(i!==0 || !settings.mouseAim || !mouseRecent){ p.angle = Math.atan2(target.y - p.y, target.x - p.x); }
       fireWeaponFor(p, t, target);
     }
