@@ -219,6 +219,16 @@ function panel(x, y, w, h, fill=palette.uiLight, stroke=palette.outline, r=10, o
 
 function flashMsg(text, dur=1.6){
   msgEl.textContent = text;
+  // keep the toast off the level-up panel and the shop (default CSS spot is 24% from the bottom)
+  msgEl.style.top = ''; msgEl.style.bottom = '';
+  if(state.phase === 'upgrade'){
+    const L = getUpgradeLayout();
+    const below = L.py + L.panelH + 12;
+    if(below + 44 <= H){ msgEl.style.top = below + 'px'; msgEl.style.bottom = 'auto'; }
+    else { msgEl.style.top = '8px'; msgEl.style.bottom = 'auto'; }
+  } else if(state.phase === 'shop'){
+    msgEl.style.top = '8px'; msgEl.style.bottom = 'auto';
+  }
   msgEl.style.display = 'block';
   setTimeout(()=>{ msgEl.style.display = 'none'; }, dur*1000);
 }
@@ -1780,6 +1790,16 @@ function drawPlayerCard(p, x, y, w, title, accent){
   ctx.fillText(`${p.currency}`, x + 40, y + 85);
 }
 
+// y (in HUD units) for the P2 card: 8px below the DOM Pause button, measured in canvas pixels
+function hudP2CardY(S){
+  let bottomPx = 62 * S;
+  if(pauseBtn && pauseBtn.style.display !== 'none'){
+    const br = pauseBtn.getBoundingClientRect(), cr = canvas.getBoundingClientRect();
+    if(br.height > 0) bottomPx = br.bottom - cr.top + 8;
+  }
+  return Math.max(62, bottomPx / S);
+}
+
 function drawHUD(){
   const p = players[0];
   const S = hudScale();
@@ -1816,15 +1836,15 @@ function drawHUD(){
   }
 
   // --- top-right: player 2 card (below the DOM pause button)
-  if(players[1]) drawPlayerCard(players[1], VW - 262, 62, 250, 'PLAYER 2', '#ff6b6b');
+  if(players[1]) drawPlayerCard(players[1], VW - 262, hudP2CardY(S), 250, 'PLAYER 2', '#ff6b6b');
 
   // --- bottom-left: weapon + ammo, dash
   const w = getWeaponFor(p);
-  const by = VH - 70;
-  panel(12, by, 250, 58, palette.uiLight, palette.outline, 12);
+  const by = VH - 78;
+  panel(12, by, 250, 66, palette.uiLight, palette.outline, 12);
   ctx.fillStyle = 'rgba(190,215,255,0.16)';
-  roundRect(20, by + 8, 58, 42, 8); ctx.fill();
-  drawWeaponIcon(w, 24, by + 14, 50, 30);
+  roundRect(20, by + 10, 58, 46, 8); ctx.fill();
+  drawWeaponIcon(w, 24, by + 18, 50, 30);
   ctx.font = uiFont(13, 'bold');
   ctx.fillStyle = palette.text;
   ctx.fillText(w.name, 88, by + 23);
@@ -1839,16 +1859,16 @@ function drawHUD(){
     const magMax = Math.max(1, (w.mag||0) + p.magBonus);
     if(p.reloading > 0){
       drawBar(88, by + 34, 160, 10, 1 - p.reloading / Math.max(0.01, w.reload), '#ffd166', '#ffb44c', '');
-      ctx.font = uiFont(10, 'bold'); ctx.fillStyle = '#ffd166'; ctx.fillText('RELOADING', 88, by + 55);
+      ctx.font = uiFont(10, 'bold'); ctx.fillStyle = '#ffd166'; ctx.fillText('RELOADING', 88, by + 54);
     } else {
       drawBar(88, by + 34, 160, 10, p.ammoInMag / magMax, palette.uiAccent, palette.uiGreen, '');
-      ctx.font = uiFont(10); ctx.fillStyle = palette.textLight; ctx.fillText(`${p.ammoInMag} / ${magMax}`, 88, by + 55);
+      ctx.font = uiFont(10); ctx.fillStyle = palette.textLight; ctx.fillText(`${p.ammoInMag} / ${magMax}`, 88, by + 54);
     }
   } else {
     ctx.font = uiFont(10); ctx.fillStyle = palette.textLight; ctx.fillText('Melee', 88, by + 42);
   }
   if(w.overheatMax){
-    drawBar(170, by + 50, 78, 4, w.heat / w.overheatMax, '#ffd166', '#ff5d5d', '');
+    drawBar(170, by + 50, 78, 4, w.heat / w.overheatMax, '#ffd166', '#ff5d5d', '');   // ends at by+54, 12px above the border
   }
   const dy = by - 40;
   panel(12, dy, 170, 32, palette.uiLight, palette.outline, 10, {shadow:false});
@@ -1882,12 +1902,20 @@ function getUpgradeLayout(){
   return {px, py, panelW, panelH, cards};
 }
 
+// Shop cards: never narrower than SHOP_MIN_CARD_W. Panels pick 3/2/1 columns to fit, and co-op shops
+// stack vertically when side by side would squeeze them below 2 columns or not fit the window.
+const SHOP_MIN_CARD_W = 160, SHOP_GAP = 12, SHOP_HEAD = 70, SHOP_PAD = 16;
+function shopGrid(panelW, cardH){
+  const inner = panelW - SHOP_PAD * 2;
+  const cols = Math.max(1, Math.min(3, Math.floor((inner + SHOP_GAP) / (SHOP_MIN_CARD_W + SHOP_GAP))));
+  const rows = Math.ceil(6 / cols);
+  const cardW = (inner - SHOP_GAP * (cols - 1)) / cols;
+  return {cols, rows, cardW, cardH, h: SHOP_HEAD + rows * cardH + (rows - 1) * SHOP_GAP + SHOP_PAD};
+}
 function getShopCardRect(def, i){
-  const cols = 3, gap = 12;
-  const cardW = (def.w - 32 - gap * (cols - 1)) / cols;
-  const cardH = Math.max(110, Math.min(140, (def.h - 84 - gap) / 2));
-  const col = i % cols, row = Math.floor(i / cols);
-  return {x: def.x + 16 + col * (cardW + gap), y: def.y + 70 + row * (cardH + gap), w: cardW, h: cardH};
+  const g = def.grid || shopGrid(def.w, 120);
+  const col = i % g.cols, row = Math.floor(i / g.cols);
+  return {x: def.x + SHOP_PAD + col * (g.cardW + SHOP_GAP), y: def.y + SHOP_HEAD + row * (g.cardH + SHOP_GAP), w: g.cardW, h: g.cardH};
 }
 
 function getShopButtons(){
@@ -1903,7 +1931,7 @@ function inRect(mx, my, r){ return mx >= r.x && mx <= r.x + r.w && my >= r.y && 
 
 function drawButton(r, label, {primary=false, disabled=false}={}){
   const hover = !disabled && inRect(input.mx, input.my, r);
-  const lift = hover ? -2 : 0;
+  const lift = 0;   // no hover lift: drawn button == click rect
   ctx.save();
   ctx.fillStyle = palette.outline;
   roundRect(r.x, r.y + 4, r.w, r.h, 10); ctx.fill();          // drop edge
@@ -1943,9 +1971,7 @@ function drawUpgradeSelector(){
     const c = L.cards[i];
     const hover = inRect(input.mx, input.my, c);
     anyHover = anyHover || hover;
-    const lift = hover ? -4 : 0;
-    ctx.save();
-    ctx.translate(0, lift);
+    ctx.save();   // no hover lift: the drawn card always matches its click rect
     panel(c.x, c.y, c.w, c.h, hover ? '#2a4259' : palette.uiMid, hover ? choice.tier.color : palette.outline, 12);
     // tier band
     ctx.fillStyle = choice.tier.color;
@@ -2000,18 +2026,61 @@ function drawShop(){
 }
 
 function getShopPanels(){
-  const panelH = Math.min(400, H*0.74);
-  const py = (H - panelH)/2 - 20 + (1-(state.shopAnim||1))*50;
+  const slide = (1-(state.shopAnim||1))*50;
+  const BUTTONS_H = 84;                              // Reroll/Next buttons + hint line under the panels
+  const avail = H - BUTTONS_H - 12;
+  const pickCardH = (rows, panels) => {               // taller cards when there is room
+    const tall = panels * (SHOP_HEAD + rows * 136 + (rows - 1) * SHOP_GAP + SHOP_PAD) + (panels - 1) * 14;
+    return tall <= avail ? 136 : 120;
+  };
   if(state.coop && players[1]){
     const gap = 14;
-    const panelW = Math.min(580, (W - gap*3) / 2);
+    const sideW = Math.min(580, (W - gap*3) / 2);
+    const side = shopGrid(sideW, 120);
+    const stackW = Math.min(800, W*0.92);
+    const stack = shopGrid(stackW, 120);
+    const stackH = stack.h * 2 + gap;
+    const useStack = side.cols < 2 || (side.h > avail && stackH <= avail) || (side.cols < 3 && stack.cols === 3 && stackH <= avail);
+    if(useStack){
+      const g = shopGrid(stackW, pickCardH(stack.rows, 2));
+      const y0 = Math.max(6, (avail - (g.h * 2 + gap)) / 2) + slide;
+      const x = (W - stackW) / 2;
+      return [
+        {x, y: y0, w: stackW, h: g.h, grid: g, player: players[0], title: 'P1 SHOP'},
+        {x, y: y0 + g.h + gap, w: stackW, h: g.h, grid: g, player: players[1], title: 'P2 SHOP'},
+      ];
+    }
+    const g = shopGrid(sideW, pickCardH(side.rows, 1));
+    const py = Math.max(6, (avail - g.h) / 2) + slide;
     return [
-      {x: W/2 - gap/2 - panelW, y: py, w: panelW, h: panelH, player: players[0], title: 'P1 SHOP'},
-      {x: W/2 + gap/2, y: py, w: panelW, h: panelH, player: players[1], title: 'P2 SHOP'},
+      {x: W/2 - gap/2 - sideW, y: py, w: sideW, h: g.h, grid: g, player: players[0], title: 'P1 SHOP'},
+      {x: W/2 + gap/2, y: py, w: sideW, h: g.h, grid: g, player: players[1], title: 'P2 SHOP'},
     ];
   }
   const panelW = Math.min(800, W*0.92);
-  return [{x: (W-panelW)/2, y: py, w: panelW, h: panelH, player: players[0], title: 'SHOP'}];
+  const g = shopGrid(panelW, pickCardH(shopGrid(panelW, 120).rows, 1));
+  const py = Math.max(6, (avail - g.h) / 2) + slide;
+  return [{x: (W-panelW)/2, y: py, w: panelW, h: g.h, grid: g, player: players[0], title: 'SHOP'}];
+}
+
+// fit text into maxW by trimming with an ellipsis (uses the current ctx.font)
+function fitText(text, maxW){
+  text = String(text);
+  if(maxW <= 0) return '';
+  if(ctx.measureText(text).width <= maxW) return text;
+  let lo = 0, hi = text.length;
+  while(lo < hi){ const mid = (lo + hi + 1) >> 1; if(ctx.measureText(text.slice(0, mid) + '…').width <= maxW) lo = mid; else hi = mid - 1; }
+  return lo > 0 ? text.slice(0, lo) + '…' : '';
+}
+
+// price + lock badge positions inside a card (shared by drawing and the UI tests)
+function getShopBadgeRects(c){
+  const y = c.y + c.h - 32;
+  const priceW = Math.min(76, Math.max(52, c.w * 0.45));
+  const price = {x: c.x + 20, y, w: priceW, h: 22};
+  const lockW = Math.max(40, Math.min(48, c.x + c.w - 12 - (price.x + price.w + 6)));
+  const lock = {x: c.x + c.w - 12 - lockW, y, w: lockW, h: 22};
+  return {price, lock};
 }
 
 function drawShopPanel(def){
@@ -2022,7 +2091,7 @@ function drawShopPanel(def){
   ctx.fillText(title, px+18, py+32);
   ctx.font = uiFont(12);
   ctx.fillStyle = palette.textLight;
-  ctx.fillText(`Wave ${state.wave} cleared`, px+18, py+52);
+  ctx.fillText(fitText(`Wave ${state.wave} cleared`, panelW - 130), px+18, py+52);
   // wallet
   ctx.font = uiFont(16, 'bold');
   const coinsTxt = `${p.currency}`;
@@ -2041,8 +2110,7 @@ function drawShopPanel(def){
     hoverAny = hoverAny || isHover;
     const it = shop.items[i];
     const locked = !!shop.locked[i];
-    ctx.save();
-    ctx.translate(0, isHover ? -3 : 0);
+    ctx.save();   // no hover lift: the drawn card always matches its click rect
     const rarity = it && it.data ? rarities.find(r=>r.id === (it.rarity || it.data.rarity)) : null;
     const rc = (rarity && rarity.color) || palette.uiMid;
     panel(x, y, cw, ch, isHover ? '#243a50' : palette.uiMid, isHover ? rc : (i === shop.selection ? 'rgba(72,224,194,0.55)' : palette.outline), 12);
@@ -2056,16 +2124,13 @@ function drawShopPanel(def){
     // rarity stripe + label
     ctx.fillStyle = rc;
     roundRect(x + 8, y + 8, 5, ch - 16, 2.5); ctx.fill();
-    ctx.font = uiFont(13, 'bold');
+    ctx.font = uiFont(cw < 190 ? 12 : 13, 'bold');
     ctx.fillStyle = palette.text;
-    ctx.save();
-    ctx.beginPath(); ctx.rect(x + 18, y, cw - 26, ch); ctx.clip();
-    ctx.fillText(it.data.name, x+20, y+24);
-    ctx.restore();
+    ctx.fillText(fitText(it.data.name, cw - 30), x+20, y+24);
     ctx.font = uiFont(9, 'bold');
     ctx.fillStyle = rc;
     const rname = (it.rarity || it.data.rarity) === 'red' ? 'LEGENDARY' : String(it.rarity || it.data.rarity).toUpperCase();
-    ctx.fillText(`${rname} ${it.type === 'weapon' ? 'WEAPON' : 'ITEM'}`, x+20, y+37);
+    ctx.fillText(fitText(`${rname} ${it.type === 'weapon' ? 'WEAPON' : 'ITEM'}`, cw - 30), x+20, y+37);
 
     if(it.type === 'weapon'){
       ctx.fillStyle = 'rgba(190,215,255,0.16)';
@@ -2074,10 +2139,12 @@ function drawShopPanel(def){
       const wInst = it.preview || (it.preview = createWeaponInstance(it.data, it.rarity || it.data.rarity));
       ctx.font = uiFont(10);
       ctx.fillStyle = palette.textLight;
-      const sx = x + 88;
-      ctx.fillText(`DMG ${wInst.damage}${wInst.pellets ? '×' + wInst.pellets : ''}`, sx, y+54);
-      ctx.fillText(`ROF ${wInst.fireRate.toFixed(2)}s`, sx, y+67);
-      ctx.fillText(`MAG ${wInst.mag}  RLD ${wInst.reload.toFixed(1)}s`, sx, y+80);
+      const sx = x + 86, sw = cw - 94;
+      const lines = [`DMG ${wInst.damage}${wInst.pellets ? '×' + wInst.pellets : ''}`, `ROF ${wInst.fireRate.toFixed(2)}s`];
+      const magTxt = `MAG ${wInst.mag}  RLD ${wInst.reload.toFixed(1)}s`;
+      if(ctx.measureText(magTxt).width <= sw) lines.push(magTxt); else lines.push(`MAG ${wInst.mag}`, `RLD ${wInst.reload.toFixed(1)}s`);
+      const lh = lines.length > 3 ? 10 : 13;
+      lines.forEach((ln, k)=> ctx.fillText(fitText(ln, sw), sx, y + 53 + k * lh));
     } else {
       ctx.fillStyle = 'rgba(190,215,255,0.16)';
       roundRect(x + 20, y + 44, 30, 30, 8); ctx.fill();
@@ -2088,19 +2155,19 @@ function drawShopPanel(def){
     }
     // price badge (green if affordable, gray if not)
     const canAfford = p.currency >= it.price;
-    const bx = x + 20, byy = y + ch - 32;
-    panel(bx, byy, 76, 22, canAfford ? '#2dbba0' : '#2a3a4c', palette.outline, 10, {shadow:false, highlight:false});
+    const B = getShopBadgeRects(c);
+    panel(B.price.x, B.price.y, B.price.w, B.price.h, canAfford ? '#2dbba0' : '#2a3a4c', palette.outline, 10, {shadow:false, highlight:false});
     ctx.font = uiFont(12, 'bold');
     ctx.fillStyle = canAfford ? '#041018' : '#8aa0b8';
     ctx.textAlign = 'center';
-    ctx.fillText(`$${it.price}`, bx + 38, byy + 16);
+    ctx.fillText(`$${it.price}`, B.price.x + B.price.w/2, B.price.y + 16);
     ctx.textAlign = 'start';
-    // lock badge
+    // lock badge: bottom-right, never over the price badge
     if(locked){
-      const lx = x + cw - 60, ly = y + ch - 32;
-      panel(lx, ly, 48, 22, '#ffd166', palette.outline, 10, {shadow:false, highlight:false});
-      ctx.font = uiFont(10, 'bold'); ctx.fillStyle = '#2b1e10';
-      ctx.textAlign = 'center'; ctx.fillText('LOCKED', lx + 24, ly + 15); ctx.textAlign = 'start';
+      const L = B.lock;
+      panel(L.x, L.y, L.w, L.h, '#ffd166', palette.outline, 10, {shadow:false, highlight:false});
+      ctx.font = uiFont(L.w < 48 ? 9 : 10, 'bold'); ctx.fillStyle = '#2b1e10';
+      ctx.textAlign = 'center'; ctx.fillText(L.w < 48 ? 'LOCK' : 'LOCKED', L.x + L.w/2, L.y + 15); ctx.textAlign = 'start';
     }
     ctx.restore();
   }
@@ -2383,7 +2450,7 @@ function draw(){
   drawEffects();
   drawPlayers();
   ctx.restore();
-  drawHUD();
+  if(state.phase !== 'gameover') drawHUD();   // the run-over panels replace the HUD
   drawWaveBanner();
   drawUpgradeSelector();
   drawShop();

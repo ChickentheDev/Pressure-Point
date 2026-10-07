@@ -3,6 +3,9 @@
 ## v0.55 ALPHA — 2026-10-07
 - Pausing now freezes the animation clock, screen shake and the wave banner.
 - The dash cooldown resets when you start a new run.
+- Shop cards are never narrower than 160px: each shop uses 3, 2 or 1 columns to fit, and the two co-op shops stack vertically in tall, narrow windows. Long names and stats are trimmed with an ellipsis, weapon stats wrap onto an extra line when needed, and the LOCKED badge no longer covers the price.
+- Shop cards, level-up cards and buttons no longer lift on hover, so what you see is exactly what you can click.
+- The co-op P2 card sits below the Pause button at every HUD scale, the HUD is hidden on the game-over screen, the weapon card is taller so the ammo text clears its border, and on-screen messages (like "Paused") move off the level-up panel and the shop.
 
 ## v0.54 ALPHA — 2026-10-07
 - Fixed enemies standing on top of the player being impossible to hit. Bullets now use a swept hit test from the player's centre, so point-blank shots land and fast bullets can no longer skip past small enemies.
