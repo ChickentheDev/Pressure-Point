@@ -63,7 +63,10 @@
     const key = [W, H, n, state.coop && players.length > 1].join();
     if(cache && cache.key === key) return cache;
     const narrow = W < 760;
-    const RW = narrow ? 0 : Math.max(200, Math.min(270, Math.round(W * 0.19)));
+    const MIN_CARD_W = 160;                                                  // v0.55 small-window rule: cards never narrower than 160px
+    let RW = narrow ? 0 : Math.max(200, Math.min(270, Math.round(W * 0.19)));
+    // give the right column less room if that lets every card sit in one row at full width
+    if(RW > 200 && (W - 2 * M - RW - G - G * (n - 1)) / n < MIN_CARD_W && (W - 2 * M - 200 - G - G * (n - 1)) / n >= MIN_CARD_W) RW = 200;
     const leftX = M, leftW = W - 2 * M - (RW ? RW + G : 0);
     const T = Math.max(32, Math.min(56, Math.floor(Math.min(W, H) / 14)));   // item/weapon tile size
     const BH = 30 + 2 * T + 6 + 4;                                           // items + weapons block
@@ -71,7 +74,7 @@
     const goH = 52, badgeH = 34;
     const tailH = narrow ? Math.max(260, Math.min(330, H * 0.3)) : 0;        // narrow: stats + Go under the grids
     let cols = 2;
-    for(const c of [n, 3, 2]){ if(c <= n && (leftW - G * (c - 1)) / c >= 150){ cols = c; break; } }
+    for(const c of [n, 3, 2]){ if(c <= n && (leftW - G * (c - 1)) / c >= MIN_CARD_W){ cols = c; break; } }
     const rows = Math.ceil(n / cols);
     const cardW = Math.min(220, (leftW - G * (cols - 1)) / cols);
     // Everything stacks top-down with tight gaps (like the reference). Cards keep a card-like shape

@@ -39,8 +39,10 @@ resize();
 
 // Input handling (keyboard + mouse)
 const input = {keys:{}, mx: W/2, my: H/2, mouseDown:false, lastMove:0};
-window.addEventListener('keydown', e=>{ if(e.key === 'Tab') e.preventDefault(); input.keys[e.key.toLowerCase()] = true; });
-window.addEventListener('keyup', e=>{ input.keys[e.key.toLowerCase()] = false; });
+// Space is the fire key in game: stop it from scrolling or activating a focused button (e.g. Pause)
+const inGame = () => typeof state !== 'undefined' && state.phase !== 'menu' && (!menuEl || menuEl.style.display === 'none');
+window.addEventListener('keydown', e=>{ if(e.key === 'Tab' || (e.key === ' ' && inGame())) e.preventDefault(); input.keys[e.key.toLowerCase()] = true; });
+window.addEventListener('keyup', e=>{ if(e.key === ' ' && inGame()) e.preventDefault(); input.keys[e.key.toLowerCase()] = false; });
 canvas.addEventListener('mousemove', e=>{ const r = canvas.getBoundingClientRect(); input.mx = e.clientX - r.left; input.my = e.clientY - r.top; input.lastMove = performance.now()/1000; });
 canvas.addEventListener('mousedown', e=>{ input.mouseDown = true; });
 window.addEventListener('mouseup', e=>{ input.mouseDown = false; });
@@ -226,6 +228,19 @@ function panel(x, y, w, h, fill=palette.uiLight, stroke=palette.outline, r=10, o
 
 function flashMsg(text, dur=1.6){
   msgEl.textContent = text;
+  // keep the toast off the level-up panel and the shop (default CSS spot is 24% from the bottom)
+  msgEl.style.top = ''; msgEl.style.bottom = '';
+  if(state.phase === 'upgrade'){
+    const L = getUpgradeLayout();
+    const below = L.py + L.panelH + 12;
+    if(below + 44 <= H){ msgEl.style.top = below + 'px'; msgEl.style.bottom = 'auto'; }
+    else { msgEl.style.top = '8px'; msgEl.style.bottom = 'auto'; }
+  } else if(state.phase === 'shop'){
+    // [brad-ui] v0.56 shop: just under the title/wallet row so the toast never hides the wallet or REROLL
+    let top = 8;
+    if(window.ShopUI && ShopUI.layout){ const L = ShopUI.layout(); if(L && L.header) top = Math.round(L.header.y + L.header.h + 2); }
+    msgEl.style.top = top + 'px'; msgEl.style.bottom = 'auto';
+  }
   msgEl.style.display = 'block';
   setTimeout(()=>{ msgEl.style.display = 'none'; }, dur*1000);
 }
@@ -402,7 +417,7 @@ function createPlayer(x,y){ return {
   ownedWeapons: [], weaponIndex:0, ammoInMag:12, reloading:0, kick:0,
   currency:0, id: Math.random().toString(36).slice(2,8), hitFlash:0,
   items: [], dead: false, pierceBonus:0,
-  dashTimer:0, dashCooldown:0, dashDir:0, iFrames:0,
+  dashTimer:0, dashCooldown:0, dashDir:0, iFrames:0, vx:0, vy:0,
   classId: 'ironheart', className: 'Ironheart',
   lastHitTime:0, hitCooldown:0.5,
 }; }
@@ -427,7 +442,7 @@ const rarities = [
 
 const weapons = [
   {id:'pistol', name:'Cobalt Pistol', type:'sidearm', rarity:'common', fireRate:0.22, bulletSpeed:700, spread:0.05, damage:14, mag:12, reload:1.1, recoil:0.8, color:'#8be9ff'},
-  {id:'harpoon', name:'Harpoon Gun', type:'rifle', rarity:'rare', fireRate:0.45, bulletSpeed:900, spread:0.0, damage:28, mag:4, reload:1.6, recoil:1.2, color:'#9be7ff', pierce:2},
+  {id:'harpoon', name:'Harpoon Gun', type:'rifle', rarity:'rare', fireRate:0.45, bulletSpeed:900, spread:0.0, damage:28, mag:4, reload:1.6, recoil:1.2, color:'#9be7ff', pierce:2, rehit:true},   // rehit: a harpoon can hit the same enemy again with its pierce (pre-v0.54 behaviour)
   {id:'rifle', name:'Pulse Rifle', type:'rifle', rarity:'rare', fireRate:0.12, bulletSpeed:860, spread:0.02, damage:12, mag:30, reload:1.4, recoil:1.1, color:'#9bff7b'},
   {id:'shotgun', name:'Grav Shotgun', type:'shotgun', rarity:'rare', fireRate:0.6, bulletSpeed:520, spread:0.5, damage:10, pellets:7, mag:6, reload:1.8, recoil:1.4, color:'#ffd166'},
   {id:'heavy', name:'Titan Cannon', type:'heavy', rarity:'red', fireRate:0.9, bulletSpeed:520, spread:0.08, damage:34, mag:4, reload:2.3, recoil:1.8, color:'#ff7b7b', explosive:true, elemental:'fire'},
@@ -552,7 +567,7 @@ const classes = classArchetypes.map(a=>({
 
 // End-of-wave stat upgrades
 const upgradeStats = [
-  {id:'atkspd', name:'Attack Speed', apply:(p, mult)=>{ p.reloadSpeed *= mult; }},
+  {id:'atkspd', name:'Attack Speed', apply:(p, mult)=>{ p.reloadSpeed /= mult; }},   // reloadSpeed scales shot delay and reload time: lower = faster
   {id:'baseDmg', name:'Base Damage', apply:(p, mult)=>{ p.damageBonus += Math.floor((mult-1)*10); }},
   {id:'hp', name:'Max HP', apply:(p, mult)=>{ p.baseMaxHp += Math.max(4, Math.round((mult-1)*40)); p.hp = p.baseMaxHp; }},
   {id:'lifesteal', name:'Life Steal', apply:(p, mult)=>{ p.lifesteal = Math.min(0.5, p.lifesteal + (mult-1)*0.05); }},
@@ -687,9 +702,11 @@ function applyUpgradeChoice(choice){
 
 function rand(min,max){return Math.random()*(max-min)+min}
 
+// Screen shake (toned down in v0.55): every request is scaled, the total is capped and decays faster.
+const SHAKE_SCALE = 0.6, SHAKE_MAX = 8, SHAKE_DECAY = 20, SHAKE_PX_PER_UNIT = 0.35;
 function addShake(amount){
   if(!settings.screenShake) return;
-  camera.shake = Math.min(10, camera.shake + amount);
+  camera.shake = Math.min(SHAKE_MAX, camera.shake + amount * SHAKE_SCALE);
 }
 
 function updateCamera(dt){
@@ -697,9 +714,9 @@ function updateCamera(dt){
     camera.shake = 0; camera.x = 0; camera.y = 0;
     return;
   }
-  camera.shake = Math.max(0, camera.shake - dt * 16);
+  camera.shake = Math.max(0, camera.shake - dt * SHAKE_DECAY);
   const a = Math.random() * Math.PI * 2;
-  const m = camera.shake * 0.4;
+  const m = camera.shake * SHAKE_PX_PER_UNIT;
   camera.x = Math.cos(a) * m;
   camera.y = Math.sin(a) * m;
 }
@@ -940,6 +957,13 @@ const SEP_OFFSETS = [0,0, -1,-1, 0,-1, 1,-1, -1,0, 1,0, -1,1, 0,1, 1,1];
 const SEP_SPACING = 0.9;        // allow a little overlap so packs still look tight
 const sepGrid = new Map();
 let sepFrame = 0;
+// After a push (separation/knockback): don't let an enemy end up outside [r, W-r] x [r, H-r]. An enemy
+// that was already outside (just spawned off-screen) may stay where it was but isn't pushed further out.
+function keepInArena(e, oldX, oldY){
+  const r = e.r || 0;
+  if(e.x < r) e.x = Math.max(e.x, Math.min(oldX, r)); else if(e.x > W - r) e.x = Math.min(e.x, Math.max(oldX, W - r));
+  if(e.y < r) e.y = Math.max(e.y, Math.min(oldY, r)); else if(e.y > H - r) e.y = Math.min(e.y, Math.max(oldY, H - r));
+}
 function separateEnemies(dt){
   const n = enemies.length;
   if(n < 2) return;
@@ -976,17 +1000,75 @@ function separateEnemies(dt){
         const push = (min - d) * k * 0.5;
         const ma = a.isBoss ? 0.1 : 1, mb = b.isBoss ? 0.1 : 1;
         const wa = ma / (ma + mb) * 2, wb = mb / (ma + mb) * 2;   // the lighter one moves more
+        const ax = a.x, ay = a.y, bx0 = b.x, by0 = b.y;
         a.x -= dx * push * wb; a.y -= dy * push * wb;
         b.x += dx * push * wa; b.y += dy * push * wa;
+        keepInArena(a, ax, ay); keepInArena(b, bx0, by0);
       }
     }
   }
 }
 
+// Safety net: an entity with a NaN/Infinity position can't be hit or collide and would stall a wave.
+// Enemies with a bad position are moved back to an arena edge; enemies with bad hp/speed are removed
+// (they still count as spawned, so the wave can finish). Bad bullets are dropped, bad players recentred.
+const nonFiniteStats = { enemiesRepaired: 0, enemiesRemoved: 0, bullets: 0, players: 0 };
+function repairNonFinite(){
+  const fin = Number.isFinite;
+  for(let i=enemies.length-1;i>=0;i--){
+    const e = enemies[i];
+    if(!fin(e.hp) || !fin(e.speed) || !fin(e.r)){ enemies.splice(i,1); nonFiniteStats.enemiesRemoved++; continue; }
+    if(!fin(e.x) || !fin(e.y)){
+      const edge = (Math.random()*4)|0;
+      e.x = edge===0 ? -20 : edge===1 ? W+20 : Math.random()*W;
+      e.y = edge===2 ? -20 : edge===3 ? H+20 : Math.random()*H;
+      e.vx = 0; e.vy = 0;
+      nonFiniteStats.enemiesRepaired++;
+    }
+    if(!fin(e.vx) || !fin(e.vy)){ e.vx = 0; e.vy = 0; }
+  }
+  for(let i=bullets.length-1;i>=0;i--){ const b = bullets[i]; if(!fin(b.x) || !fin(b.y) || !fin(b.vx) || !fin(b.vy)){ bullets.splice(i,1); nonFiniteStats.bullets++; } }
+  for(const p of players){ if(!fin(p.x) || !fin(p.y)){ p.x = W/2; p.y = H/2; nonFiniteStats.players++; } }
+}
+
+// ---- Physics (v0.55). Kept separate from drawing so visual work can merge independently. ----------
+// Player: velocity eases toward the input direction (acceleration) and back to zero (deceleration).
+const PLAYER_ACCEL = 12, PLAYER_DECEL = 16;    // 1/s: higher = snappier (95% of target in ~0.25s / ~0.19s)
+function updatePlayerVelocity(p, dx, dy, dt){
+  const tx = dx * p.baseSpeed, ty = dy * p.baseSpeed;
+  const k = 1 - Math.exp(-((dx || dy) ? PLAYER_ACCEL : PLAYER_DECEL) * dt);
+  p.vx = (p.vx || 0) + (tx - (p.vx || 0)) * k;
+  p.vy = (p.vy || 0) + (ty - (p.vy || 0)) * k;
+  if(Math.abs(p.vx) < 0.5 && !dx) p.vx = 0;
+  if(Math.abs(p.vy) < 0.5 && !dy) p.vy = 0;
+}
+// Enemies: bullets add a knockback velocity proportional to damage / mass; friction bleeds it off.
+// Tuned so sustained fire pushes back at well under a quarter of enemy run speed (balance stays close).
+const KNOCKBACK_PER_DMG = 1.6, KNOCKBACK_MAX = 220, KNOCKBACK_FRICTION = 8;
+function enemyMass(e){ const m = (e.r / 12) ** 2; return e.isBoss ? m * 6 : m; }
+function applyKnockback(e, dirX, dirY, damage){
+  const len = Math.hypot(dirX, dirY);
+  if(!(len > 0) || !(damage > 0)) return;
+  const imp = damage * KNOCKBACK_PER_DMG / enemyMass(e);
+  e.kx = (e.kx || 0) + dirX / len * imp;
+  e.ky = (e.ky || 0) + dirY / len * imp;
+  const sp = Math.hypot(e.kx, e.ky);
+  if(sp > KNOCKBACK_MAX){ e.kx *= KNOCKBACK_MAX / sp; e.ky *= KNOCKBACK_MAX / sp; }
+}
+function integrateEnemyKnockback(e, dt){
+  if(!e.kx && !e.ky) return;
+  const ox = e.x, oy = e.y;
+  e.x += e.kx * dt; e.y += e.ky * dt;
+  keepInArena(e, ox, oy);
+  const f = Math.exp(-KNOCKBACK_FRICTION * dt);
+  e.kx *= f; e.ky *= f;
+  if(Math.abs(e.kx) < 1 && Math.abs(e.ky) < 1){ e.kx = 0; e.ky = 0; }
+}
+
 function getNearestEnemyTo(x,y){ let best=null, bd=Infinity; for(const e of enemies){ const d=(e.x-x)**2 + (e.y-y)**2; if(d<bd){ bd=d; best=e; } } return best; }
 function getNearestTreeTo(x,y){ let best=null, bd=Infinity; for(const tr of trees){ const d=(tr.x-x)**2 + (tr.y-y)**2; if(d<bd){ bd=d; best=tr; } } return best; }
 
-function fireWeaponFor(player, time, target){ if(!target) return; if(player.reloading>0) return; const w = getWeaponFor(player); if(w.overheated) return; const fireRate = w.fireRate * player.reloadSpeed; if(time - (w.last||0) < fireRate) return; if(player.ammoInMag <= 0){ player.reloading = w.reload; audio.beep(240,0.08,'sawtooth',0.04); return; }
+function fireWeaponFor(player, time, target){ if(!target) return; if(player.reloading>0) return; const w = getWeaponFor(player); if(w.overheated) return; const fireRate = w.fireRate * player.reloadSpeed; if(time - (w.last||0) < fireRate) return; if(player.ammoInMag <= 0){ player.reloading = w.reload * player.reloadSpeed; audio.beep(240,0.08,'sawtooth',0.04); return; }
   w.last = time; player.ammoInMag -= 1; player.kick = Math.max(player.kick, 0.08 * w.recoil);
   if(w.overheatMax){
     w.heat += w.overheatPerShot;
@@ -1010,7 +1092,7 @@ function fireWeaponFor(player, time, target){ if(!target) return; if(player.relo
     const elemental = w.elemental || (w.explosive ? 'fire' : null);
     // px/py = previous position for the swept hit test. A new bullet starts its sweep at the player's
     // centre, so an enemy overlapping the player (inside the muzzle offset) still gets hit.
-    bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, px: player.x, py: player.y, fresh: true, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, pierce: (w.pierce||0) + (player.pierceBonus||0) });
+    bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, px: player.x, py: player.y, fresh: true, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, pierce: (w.pierce||0) + (player.pierceBonus||0), rehit: !!w.rehit });
   }
   addParticle({x:player.x + Math.cos(angle)*16, y:player.y + Math.sin(angle)*16, life:0.15, r: w.type==='heavy'?18:w.type==='shotgun'?14:10, color:w.color});
   if(audio.ctx && time - (w.lastSound||0) > 0.06){ w.lastSound = time; const freq = w.type==='heavy'?120:w.type==='shotgun'?180:w.type==='rifle'?240:320; audio.beep(freq,0.04,'square',0.03); }
@@ -1101,6 +1183,7 @@ renderDangerButtons();
 renderClassButtons();
 if(pauseBtn){
   pauseBtn.addEventListener('click', ()=>{
+    pauseBtn.blur();   // so Space/Enter don't re-trigger it later
     if(state.phase === 'menu' || state.phase === 'gameover') return;
     togglePause();
   });
@@ -1115,6 +1198,7 @@ startBtn.addEventListener('click', ()=>{
   const chosenClass = classes.find(x=>x.id === state.classId) || classes[0];
   applyClassToPlayer(players[0], chosenClass);
   if(players[1]) applyClassToPlayer(players[1], chosenClass);
+  for(const p of players){ p.dashCooldown = 0; p.dashTimer = 0; p.iFrames = 0; p.vx = 0; p.vy = 0; }   // fresh dash + no leftover momentum each run
   menuEl.style.display = 'none';
   if(pauseBtn){ pauseBtn.style.display = 'block'; pauseBtn.textContent = 'Pause'; }
   state.phase = 'wave';
@@ -1188,9 +1272,6 @@ canvas.addEventListener('click', (e)=>{
 // Core update loop
 function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover') return;
   if(menuEl && menuEl.style.display !== 'none') return;
-  state.animTime += dt;
-  updateCamera(dt);
-  if(state.waveBanner > 0) state.waveBanner = Math.max(0, state.waveBanner - dt);
   if(input.keys['p']){
     input.keys['p'] = false;
     togglePause();
@@ -1201,6 +1282,10 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
     flashMsg(audio.muted ? 'Audio muted (M)' : 'Audio unmuted', 1.1);
   }
   if(state.paused) return;
+  // animation clock, camera shake and the wave banner stop while paused
+  state.animTime += dt;
+  updateCamera(dt);
+  if(state.waveBanner > 0) state.waveBanner = Math.max(0, state.waveBanner - dt);
   // players movement
   for(let idx=0; idx<players.length; idx++){
     const p = players[idx]; if(p.dead) continue; let dx=0, dy=0;
@@ -1240,10 +1325,14 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
       const speed = p.baseSpeed * 3.2;
       p.x += Math.cos(p.dashDir) * speed * dt;
       p.y += Math.sin(p.dashDir) * speed * dt;
+      // leave the dash carrying normal run speed in the dash direction
+      p.vx = Math.cos(p.dashDir) * p.baseSpeed; p.vy = Math.sin(p.dashDir) * p.baseSpeed;
     } else {
-      p.x += dx * p.baseSpeed * dt; p.y += dy * p.baseSpeed * dt;
+      updatePlayerVelocity(p, dx, dy, dt);
+      p.x += p.vx * dt; p.y += p.vy * dt;
     }
-    p.x = Math.max(0, Math.min(W, p.x)); p.y = Math.max(0, Math.min(H, p.y));
+    if(p.x < 0 || p.x > W){ p.x = Math.max(0, Math.min(W, p.x)); p.vx = 0; }
+    if(p.y < 0 || p.y > H){ p.y = Math.max(0, Math.min(H, p.y)); p.vy = 0; }
     if(p.reloading > 0){ p.reloading -= dt; if(p.reloading <= 0){ refreshAmmoFor(p); audio.beep(320,0.05,'triangle',0.04); } }
     if(p.kick > 0) p.kick -= dt * 2.5; if(p.hitFlash > 0) p.hitFlash -= dt;
   }
@@ -1337,6 +1426,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
   }
 
   // enemies
+  repairNonFinite();
   for(let i=enemies.length-1;i>=0;i--){ const e=enemies[i]; // choose nearest alive player to chase
     const alivePlayers = players.filter(p=>!p.dead);
     if(alivePlayers.length === 0) continue;
@@ -1361,18 +1451,23 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
     e.vy = Math.sin(ang) * e.speed * slowMult;
     e.x += e.vx * dt;
     e.y += e.vy * dt;
+    integrateEnemyKnockback(e, dt);
 
     // bullets collision (swept: previous -> current bullet position vs enemy radius + bullet radius)
     let killed = false;
     for(let j=bullets.length-1;j>=0;j--){ const b = bullets[j];
           if(b.hits && b.hits.includes(e)) continue;   // a piercing bullet hits each enemy once
+          // rehit weapons (Harpoon): hitting the same enemy again needs the bullet to still be inside it
+          // (the pre-v0.54 point test), so its single-target damage matches the old behaviour
+          if(b.rehit && b.lastHit === e && Math.hypot(b.x - e.x, b.y - e.y) >= e.r + BULLET_HIT_R) continue;
           if(segmentHitsCircle(b.px ?? b.x, b.py ?? b.y, b.x, b.y, e.x, e.y, e.r + BULLET_HIT_R)){
             e.hp -= b.damage;
             e.lastHitBy = b.ownerId;
+            applyKnockback(e, b.vx, b.vy, b.damage);
             e.hitFlash = 0.1; // visual only
             const dealt = Math.max(1, Math.round(Math.min(b.damage, b.damage + e.hp)));
             floatingTexts.push({x:e.x, y:e.y-6, vx:rand(-12,12), vy:-40, life:0.8, text: dealt, color: b.crit ? '#ffd166' : palette.textLight});
-            addShake(b.crit ? 4 : 1.5);
+            addShake(b.crit ? 2 : 0.5);
             // elemental status
             if(b.elemental === 'fire'){
               e.status.burn = Math.max(e.status.burn, 2.5);
@@ -1390,7 +1485,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
               }
             }
             addParticle({x:e.x,y:e.y,life:0.2, r:8, color:'#ffd166'}); const ownerId = b.ownerId;
-            if(b.pierce > 0){ b.pierce--; (b.hits || (b.hits = [])).push(e); } else { bullets.splice(j,1); } if(e.hp <= 0){ // die
+            if(b.pierce > 0){ b.pierce--; if(b.rehit) b.lastHit = e; else (b.hits || (b.hits = [])).push(e); } else { bullets.splice(j,1); } if(e.hp <= 0){ // die
             // reward to owner if available, else nearest player
             killEnemy(i, ownerId); killed = true; break; } }
     }
@@ -1403,8 +1498,8 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
       const d = Math.hypot(p.x - e.x, p.y - e.y);
       if(d < p.r + e.r){
         p.hp -= Math.max(1, (e.dmg - p.armor) * dt);
+        addShake(p.hitFlash > 0 ? 0.3 : 5);   // a kick on first contact, not a constant max shake
         p.hitFlash = 0.12;
-        addShake(6);
         if(p.hp <= 0){
           p.hp = 0;
           p.dead = true;
@@ -1788,6 +1883,16 @@ function drawPlayerCard(p, x, y, w, title, accent){
   ctx.fillText(`${p.currency}`, x + 40, y + 85);
 }
 
+// y (in HUD units) for the P2 card: 8px below the DOM Pause button, measured in canvas pixels
+function hudP2CardY(S){
+  let bottomPx = 62 * S;
+  if(pauseBtn && pauseBtn.style.display !== 'none'){
+    const br = pauseBtn.getBoundingClientRect(), cr = canvas.getBoundingClientRect();
+    if(br.height > 0) bottomPx = br.bottom - cr.top + 8;
+  }
+  return Math.max(62, bottomPx / S);
+}
+
 function drawHUD(){
   const p = players[0];
   const S = hudScale();
@@ -1824,12 +1929,8 @@ function drawHUD(){
   }
 
   // --- top-right: player 2 card (below the DOM pause button)
-  // [brad-ui] (b) keep it clear of the DOM Pause button at every HUD scale (0.8 at 800x600 overlapped)
-  if(players[1]){
-    let p2y = 62;
-    if(pauseBtn && pauseBtn.style.display !== 'none'){ const pb = pauseBtn.getBoundingClientRect(); if(pb.height) p2y = Math.max(p2y, (pb.bottom + 10) / S); }
-    drawPlayerCard(players[1], VW - 262, p2y, 250, 'PLAYER 2', '#ff6b6b');
-  }
+  // [brad-ui] (b) P2 card below the DOM Pause button at every HUD scale (Greg's hudP2CardY)
+  if(players[1]) drawPlayerCard(players[1], VW - 262, hudP2CardY(S), 250, 'PLAYER 2', '#ff6b6b');
 
   // --- bottom-left: weapon + ammo, dash
   const w = getWeaponFor(p);
@@ -1852,7 +1953,8 @@ function drawHUD(){
   if(!w.melee){
     const magMax = Math.max(1, (w.mag||0) + p.magBonus);
     if(p.reloading > 0){
-      drawBar(88, by + 32, 160, 10, 1 - p.reloading / Math.max(0.01, w.reload), '#ffd166', '#ffb44c', '');
+      // [brad-ui] reload bar fills against the effective reload time (fireWeaponFor sets reloading = w.reload * reloadSpeed)
+      drawBar(88, by + 32, 160, 10, 1 - p.reloading / Math.max(0.01, w.reload * (p.reloadSpeed || 1)), '#ffd166', '#ffb44c', '');
       ctx.font = uiFont(10, 'bold'); ctx.fillStyle = '#ffd166'; ctx.fillText('RELOADING', 88, by + 53);
     } else {
       drawBar(88, by + 32, 160, 10, p.ammoInMag / magMax, palette.uiAccent, palette.uiGreen, '');
@@ -1904,7 +2006,7 @@ function inRect(mx, my, r){ return mx >= r.x && mx <= r.x + r.w && my >= r.y && 
 
 function drawButton(r, label, {primary=false, disabled=false}={}){
   const hover = !disabled && inRect(input.mx, input.my, r);
-  const lift = hover ? -2 : 0;
+  const lift = 0;   // no hover lift: drawn button == click rect
   ctx.save();
   ctx.fillStyle = palette.outline;
   roundRect(r.x, r.y + 4, r.w, r.h, 10); ctx.fill();          // drop edge

@@ -16,6 +16,25 @@
 - The HUD and wave banner are no longer drawn over the game-over screen or the shop, and the Pause button is hidden in the shop.
 - The weapon card is a little taller, so the ammo count no longer touches its bottom border.
 - Pausing during level-up shows the PAUSED box above the level-up panel, and the pause/mute toast now appears near the bottom of the screen instead of over the panel.
+- The v0.56 shop replaces the v0.55 shop layout but keeps its small-window rules: cards are never narrower than 160px (6 across in wide windows, otherwise 3 or 2 per row), names and type lines wrap or shrink instead of being cut off, and the Lock button never covers the price.
+- The HUD reload bar now fills against your actual reload time, so with faster reloads it starts empty instead of partly filled.
+
+## v0.55 ALPHA — 2026-10-07
+- The "wave never completed" test runs were not a game stall and not caused by v0.54: v0.53 fails the same runs. The test harness ran out of damage because it never bought anything and the Attack Speed upgrade it picked actually slowed fire (fixed below). The harness now buys weapons and damage items, picks damage upgrades, moves the player at its real speed, and only reports a stall when enemies are on the field and none loses HP for 10 seconds.
+- Added a safety net: an enemy with a broken (NaN) position is moved back to the arena edge, an enemy with broken health is removed so the wave can still finish, and broken bullets are dropped.
+- Smoother movement: the player now accelerates up to full speed in about a quarter of a second and glides briefly to a stop instead of starting and stopping instantly. Leaving a dash keeps your momentum.
+- Enemy knockback: hits push enemies back based on damage and enemy size (small runners move most, bosses barely move), and the push fades out with friction. Sustained fire only slows a charging enemy a little (a runner reaches a Flamethrower user in about 1.75s instead of 1.4s), so balance stays close.
+- Screen shake is toned down: all shake is scaled to 60%, capped lower and fades faster, bullet hits shake less, and touching an enemy gives one kick instead of maximum shake every frame.
+- Fixed the Attack Speed upgrade slowing your fire rate instead of speeding it up. Reload time now also uses your fire-rate/reload stat (classes and items that promise faster reloads now deliver).
+- Enemies pushed apart by the crowd or knocked back by hits can no longer be shoved outside the arena (before, a crowd in a corner pushed many enemies off-screen).
+- Holding Space to fire no longer also presses the Pause button after you have clicked it.
+- The Harpoon can hit the same enemy again with its pierce, as it did before v0.54, so its single-target damage is back (v0.54 had cut it to about a third against the boss).
+- Docs: README controls corrected (Dash is `Shift` for P1 and `U` for P2, not `Space`); the `F`/`H`/`R` and weapon-switch keys are marked as planned; Auto Shoot / Mouse Aim behaviour documented; added the missing v0.51 changelog entry.
+- Pausing now freezes the animation clock, screen shake and the wave banner.
+- The dash cooldown resets when you start a new run.
+- Shop cards are never narrower than 160px: each shop uses 3, 2 or 1 columns to fit, and the two co-op shops stack vertically in tall, narrow windows. Long names and stats are trimmed with an ellipsis, weapon stats wrap onto an extra line when needed, and the LOCKED badge no longer covers the price.
+- Shop cards, level-up cards and buttons no longer lift on hover, so what you see is exactly what you can click.
+- The co-op P2 card sits below the Pause button at every HUD scale, the HUD is hidden on the game-over screen, the weapon card is taller so the ammo text clears its border, and on-screen messages (like "Paused") move off the level-up panel and the shop.
 
 ## v0.54 ALPHA — 2026-10-07
 - Fixed enemies standing on top of the player being impossible to hit. Bullets now use a swept hit test from the player's centre, so point-blank shots land and fast bullets can no longer skip past small enemies.
@@ -26,6 +45,7 @@
 - Opening `Index.html` directly (file://) or in the desktop app no longer loads the WASM loader, which removes the CORS console error.
 - Fixed Auto Shoot off: you now fire only while holding the mouse button (or Space), instead of firing when the mouse moves and not when you click.
 - Fixed Mouse Aim off being ignored: auto-aim now always targets the nearest enemy, whatever the mouse does.
+- With Mouse Aim on, you aim at the cursor while the mouse is moving or the button is held (otherwise auto-aim picks the nearest enemy). With Auto Shoot on, moving the mouse makes you fire at the cursor.
 - Piercing bullets hit each enemy once and carry on to the next one instead of spending their pierce on the same enemy.
 
 ## v0.53 ALPHA — 2026-10-07
@@ -39,6 +59,13 @@
 - Fixed the game freezing mid-wave (often around wave 7) when an enemy was killed by burn or shock damage instead of a bullet. Those enemies were never removed, and drawing their negative-width health bar crashed the game loop.
 - Enemies killed by burn or shock now die normally and reward the player who last hit them.
 - Rounded UI boxes can no longer crash the renderer when given a negative size.
+
+## v0.51 ALPHA — 2026-03-02
+- Balance: improved shop economy (better reroll costs), stronger luck scaling, smoother difficulty progression.
+- Bug fixes: object pooling for memory management, safer collision detection, dash cooldown sync fix.
+- UI/UX: FPS counter (`F`), keyboard shortcuts help (`H`), better visual feedback and critical-hit effects.
+- Performance: object pooling to cut garbage collection, steadier frame rate, faster collision checks.
+- Note: these changes ship as `game-improvements.js` (see `IMPROVEMENTS.md` and `INTEGRATION_EXAMPLE.js`); `Index.html` does not load that file yet, so the `F` and `H` keys don't work in the game.
 
 ## v0.50 ALPHA — 2026-02-14
 - Swapped to a teal/blue neon menu color scheme.
