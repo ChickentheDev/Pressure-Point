@@ -39,8 +39,10 @@ resize();
 
 // Input handling (keyboard + mouse)
 const input = {keys:{}, mx: W/2, my: H/2, mouseDown:false, lastMove:0};
-window.addEventListener('keydown', e=>{ if(e.key === 'Tab') e.preventDefault(); input.keys[e.key.toLowerCase()] = true; });
-window.addEventListener('keyup', e=>{ input.keys[e.key.toLowerCase()] = false; });
+// Space is the fire key in game: stop it from scrolling or activating a focused button (e.g. Pause)
+const inGame = () => typeof state !== 'undefined' && state.phase !== 'menu' && (!menuEl || menuEl.style.display === 'none');
+window.addEventListener('keydown', e=>{ if(e.key === 'Tab' || (e.key === ' ' && inGame())) e.preventDefault(); input.keys[e.key.toLowerCase()] = true; });
+window.addEventListener('keyup', e=>{ if(e.key === ' ' && inGame()) e.preventDefault(); input.keys[e.key.toLowerCase()] = false; });
 canvas.addEventListener('mousemove', e=>{ const r = canvas.getBoundingClientRect(); input.mx = e.clientX - r.left; input.my = e.clientY - r.top; input.lastMove = performance.now()/1000; });
 canvas.addEventListener('mousedown', e=>{ input.mouseDown = true; });
 window.addEventListener('mouseup', e=>{ input.mouseDown = false; });
@@ -61,52 +63,97 @@ const palette = {
   textLight: '#c7dcff',
 };
 
-const weaponImageFiles = {
-  pistol: 'CobaltPistol.png',
-  shotgun: 'Shotgun.png',
-  blade: 'ArcBlade.png',
-  smg: 'ViperSMG.png',
-  rifle: 'Pulserifle.png',
-  heavy: 'TitanCannon.png',
-  rpg: 'RPG.png',
-  minigun: 'Minigun.png',
+// ---- Sprites -------------------------------------------------------------
+// crop = opaque bounding box inside the PNG (measured offline) so every sprite is
+// scaled by what is actually drawn, not by its transparent padding.
+// pixel = true -> nearest-neighbour scaling (pixel art); false -> smooth downscale (hi-res art).
+const SPRITE_DEFS = {
+  playerUp:    {src:'PlayerUp.png',     crop:[14,10,34,46], pixel:true},
+  playerDown:  {src:'PlayerDown.png',   crop:[14,10,34,46], pixel:true},
+  playerSide:  {src:'PlayerSide.png',   crop:[20,10,22,42], pixel:true},
+  enemyLight:  {src:'EnemyLight.png',   crop:[3,1,31,37],   pixel:true},
+  tree:        {src:'Tree.png',         crop:[2,12,46,52],  pixel:true},
+  map:         {src:'Map.png',          crop:[0,0,512,512], pixel:true},
+  w_pistol:    {src:'CobaltPistol.png', crop:[69,279,893,480], pixel:false},
+  w_shotgun:   {src:'GravShotgun.png',  crop:[80,88,345,310],  pixel:false, fallback:'w_shotgunAlt'},
+  w_shotgunAlt:{src:'Shotgun.png',      crop:[46,25,147,169],  pixel:false},
+  w_blade:     {src:'ArcBlade.png',     crop:[103,52,283,382], pixel:false},
+  w_smg:       {src:'ViperSMG.png',     crop:[32,95,441,248],  pixel:false},
+  w_rifle:     {src:'Pulserifle.png',   crop:[0,8,127,137],    pixel:false},
+  w_heavy:     {src:'TitanCannon.png',  crop:[23,26,21,6],     pixel:true},
+  w_rpg:       {src:'RPG.png',          crop:[17,20,33,10],    pixel:true},
+  w_minigun:   {src:'Minigun.png',      crop:[2,5,117,108],    pixel:false},
+  w_harpoon:   {src:'Harpoongun.png',   crop:[8,24,48,18],     pixel:true},
+  w_dmr:       {src:'LongshotDMR.png',  crop:[2,24,58,16],     pixel:true},
+  // [brad-fx] v0.56 pixel art for the five weapons that had none (tools/gen_sprites.py)
+  w_flame:     {src:'assets/sprites/weapon_flame.png',   crop:[0,0,32,14], pixel:true},
+  w_arc:       {src:'assets/sprites/weapon_arc.png',     crop:[0,0,30,14], pixel:true},
+  w_rail:      {src:'assets/sprites/weapon_rail.png',    crop:[0,0,38,12], pixel:true},
+  w_mine:      {src:'assets/sprites/weapon_mine.png',    crop:[0,0,28,16], pixel:true},
+  w_sprayer:   {src:'assets/sprites/weapon_sprayer.png', crop:[0,0,30,14], pixel:true},
 };
-const weaponImages = {};
-function loadWeaponImages(){
-  for(const [id, file] of Object.entries(weaponImageFiles)){
-    const img = new Image();
-    img.src = file;
-    weaponImages[id] = img;
-  }
-}
-
-const enemyImages = {};
-function loadEnemyImages(){
+const sprites = {};
+for(const [key, def] of Object.entries(SPRITE_DEFS)){
   const img = new Image();
-  img.src = 'EnemyLight.png';
-  enemyImages.light = img;
+  img.src = def.src;
+  sprites[key] = {...def, img};
 }
-
-const playerImages = {};
-function loadPlayerImages(){
-  const up = new Image();
-  up.src = 'PlayerUp.png';
-  playerImages.up = up;
-  
-  const down = new Image();
-  down.src = 'PlayerDown.png';
-  playerImages.down = down;
-  
-  const side = new Image();
-  side.src = 'PlayerSide.png';
-  playerImages.side = side;
+function spriteReady(key){
+  const s = sprites[key];
+  if(s && s.img.complete && s.img.naturalWidth) return s;
+  if(s && s.fallback) return spriteReady(s.fallback);
+  return null;
 }
+// white silhouettes for hit flashes (drawing a file:// image into a canvas is fine; we never read pixels back)
+const silhouetteCache = {};
+function spriteSilhouette(s){
+  if(silhouetteCache[s.src]) return silhouetteCache[s.src];
+  const c = document.createElement('canvas');
+  c.width = s.img.naturalWidth; c.height = s.img.naturalHeight;
+  const g = c.getContext('2d');
+  g.drawImage(s.img, 0, 0);
+  g.globalCompositeOperation = 'source-in';
+  g.fillStyle = '#ffffff';
+  g.fillRect(0, 0, c.width, c.height);
+  silhouetteCache[s.src] = c;
+  return c;
+}
+// Draw sprite `key` centred at (0,0) of the current transform, scaled so its cropped width is `w`
+// (or height `h` if w is null). Returns false when the sprite isn't available so callers can fall back.
+function drawSprite(key, w, h, opts={}){
+  const s = spriteReady(key);
+  if(!s) return false;
+  const [cx, cy, cw, ch] = s.crop;
+  const dw = w != null ? w : h * cw / ch;
+  const dh = h != null ? h : w * ch / cw;
+  const ox = opts.anchorX != null ? opts.anchorX : 0.5;
+  const oy = opts.anchorY != null ? opts.anchorY : 0.5;
+  ctx.save();
+  ctx.imageSmoothingEnabled = !s.pixel;
+  if(!s.pixel) ctx.imageSmoothingQuality = 'high';
+  if(opts.flipX) ctx.scale(-1, 1);
+  if(opts.flipY) ctx.scale(1, -1);
+  ctx.drawImage(s.img, cx, cy, cw, ch, -dw*ox, -dh*oy, dw, dh);
+  if(opts.flash > 0){
+    ctx.globalAlpha = Math.min(1, opts.flash);
+    ctx.drawImage(spriteSilhouette(s), cx, cy, cw, ch, -dw*ox, -dh*oy, dw, dh);
+  }
+  ctx.restore();
+  return true;
+}
+function drawGroundShadow(x, y, rx, ry){
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.32)';
+  ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+// in-hand length (px) for each weapon sprite, keeps weapons visually consistent regardless of PNG size
+const weaponHandLength = { pistol:20, blade:24, smg:26, rifle:28, shotgun:28, harpoon:30, dmr:32, heavy:30, rpg:32, minigun:30,
+  flame:30, arc:28, rail:36, mine:26, sprayer:28 };   // [brad-fx] last row: v0.56 weapon art
 
-const treeImage = new Image();
-treeImage.src = 'Tree.png';
-
-const mapImage = new Image();
-mapImage.src = 'Map.png';
+// UI font helper so every canvas screen uses the same family
+const UI_FONT = '"Trebuchet MS", "Segoe UI", system-ui, sans-serif';
+function uiFont(size, weight=''){ return `${weight ? weight + ' ' : ''}${size}px ${UI_FONT}`; }
 
 const bgDots = Array.from({length: 90}, () => ({
   x: Math.random(),
@@ -125,7 +172,9 @@ const floatingTexts = [];
 const camera = {shake:0, x:0, y:0};
 
 function roundRect(x, y, w, h, r){
-  const rr = Math.min(r, w/2, h/2);
+  // arcTo() throws IndexSizeError on a negative radius, which would kill the render loop
+  w = Math.max(0, w); h = Math.max(0, h);
+  const rr = Math.max(0, Math.min(r, w/2, h/2));
   ctx.beginPath();
   ctx.moveTo(x+rr, y);
   ctx.arcTo(x+w, y, x+w, y+h, rr);
@@ -179,6 +228,19 @@ function panel(x, y, w, h, fill=palette.uiLight, stroke=palette.outline, r=10, o
 
 function flashMsg(text, dur=1.6){
   msgEl.textContent = text;
+  // keep the toast off the level-up panel and the shop (default CSS spot is 24% from the bottom)
+  msgEl.style.top = ''; msgEl.style.bottom = '';
+  if(state.phase === 'upgrade'){
+    const L = getUpgradeLayout();
+    const below = L.py + L.panelH + 12;
+    if(below + 44 <= H){ msgEl.style.top = below + 'px'; msgEl.style.bottom = 'auto'; }
+    else { msgEl.style.top = '8px'; msgEl.style.bottom = 'auto'; }
+  } else if(state.phase === 'shop'){
+    // [brad-ui] v0.56 shop: just under the title/wallet row so the toast never hides the wallet or REROLL
+    let top = 8;
+    if(window.ShopUI && ShopUI.layout){ const L = ShopUI.layout(); if(L && L.header) top = Math.round(L.header.y + L.header.h + 2); }
+    msgEl.style.top = top + 'px'; msgEl.style.bottom = 'auto';
+  }
   msgEl.style.display = 'block';
   setTimeout(()=>{ msgEl.style.display = 'none'; }, dur*1000);
 }
@@ -243,7 +305,12 @@ const audio = {
 };
 window.addEventListener('mousedown', ()=>{ audio.init(); audio.startBgm(); }, {once:true});
 const stubSystems = { ready: Promise.resolve(), isStub:true };
-function getSystems(){ return window.SystemsWasm || stubSystems; }
+// C# WASM systems (shop roller). Index.html only injects wasm/systems.loader.js over http(s); it loads
+// asynchronously, after this script. Until it has loaded AND accepted our weapon/item data, everything
+// uses the JS implementation, so Start never waits on (or hangs in) the WASM module.
+// status: off (file://, Electron, DISABLE_WASM) | loading | ready | failed
+const wasmSystems = { status: window.__systemsWasmWanted ? 'loading' : 'off', api: null, reason: '' };
+function getSystems(){ return wasmSystems.status === 'ready' ? wasmSystems.api : stubSystems; }
 
 function togglePause(){
   state.paused = !state.paused;
@@ -300,6 +367,14 @@ if(shakeToggle){
   shakeToggle.checked = settings.screenShake;
   shakeToggle.addEventListener('change', ()=>{ settings.screenShake = !!shakeToggle.checked; saveSettings(); });
 }
+if(autoShootToggle){
+  autoShootToggle.checked = settings.autoShoot;
+  autoShootToggle.addEventListener('change', ()=>{ settings.autoShoot = !!autoShootToggle.checked; saveSettings(); });
+}
+if(mouseAimToggle){
+  mouseAimToggle.checked = settings.mouseAim;
+  mouseAimToggle.addEventListener('change', ()=>{ settings.mouseAim = !!mouseAimToggle.checked; saveSettings(); });
+}
 if(gfxPreset){
   gfxPreset.value = settings.graphics;
   if(customGfxRow) customGfxRow.style.display = gfxPreset.value === 'custom' ? 'flex' : 'none';
@@ -342,7 +417,7 @@ function createPlayer(x,y){ return {
   ownedWeapons: [], weaponIndex:0, ammoInMag:12, reloading:0, kick:0,
   currency:0, id: Math.random().toString(36).slice(2,8), hitFlash:0,
   items: [], dead: false, pierceBonus:0,
-  dashTimer:0, dashCooldown:0, dashDir:0, iFrames:0,
+  dashTimer:0, dashCooldown:0, dashDir:0, iFrames:0, vx:0, vy:0,
   classId: 'ironheart', className: 'Ironheart',
   lastHitTime:0, hitCooldown:0.5,
 }; }
@@ -367,7 +442,7 @@ const rarities = [
 
 const weapons = [
   {id:'pistol', name:'Cobalt Pistol', type:'sidearm', rarity:'common', fireRate:0.22, bulletSpeed:700, spread:0.05, damage:14, mag:12, reload:1.1, recoil:0.8, color:'#8be9ff'},
-  {id:'harpoon', name:'Harpoon Gun', type:'rifle', rarity:'rare', fireRate:0.45, bulletSpeed:900, spread:0.0, damage:28, mag:4, reload:1.6, recoil:1.2, color:'#9be7ff', pierce:2},
+  {id:'harpoon', name:'Harpoon Gun', type:'rifle', rarity:'rare', fireRate:0.45, bulletSpeed:900, spread:0.0, damage:28, mag:4, reload:1.6, recoil:1.2, color:'#9be7ff', pierce:2, rehit:true},   // rehit: a harpoon can hit the same enemy again with its pierce (pre-v0.54 behaviour)
   {id:'rifle', name:'Pulse Rifle', type:'rifle', rarity:'rare', fireRate:0.12, bulletSpeed:860, spread:0.02, damage:12, mag:30, reload:1.4, recoil:1.1, color:'#9bff7b'},
   {id:'shotgun', name:'Grav Shotgun', type:'shotgun', rarity:'rare', fireRate:0.6, bulletSpeed:520, spread:0.5, damage:10, pellets:7, mag:6, reload:1.8, recoil:1.4, color:'#ffd166'},
   {id:'heavy', name:'Titan Cannon', type:'heavy', rarity:'red', fireRate:0.9, bulletSpeed:520, spread:0.08, damage:34, mag:4, reload:2.3, recoil:1.8, color:'#ff7b7b', explosive:true, elemental:'fire'},
@@ -395,13 +470,78 @@ const items = [
   {id:'pierce', name:'Piercing Bullet', rarity:'rare', price:70, desc:'+1 Pierce for all shots', effects:{pierceAdd:1}},
 ];
 
-// push weapon/item data to WASM module when ready
-getSystems().ready.then(()=>{
-  const sys = getSystems();
-  if(sys.loadData){
-    sys.loadData(JSON.stringify(weapons), JSON.stringify(items));
+// ---- WASM shop bridge ----------------------------------------------------------------------------
+// The C# records (wasm/BrotatoSystems/Extra.cs) use PascalCase properties and int enums, so the JS data
+// has to be converted before LoadData, and RollShop results ({Type, Data:{Id..}, Rarity, Price}) have to
+// be mapped back to the JS objects buildShop expects ({type, data, rarity, price}).
+const WASM_RARITY = { common:0, rare:1, epic:2, red:3 };        // C# Rarity: Common, Rare, Epic, Legendary
+const WASM_TIMEOUT_MS = 10000;
+function wasmDamageType(w){ return w.elemental==='fire' ? 1 : w.elemental==='ice' ? 2 : w.elemental==='shock' ? 3 : w.explosive ? 4 : 0; }
+function wasmWeaponData(){
+  return weapons.map(w=>({ Id:w.id, Name:w.name, Type:wasmDamageType(w), Damage:w.damage, FireDelay:w.fireRate, Spread:w.spread||0,
+    Magazine:Math.round(w.mag||1), Reload:w.reload||1, Explosive:!!w.explosive, Melee:!!w.melee, AltMode:null,
+    Rarity:WASM_RARITY[w.rarity] ?? 0, BasePrice:weaponPrices[w.id] || 100 }));
+}
+function wasmItemData(){
+  return items.map(it=>{
+    const mods = {};
+    for(const [k,v] of Object.entries(it.effects||{})){ if(typeof v === 'number' && isFinite(v)) mods[k] = v; }
+    return { Id:it.id, Name:it.name, Rarity:WASM_RARITY[it.rarity] ?? 0, Description:it.desc||'', StatMods:mods };
+  });
+}
+// Map one RollShop entry back to a JS shop entry. Unknown ids are dropped. Price uses the JS formula so
+// the shop costs the same whichever roller produced it.
+function normalizeWasmPick(p){
+  if(!p || typeof p !== 'object') return null;
+  const type = p.Type ?? p.type;
+  const data = p.Data ?? p.data;
+  const id = data && (data.Id ?? data.id);
+  if(!id) return null;
+  if(type === 'weapon'){
+    const w = weapons.find(x=>x.id === id); if(!w) return null;
+    return { type:'weapon', data:w, rarity:w.rarity, price:Math.round((weaponPrices[w.id]||100) * rarityMult(w.rarity)) };
   }
-}).catch(()=>{});
+  if(type === 'item'){
+    const it = items.find(x=>x.id === id); if(!it) return null;
+    return { type:'item', data:it, rarity:it.rarity, price:Math.round(it.price * rarityMult(it.rarity)) };
+  }
+  return null;
+}
+function wasmFail(reason){
+  if(wasmSystems.status === 'ready') return;
+  wasmSystems.status = 'failed'; wasmSystems.api = null; wasmSystems.reason = reason;
+  console.info('[systems] using JS shop:', reason);
+}
+function attachWasmSystems(api){
+  if(wasmSystems.status !== 'loading') return;           // off, already attached, or gave up (timeout)
+  if(!api || api.isStub || typeof api.loadData !== 'function' || typeof api.rollShop !== 'function'){ wasmFail('WASM module unavailable'); return; }
+  const w = wasmWeaponData(), it = wasmItemData();
+  // ShopRoller.Roll loops forever when its pools are empty, so never let it run without data.
+  if(!w.length || !it.length){ wasmFail('no shop data'); return; }
+  let loaded = false;
+  try { loaded = api.loadData(JSON.stringify(w), JSON.stringify(it)) !== false; } catch(err){ loaded = false; }
+  if(!loaded){ wasmFail('LoadData failed'); return; }
+  // probe once: the pools are non-empty now, so this terminates; reject the module if results are unusable
+  let probe = null;
+  try { probe = api.rollShop(1, 0, null); } catch(err){ probe = null; }
+  if(!Array.isArray(probe) || probe.length !== 1 || !normalizeWasmPick(probe[0])){ wasmFail('RollShop returned unusable data'); return; }
+  wasmSystems.api = api; wasmSystems.status = 'ready';
+  console.info('[systems] WASM shop ready');
+}
+// returns normalized picks from the WASM roller, or null (caller falls back to the JS roller)
+function rollShopWasm(count, luck){
+  if(wasmSystems.status !== 'ready' || count <= 0) return null;
+  try {
+    const raw = wasmSystems.api.rollShop(count|0, Math.max(0, Math.floor(luck||0)), null);
+    if(!Array.isArray(raw)) return null;
+    return raw.map(normalizeWasmPick).filter(Boolean);
+  } catch(err){ console.warn('rollShop failed, using JS shop', err); return null; }
+}
+if(wasmSystems.status === 'loading'){
+  window.addEventListener('systemswasm', (ev)=>attachWasmSystems(ev.detail || window.SystemsWasm));
+  if(window.SystemsWasm && !window.SystemsWasm.isStub) attachWasmSystems(window.SystemsWasm);  // loaded before us
+  setTimeout(()=>{ if(wasmSystems.status === 'loading') wasmFail('timed out after ' + WASM_TIMEOUT_MS + 'ms'); }, WASM_TIMEOUT_MS);
+}
 
 // Class definitions (50 variants)
 const classArchetypes = [
@@ -427,7 +567,7 @@ const classes = classArchetypes.map(a=>({
 
 // End-of-wave stat upgrades
 const upgradeStats = [
-  {id:'atkspd', name:'Attack Speed', apply:(p, mult)=>{ p.reloadSpeed *= mult; }},
+  {id:'atkspd', name:'Attack Speed', apply:(p, mult)=>{ p.reloadSpeed /= mult; }},   // reloadSpeed scales shot delay and reload time: lower = faster
   {id:'baseDmg', name:'Base Damage', apply:(p, mult)=>{ p.damageBonus += Math.floor((mult-1)*10); }},
   {id:'hp', name:'Max HP', apply:(p, mult)=>{ p.baseMaxHp += Math.max(4, Math.round((mult-1)*40)); p.hp = p.baseMaxHp; }},
   {id:'lifesteal', name:'Life Steal', apply:(p, mult)=>{ p.lifesteal = Math.min(0.5, p.lifesteal + (mult-1)*0.05); }},
@@ -562,9 +702,11 @@ function applyUpgradeChoice(choice){
 
 function rand(min,max){return Math.random()*(max-min)+min}
 
+// Screen shake (toned down in v0.55): every request is scaled, the total is capped and decays faster.
+const SHAKE_SCALE = 0.6, SHAKE_MAX = 8, SHAKE_DECAY = 20, SHAKE_PX_PER_UNIT = 0.35;
 function addShake(amount){
   if(!settings.screenShake) return;
-  camera.shake = Math.min(10, camera.shake + amount);
+  camera.shake = Math.min(SHAKE_MAX, camera.shake + amount * SHAKE_SCALE);
 }
 
 function updateCamera(dt){
@@ -572,9 +714,9 @@ function updateCamera(dt){
     camera.shake = 0; camera.x = 0; camera.y = 0;
     return;
   }
-  camera.shake = Math.max(0, camera.shake - dt * 16);
+  camera.shake = Math.max(0, camera.shake - dt * SHAKE_DECAY);
   const a = Math.random() * Math.PI * 2;
-  const m = camera.shake * 0.4;
+  const m = camera.shake * SHAKE_PX_PER_UNIT;
   camera.x = Math.cos(a) * m;
   camera.y = Math.sin(a) * m;
 }
@@ -658,10 +800,9 @@ function buildShop(){
     return picks.some(it => it && it.type === candidate.type && it.data.id === candidate.data.id);
   };
 
-  // allow WASM/system override
-  const sys = getSystems();
+  // allow WASM/system override (only once the module is loaded and has our data; see attachWasmSystems)
   const emptyCount = picks.filter(x=>!x).length;
-  const wasmPicks = sys && sys.rollShop ? sys.rollShop(emptyCount, luck, null) : null;
+  const wasmPicks = rollShopWasm(emptyCount, luck);
   if(Array.isArray(wasmPicks) && wasmPicks.length){
     for(const pick of wasmPicks){
       if(!pick || isDuplicate(pick)) continue;
@@ -768,7 +909,7 @@ function spawnEnemy(){
   const dangerDmg = 1 + (state.danger-1) * 0.28;
   const waveScale = 1 + Math.max(0, state.wave-1) * 0.12;
   const lateDmg = 1 + Math.max(0, state.wave-1) * 0.18;
-  enemies.push({ x,y, r: t.r, hp: Math.floor(t.hp * waveScale * dangerHP), maxHp: Math.floor(t.hp * waveScale * dangerHP), speed: t.speed + state.wave*2, dmg: Math.floor(t.dmg * dangerDmg * lateDmg + state.wave*1.2), color: t.color, xp: t.xp + Math.floor(state.wave*0.6)*(state.danger), money: Math.max(1, Math.floor(t.money * 0.7) + Math.floor(state.wave*0.2) * state.danger) });
+  enemies.push({ id: t.id, x,y, r: t.r, hp: Math.floor(t.hp * waveScale * dangerHP), maxHp: Math.floor(t.hp * waveScale * dangerHP), speed: t.speed + state.wave*2, dmg: Math.floor(t.dmg * dangerDmg * lateDmg + state.wave*1.2), color: t.color, xp: t.xp + Math.floor(state.wave*0.6)*(state.danger), money: Math.max(1, Math.floor(t.money * 0.7) + Math.floor(state.wave*0.2) * state.danger) });
   if(enemies.length > 120){ enemies.shift(); }
   addParticle({x, y, life:0.35, r:18, color: palette.uiAccent});
 }
@@ -779,7 +920,7 @@ function spawnBoss(){
   const dangerHP = 1 + (state.danger-1) * 0.5;
   const dangerDmg = 1 + (state.danger-1) * 0.35;
   enemies.push({
-    x,y, r: bossType.r, hp: Math.floor(bossType.hp * dangerHP), maxHp: Math.floor(bossType.hp * dangerHP),
+    id: bossType.id, x,y, r: bossType.r, hp: Math.floor(bossType.hp * dangerHP), maxHp: Math.floor(bossType.hp * dangerHP),
     speed: bossType.speed, dmg: Math.floor(bossType.dmg * dangerDmg * (1 + (state.wave-1)*0.12)),
     color: bossType.color, xp: bossType.xp * state.danger, money: bossType.money * state.danger,
     isBoss: true,
@@ -787,10 +928,147 @@ function spawnBoss(){
   addParticle({x, y, life:0.6, r:28, color: '#ff6b6b'});
 }
 
+// Swept bullet test: does the segment (px,py)->(x,y) pass within r of (cx,cy)? Stops fast bullets
+// tunnelling through small enemies and catches point-blank hits.
+const BULLET_HIT_R = 3;
+function segmentHitsCircle(px, py, x, y, cx, cy, r){
+  const sx = x - px, sy = y - py;
+  const len2 = sx*sx + sy*sy;
+  let u = len2 > 0 ? ((cx - px)*sx + (cy - py)*sy) / len2 : 0;
+  u = u < 0 ? 0 : u > 1 ? 1 : u;
+  const dx = px + sx*u - cx, dy = py + sy*u - cy;
+  return dx*dx + dy*dy <= r*r;
+}
+// Modest aim lead for auto-aim: aim part of the way toward where a moving enemy will be when the shot
+// arrives. Targets without a velocity (trees, the mouse cursor) are returned unchanged.
+const AIM_LEAD = 0.6, AIM_LEAD_MAX_T = 0.5;
+function aimPointFor(player, target){
+  if(!target || !(target.vx || target.vy)) return target;
+  const w = getWeaponFor(player);
+  const speed = (w && w.bulletSpeed) || 600;
+  const tHit = Math.min(AIM_LEAD_MAX_T, Math.hypot(target.x - player.x, target.y - player.y) / speed) * AIM_LEAD;
+  return { x: target.x + target.vx * tHit, y: target.y + target.vy * tHit };
+}
+// Light enemy separation: a soft push between overlapping enemies, using a uniform grid so each enemy
+// only checks nearby cells (and at most SEP_MAX_PER_CELL enemies per cell). Bosses barely move.
+const SEP_CELL = 56;            // >= largest pair of radii that can overlap (boss 36 + bruiser 16)
+const SEP_MAX_PER_CELL = 8;   // neighbour cap per grid cell (9 cells -> at most 72 checks per enemy)
+const SEP_OFFSETS = [0,0, -1,-1, 0,-1, 1,-1, -1,0, 1,0, -1,1, 0,1, 1,1];
+const SEP_SPACING = 0.9;        // allow a little overlap so packs still look tight
+const sepGrid = new Map();
+let sepFrame = 0;
+// After a push (separation/knockback): don't let an enemy end up outside [r, W-r] x [r, H-r]. An enemy
+// that was already outside (just spawned off-screen) may stay where it was but isn't pushed further out.
+function keepInArena(e, oldX, oldY){
+  const r = e.r || 0;
+  if(e.x < r) e.x = Math.max(e.x, Math.min(oldX, r)); else if(e.x > W - r) e.x = Math.min(e.x, Math.max(oldX, W - r));
+  if(e.y < r) e.y = Math.max(e.y, Math.min(oldY, r)); else if(e.y > H - r) e.y = Math.min(e.y, Math.max(oldY, H - r));
+}
+function separateEnemies(dt){
+  const n = enemies.length;
+  if(n < 2) return;
+  sepGrid.clear();
+  for(let i=0;i<n;i++){
+    const e = enemies[i];
+    const key = (Math.floor(e.x / SEP_CELL) + 512) * 4096 + (Math.floor(e.y / SEP_CELL) + 512);
+    let cell = sepGrid.get(key); if(!cell){ cell = []; sepGrid.set(key, cell); } cell.push(e);
+  }
+  const k = Math.min(0.5, dt * 8);  // fraction of the overlap resolved per frame (soft)
+  sepFrame = (sepFrame + 1) % 1048576;
+  for(let i=0;i<n;i++){
+    const a = enemies[i];
+    const cx = Math.floor(a.x / SEP_CELL), cy = Math.floor(a.y / SEP_CELL);
+    // inside a crowded cell start at an offset that varies per enemy and per frame, so with the cap
+    // every pair still gets checked within a few frames
+    for(let c=0; c<9; c++){
+      const gx = cx + SEP_OFFSETS[c*2], gy = cy + SEP_OFFSETS[c*2+1];
+      const cell = sepGrid.get((gx + 512) * 4096 + (gy + 512));
+      if(!cell) continue;
+      const len = cell.length, off = (i + sepFrame * SEP_MAX_PER_CELL) % len;
+      let checks = 0;
+      for(let m=0; m<len && checks < SEP_MAX_PER_CELL; m++){
+        const b = cell[(off + m) % len];
+        if(b === a) continue;
+        checks++;
+        let dx = b.x - a.x, dy = b.y - a.y;
+        const min = (a.r + b.r) * SEP_SPACING;
+        const d2 = dx*dx + dy*dy;
+        if(d2 >= min*min) continue;
+        let d = Math.sqrt(d2);
+        if(d < 0.001){ const ang = Math.random() * Math.PI * 2; dx = Math.cos(ang); dy = Math.sin(ang); d = 0; }
+        else { dx /= d; dy /= d; }
+        const push = (min - d) * k * 0.5;
+        const ma = a.isBoss ? 0.1 : 1, mb = b.isBoss ? 0.1 : 1;
+        const wa = ma / (ma + mb) * 2, wb = mb / (ma + mb) * 2;   // the lighter one moves more
+        const ax = a.x, ay = a.y, bx0 = b.x, by0 = b.y;
+        a.x -= dx * push * wb; a.y -= dy * push * wb;
+        b.x += dx * push * wa; b.y += dy * push * wa;
+        keepInArena(a, ax, ay); keepInArena(b, bx0, by0);
+      }
+    }
+  }
+}
+
+// Safety net: an entity with a NaN/Infinity position can't be hit or collide and would stall a wave.
+// Enemies with a bad position are moved back to an arena edge; enemies with bad hp/speed are removed
+// (they still count as spawned, so the wave can finish). Bad bullets are dropped, bad players recentred.
+const nonFiniteStats = { enemiesRepaired: 0, enemiesRemoved: 0, bullets: 0, players: 0 };
+function repairNonFinite(){
+  const fin = Number.isFinite;
+  for(let i=enemies.length-1;i>=0;i--){
+    const e = enemies[i];
+    if(!fin(e.hp) || !fin(e.speed) || !fin(e.r)){ enemies.splice(i,1); nonFiniteStats.enemiesRemoved++; continue; }
+    if(!fin(e.x) || !fin(e.y)){
+      const edge = (Math.random()*4)|0;
+      e.x = edge===0 ? -20 : edge===1 ? W+20 : Math.random()*W;
+      e.y = edge===2 ? -20 : edge===3 ? H+20 : Math.random()*H;
+      e.vx = 0; e.vy = 0;
+      nonFiniteStats.enemiesRepaired++;
+    }
+    if(!fin(e.vx) || !fin(e.vy)){ e.vx = 0; e.vy = 0; }
+  }
+  for(let i=bullets.length-1;i>=0;i--){ const b = bullets[i]; if(!fin(b.x) || !fin(b.y) || !fin(b.vx) || !fin(b.vy)){ bullets.splice(i,1); nonFiniteStats.bullets++; } }
+  for(const p of players){ if(!fin(p.x) || !fin(p.y)){ p.x = W/2; p.y = H/2; nonFiniteStats.players++; } }
+}
+
+// ---- Physics (v0.55). Kept separate from drawing so visual work can merge independently. ----------
+// Player: velocity eases toward the input direction (acceleration) and back to zero (deceleration).
+const PLAYER_ACCEL = 12, PLAYER_DECEL = 16;    // 1/s: higher = snappier (95% of target in ~0.25s / ~0.19s)
+function updatePlayerVelocity(p, dx, dy, dt){
+  const tx = dx * p.baseSpeed, ty = dy * p.baseSpeed;
+  const k = 1 - Math.exp(-((dx || dy) ? PLAYER_ACCEL : PLAYER_DECEL) * dt);
+  p.vx = (p.vx || 0) + (tx - (p.vx || 0)) * k;
+  p.vy = (p.vy || 0) + (ty - (p.vy || 0)) * k;
+  if(Math.abs(p.vx) < 0.5 && !dx) p.vx = 0;
+  if(Math.abs(p.vy) < 0.5 && !dy) p.vy = 0;
+}
+// Enemies: bullets add a knockback velocity proportional to damage / mass; friction bleeds it off.
+// Tuned so sustained fire pushes back at well under a quarter of enemy run speed (balance stays close).
+const KNOCKBACK_PER_DMG = 1.6, KNOCKBACK_MAX = 220, KNOCKBACK_FRICTION = 8;
+function enemyMass(e){ const m = (e.r / 12) ** 2; return e.isBoss ? m * 6 : m; }
+function applyKnockback(e, dirX, dirY, damage){
+  const len = Math.hypot(dirX, dirY);
+  if(!(len > 0) || !(damage > 0)) return;
+  const imp = damage * KNOCKBACK_PER_DMG / enemyMass(e);
+  e.kx = (e.kx || 0) + dirX / len * imp;
+  e.ky = (e.ky || 0) + dirY / len * imp;
+  const sp = Math.hypot(e.kx, e.ky);
+  if(sp > KNOCKBACK_MAX){ e.kx *= KNOCKBACK_MAX / sp; e.ky *= KNOCKBACK_MAX / sp; }
+}
+function integrateEnemyKnockback(e, dt){
+  if(!e.kx && !e.ky) return;
+  const ox = e.x, oy = e.y;
+  e.x += e.kx * dt; e.y += e.ky * dt;
+  keepInArena(e, ox, oy);
+  const f = Math.exp(-KNOCKBACK_FRICTION * dt);
+  e.kx *= f; e.ky *= f;
+  if(Math.abs(e.kx) < 1 && Math.abs(e.ky) < 1){ e.kx = 0; e.ky = 0; }
+}
+
 function getNearestEnemyTo(x,y){ let best=null, bd=Infinity; for(const e of enemies){ const d=(e.x-x)**2 + (e.y-y)**2; if(d<bd){ bd=d; best=e; } } return best; }
 function getNearestTreeTo(x,y){ let best=null, bd=Infinity; for(const tr of trees){ const d=(tr.x-x)**2 + (tr.y-y)**2; if(d<bd){ bd=d; best=tr; } } return best; }
 
-function fireWeaponFor(player, time, target){ if(!target) return; if(player.reloading>0) return; const w = getWeaponFor(player); if(w.overheated) return; const fireRate = w.fireRate * player.reloadSpeed; if(time - (w.last||0) < fireRate) return; if(player.ammoInMag <= 0){ player.reloading = w.reload; audio.beep(240,0.08,'sawtooth',0.04); return; }
+function fireWeaponFor(player, time, target){ if(!target) return; if(player.reloading>0) return; const w = getWeaponFor(player); if(w.overheated) return; const fireRate = w.fireRate * player.reloadSpeed; if(time - (w.last||0) < fireRate) return; if(player.ammoInMag <= 0){ player.reloading = w.reload * player.reloadSpeed; audio.beep(240,0.08,'sawtooth',0.04); return; }
   w.last = time; player.ammoInMag -= 1; player.kick = Math.max(player.kick, 0.08 * w.recoil);
   if(w.overheatMax){
     w.heat += w.overheatPerShot;
@@ -812,10 +1090,24 @@ function fireWeaponFor(player, time, target){ if(!target) return; if(player.relo
     const elementalBonus = (w.elemental || w.explosive) ? (player.elementalBonus || 0) : 0;
     dmg *= (1 + elementalBonus);
     const elemental = w.elemental || (w.explosive ? 'fire' : null);
-    bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, pierce: (w.pierce||0) + (player.pierceBonus||0) });
+    // px/py = previous position for the swept hit test. A new bullet starts its sweep at the player's
+    // centre, so an enemy overlapping the player (inside the muzzle offset) still gets hit.
+    bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, px: player.x, py: player.y, fresh: true, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, pierce: (w.pierce||0) + (player.pierceBonus||0), rehit: !!w.rehit });
   }
   addParticle({x:player.x + Math.cos(angle)*16, y:player.y + Math.sin(angle)*16, life:0.15, r: w.type==='heavy'?18:w.type==='shotgun'?14:10, color:w.color});
   if(audio.ctx && time - (w.lastSound||0) > 0.06){ w.lastSound = time; const freq = w.type==='heavy'?120:w.type==='shotgun'?180:w.type==='rifle'?240:320; audio.beep(freq,0.04,'square',0.03); }
+}
+
+function killEnemy(index, ownerId){
+  const e = enemies[index];
+  if(!e) return;
+  awardToPlayerById(ownerId, e.xp, e.money);
+  addParticle({x:e.x,y:e.y,life:0.35,r:16,color:'#ff5d5d'});
+  addShake(e.isBoss ? 12 : 3);
+  audio.beep(140,0.06,'triangle',0.04);
+  // drop money pickups
+  for(let k=0;k<e.money;k++){ moneyDrops.push({x:e.x+rand(-10,10), y:e.y+rand(-10,10), r:5, life:6, t:0}); }
+  enemies.splice(index,1);
 }
 
 function awardToPlayerById(id, xp, money){ const p = players.find(x=>x.id===id) || players[0]; p.xp += xp; p.currency += money; while(p.xp >= p.xpNext){ levelUp(p); } }
@@ -891,6 +1183,7 @@ renderDangerButtons();
 renderClassButtons();
 if(pauseBtn){
   pauseBtn.addEventListener('click', ()=>{
+    pauseBtn.blur();   // so Space/Enter don't re-trigger it later
     if(state.phase === 'menu' || state.phase === 'gameover') return;
     togglePause();
   });
@@ -905,6 +1198,7 @@ startBtn.addEventListener('click', ()=>{
   const chosenClass = classes.find(x=>x.id === state.classId) || classes[0];
   applyClassToPlayer(players[0], chosenClass);
   if(players[1]) applyClassToPlayer(players[1], chosenClass);
+  for(const p of players){ p.dashCooldown = 0; p.dashTimer = 0; p.iFrames = 0; p.vx = 0; p.vy = 0; }   // fresh dash + no leftover momentum each run
   menuEl.style.display = 'none';
   if(pauseBtn){ pauseBtn.style.display = 'block'; pauseBtn.textContent = 'Pause'; }
   state.phase = 'wave';
@@ -922,17 +1216,15 @@ if(settingsCloseBtn && settingsPanel){ settingsCloseBtn.addEventListener('click'
 if(settingsCloseIcon && settingsPanel){ settingsCloseIcon.addEventListener('click', closeSettings); }
 
 // mouse/shop interaction: compute if click on a shop card
+function startNextWave(){ state.wave = Math.min(state.maxWave, state.wave + 1); startWave(); canvas.style.cursor = 'default'; }
+
 canvas.addEventListener('contextmenu', (e)=>{
   if(state.phase !== 'shop') return;
   e.preventDefault();
   const r = canvas.getBoundingClientRect(); const mx = e.clientX - r.left, my = e.clientY - r.top;
-  const panels = getShopPanels();
-  for(const def of panels){
-    const cols = 3; const cardW = (def.w - 44) / cols; const cardH = 120;
+  for(const def of getShopPanels()){
     for(let i=0;i<shop.items.length;i++){
-      const col = i % cols, row = Math.floor(i/cols);
-      const x = def.x + 16 + col * cardW; const y = def.y + 64 + row * (cardH + 12);
-      if(mx >= x && mx <= x + cardW-12 && my >= y && my <= y + cardH){
+      if(inRect(mx, my, getShopCardRect(def, i))){
         if(shop.items[i]){ shop.locked[i] = shop.locked[i] ? null : shop.items[i]; }
         audio.click();
         return;
@@ -942,13 +1234,11 @@ canvas.addEventListener('contextmenu', (e)=>{
 });
 
 canvas.addEventListener('click', (e)=>{
+  const r = canvas.getBoundingClientRect(); const mx = e.clientX - r.left, my = e.clientY - r.top;
   if(state.phase === 'upgrade'){
-    const r = canvas.getBoundingClientRect(); const mx = e.clientX - r.left, my = e.clientY - r.top;
-    const panelW = Math.min(620, W*0.85); const panelH = 220; const px = (W - panelW)/2; const py = (H - panelH)/2;
-    const cardW = (panelW - 40) / 4; const cardH = 120;
+    const L = getUpgradeLayout();
     for(let i=0;i<upgradeChoices.items.length;i++){
-      const x = px + 16 + i * cardW; const y = py + 60;
-      if(mx >= x && mx <= x + cardW-8 && my >= y && my <= y + cardH){
+      if(inRect(mx, my, L.cards[i])){
         upgradeChoices.selection = i;
         audio.click();
         applyUpgradeChoice(upgradeChoices.items[i]);
@@ -962,21 +1252,13 @@ canvas.addEventListener('click', (e)=>{
     }
     return;
   }
-  if(state.phase !== 'shop') return;
-  const r = canvas.getBoundingClientRect(); const mx = e.clientX - r.left, my = e.clientY - r.top;
-  // reroll button
-  if(mx >= W/2-70 && mx <= W/2+70 && my >= (H*0.82) && my <= (H*0.82)+36){
-    rerollShop();
-    return;
-  }
-  const panels = getShopPanels();
-  for(const def of panels){
-    const cols = 3; const cardW = (def.w - 44) / cols; const cardH = 120;
+  if(state.phase !== 'shop' || state.shopView === 'stats') return;
+  const B = getShopButtons();
+  if(inRect(mx, my, B.reroll)){ rerollShop(); return; }
+  if(inRect(mx, my, B.next)){ audio.click(); startNextWave(); return; }
+  for(const def of getShopPanels()){
     for(let i=0;i<shop.items.length;i++){
-      const col = i % cols, row = Math.floor(i/cols);
-      const x = def.x + 16 + col * cardW; const y = def.y + 64 + row * (cardH + 12);
-      if(mx >= x && mx <= x + cardW-12 && my >= y && my <= y + cardH){
-        // right click locks, left click buys
+      if(inRect(mx, my, getShopCardRect(def, i))){
         shop.selection = i;
         normalizeShopSelection();
         audio.click();
@@ -990,9 +1272,6 @@ canvas.addEventListener('click', (e)=>{
 // Core update loop
 function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover') return;
   if(menuEl && menuEl.style.display !== 'none') return;
-  state.animTime += dt;
-  updateCamera(dt);
-  if(state.waveBanner > 0) state.waveBanner = Math.max(0, state.waveBanner - dt);
   if(input.keys['p']){
     input.keys['p'] = false;
     togglePause();
@@ -1003,6 +1282,10 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
     flashMsg(audio.muted ? 'Audio muted (M)' : 'Audio unmuted', 1.1);
   }
   if(state.paused) return;
+  // animation clock, camera shake and the wave banner stop while paused
+  state.animTime += dt;
+  updateCamera(dt);
+  if(state.waveBanner > 0) state.waveBanner = Math.max(0, state.waveBanner - dt);
   // players movement
   for(let idx=0; idx<players.length; idx++){
     const p = players[idx]; if(p.dead) continue; let dx=0, dy=0;
@@ -1042,10 +1325,14 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
       const speed = p.baseSpeed * 3.2;
       p.x += Math.cos(p.dashDir) * speed * dt;
       p.y += Math.sin(p.dashDir) * speed * dt;
+      // leave the dash carrying normal run speed in the dash direction
+      p.vx = Math.cos(p.dashDir) * p.baseSpeed; p.vy = Math.sin(p.dashDir) * p.baseSpeed;
     } else {
-      p.x += dx * p.baseSpeed * dt; p.y += dy * p.baseSpeed * dt;
+      updatePlayerVelocity(p, dx, dy, dt);
+      p.x += p.vx * dt; p.y += p.vy * dt;
     }
-    p.x = Math.max(0, Math.min(W, p.x)); p.y = Math.max(0, Math.min(H, p.y));
+    if(p.x < 0 || p.x > W){ p.x = Math.max(0, Math.min(W, p.x)); p.vx = 0; }
+    if(p.y < 0 || p.y > H){ p.y = Math.max(0, Math.min(H, p.y)); p.vy = 0; }
     if(p.reloading > 0){ p.reloading -= dt; if(p.reloading <= 0){ refreshAmmoFor(p); audio.beep(320,0.05,'triangle',0.04); } }
     if(p.kick > 0) p.kick -= dt * 2.5; if(p.hitFlash > 0) p.hitFlash -= dt;
   }
@@ -1114,19 +1401,18 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
       if(input.keys['arrowleft']){ input.keys['arrowleft'] = false; shop.selection = (shop.selection-1+shop.items.length)%shop.items.length; audio.click(); }
       if(input.keys[' ']){ input.keys[' '] = false; buyShopItemFor(players[0]); }
     }
-    if(input.keys['enter']){ input.keys['enter'] = false; state.wave = Math.min(state.maxWave, state.wave + 1); startWave(); }
+    if(input.keys['enter']){ input.keys['enter'] = false; startNextWave(); }
   }
 
   // bullets update
-  for(let i=bullets.length-1;i>=0;i--){ const b=bullets[i]; b.x += b.vx*dt; b.y += b.vy*dt; b.life -= dt; if(b.life<=0 || b.x<-50 || b.x>W+50 || b.y<-50 || b.y>H+50 || bullets.length>MAX_BULLETS) bullets.splice(i,1); }
+  for(let i=bullets.length-1;i>=0;i--){ const b=bullets[i]; if(b.fresh){ b.fresh = false; } else { b.px = b.x; b.py = b.y; } b.x += b.vx*dt; b.y += b.vy*dt; b.life -= dt; if(b.life<=0 || b.x<-50 || b.x>W+50 || b.y<-50 || b.y>H+50 || bullets.length>MAX_BULLETS) bullets.splice(i,1); }
 
   // bullets vs trees (destructibles)
   for(let i=bullets.length-1;i>=0;i--){
     const b = bullets[i];
     for(let j=trees.length-1;j>=0;j--){
       const tr = trees[j];
-      const dist = Math.hypot(b.x - tr.x, b.y - tr.y);
-      if(dist < tr.r + 4){
+      if(segmentHitsCircle(b.px ?? b.x, b.py ?? b.y, b.x, b.y, tr.x, tr.y, tr.r + 4)){
         tr.hp -= b.damage;
         if(tr.hp <= 0){
           spawnFruit(tr.x, tr.y);
@@ -1140,6 +1426,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
   }
 
   // enemies
+  repairNonFinite();
   for(let i=enemies.length-1;i>=0;i--){ const e=enemies[i]; // choose nearest alive player to chase
     const alivePlayers = players.filter(p=>!p.dead);
     if(alivePlayers.length === 0) continue;
@@ -1152,18 +1439,35 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
       addParticle({x:e.x, y:e.y, life:0.08, r:4, color:'#ff8c42'});
     }
     if(e.status.slow > 0){ e.status.slow -= dt; }
+    // burn ticks and shock chains can drop hp to <= 0 without a bullet hit; kill the enemy here
+    if(e.hp <= 0){ killEnemy(i, e.lastHitBy); continue; }
 
     const slowMult = e.status.slow > 0 ? 0.6 : 1;
     const ang = Math.atan2(target.y - e.y, target.x - e.x);
-    e.x += Math.cos(ang) * e.speed * slowMult * dt;
-    e.y += Math.sin(ang) * e.speed * slowMult * dt;
+    // visual only: facing + hit flash timer
+    e.face = Math.cos(ang) < 0 ? -1 : 1;
+    if(e.hitFlash > 0) e.hitFlash -= dt;
+    e.vx = Math.cos(ang) * e.speed * slowMult;   // kept for auto-aim lead
+    e.vy = Math.sin(ang) * e.speed * slowMult;
+    e.x += e.vx * dt;
+    e.y += e.vy * dt;
+    integrateEnemyKnockback(e, dt);
 
-    // bullets collision
-    for(let j=bullets.length-1;j>=0;j--){ const b = bullets[j]; const dist = Math.hypot(b.x - e.x, b.y - e.y); if(dist < e.r + 3){
+    // bullets collision (swept: previous -> current bullet position vs enemy radius + bullet radius)
+    let killed = false;
+    for(let j=bullets.length-1;j>=0;j--){ const b = bullets[j];
+          if(b.hits && b.hits.includes(e)) continue;   // a piercing bullet hits each enemy once
+          // rehit weapons (Harpoon): hitting the same enemy again needs the bullet to still be inside it
+          // (the pre-v0.54 point test), so its single-target damage matches the old behaviour
+          if(b.rehit && b.lastHit === e && Math.hypot(b.x - e.x, b.y - e.y) >= e.r + BULLET_HIT_R) continue;
+          if(segmentHitsCircle(b.px ?? b.x, b.py ?? b.y, b.x, b.y, e.x, e.y, e.r + BULLET_HIT_R)){
             e.hp -= b.damage;
+            e.lastHitBy = b.ownerId;
+            applyKnockback(e, b.vx, b.vy, b.damage);
+            e.hitFlash = 0.1; // visual only
             const dealt = Math.max(1, Math.round(Math.min(b.damage, b.damage + e.hp)));
             floatingTexts.push({x:e.x, y:e.y-6, vx:rand(-12,12), vy:-40, life:0.8, text: dealt, color: b.crit ? '#ffd166' : palette.textLight});
-            addShake(b.crit ? 4 : 1.5);
+            addShake(b.crit ? 2 : 0.5);
             // elemental status
             if(b.elemental === 'fire'){
               e.status.burn = Math.max(e.status.burn, 2.5);
@@ -1175,20 +1479,17 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
               const chain = enemies.find(en => en !== e && Math.hypot(en.x - e.x, en.y - e.y) < 80);
               if(chain){
                 chain.hp -= b.damage * 0.6;
+                chain.lastHitBy = b.ownerId;   // so a chain kill credits the shooter (co-op)
+                chain.hitFlash = 0.1;
                 addParticle({x:chain.x,y:chain.y,life:0.2, r:8, color:'#b27bff'});
               }
             }
             addParticle({x:e.x,y:e.y,life:0.2, r:8, color:'#ffd166'}); const ownerId = b.ownerId;
-            if(b.pierce > 0){ b.pierce--; } else { bullets.splice(j,1); } if(e.hp <= 0){ // die
+            if(b.pierce > 0){ b.pierce--; if(b.rehit) b.lastHit = e; else (b.hits || (b.hits = [])).push(e); } else { bullets.splice(j,1); } if(e.hp <= 0){ // die
             // reward to owner if available, else nearest player
-            awardToPlayerById(ownerId, e.xp, e.money);
-            addParticle({x:e.x,y:e.y,life:0.35,r:16,color:'#ff5d5d'});
-            addShake(e.isBoss ? 12 : 3);
-            audio.beep(140,0.06,'triangle',0.04);
-            // drop money pickups
-            for(let k=0;k<e.money;k++){ moneyDrops.push({x:e.x+rand(-10,10), y:e.y+rand(-10,10), r:5, life:6, t:0}); }
-            enemies.splice(i,1); break; } }
+            killEnemy(i, ownerId); killed = true; break; } }
     }
+    if(killed) continue;   // enemy was removed: no contact damage from it this frame
 
     // collision with player
     for(const p of players){
@@ -1197,8 +1498,8 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
       const d = Math.hypot(p.x - e.x, p.y - e.y);
       if(d < p.r + e.r){
         p.hp -= Math.max(1, (e.dmg - p.armor) * dt);
+        addShake(p.hitFlash > 0 ? 0.3 : 5);   // a kick on first contact, not a constant max shake
         p.hitFlash = 0.12;
-        addShake(6);
         if(p.hp <= 0){
           p.hp = 0;
           p.dead = true;
@@ -1211,6 +1512,8 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
       }
     }
   }
+
+  separateEnemies(dt);
 
   const alivePlayers = players.filter(p=>!p.dead);
 
@@ -1274,34 +1577,29 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
   }
   if(floatingTexts.length > MAX_FLOATING_TEXTS){ floatingTexts.splice(0, floatingTexts.length - MAX_FLOATING_TEXTS); }
 
-  // manual/priority mouse fire: if mouse moved recently, aim at cursor and allow fire regardless of auto-toggle
-  const now = t;
-  const mouseRecent = (now - input.lastMove) < 0.35;
-  if(state.phase === 'wave' && players[0] && !players[0].dead && mouseRecent){
-    const p = players[0];
-    const target = {x: input.mx, y: input.my};
-    p.angle = Math.atan2(target.y - p.y, target.x - p.x);
-    if(input.mouseDown || !settings.autoShoot){
-      fireWeaponFor(p, t, target);
-    }
-  }
-
-  // auto-fire for players (player1 only if mouse idle or auto enabled)
-  for(let i=0;i<players.length;i++){
-    const p = players[i]; if(p.dead) continue;
-    if(i===0 && mouseRecent && !settings.autoShoot) continue;
-    if(i===0 && !settings.autoShoot && !mouseRecent) continue;
-    if(i===0 && mouseRecent) continue;
-    const target = getNearestEnemyTo(p.x,p.y) || getNearestTreeTo(p.x,p.y);
-    if(target && state.phase === 'wave'){
-      if(i!==0 || !settings.mouseAim || !mouseRecent){ p.angle = Math.atan2(target.y - p.y, target.x - p.x); }
-      fireWeaponFor(p, t, target);
+  // Player firing.
+  //  Auto Shoot on: fire whenever there is a target. Auto Shoot off (P1): fire only while the mouse button
+  //  or Space is held. Mouse Aim on (P1): aim at the cursor while the mouse is in use (moved in the last
+  //  0.35s or button held), otherwise auto-target. Mouse Aim off: always auto-target the nearest enemy
+  //  (or tree), whatever the mouse does. P2 always auto-targets and auto-fires.
+  const mouseRecent = (performance.now()/1000 - input.lastMove) < 0.35;
+  if(state.phase === 'wave'){
+    for(let i=0;i<players.length;i++){
+      const p = players[i]; if(p.dead) continue;
+      let target = null;
+      if(i===0 && settings.mouseAim && (mouseRecent || input.mouseDown)){ target = {x: input.mx, y: input.my}; }
+      else { const nearest = getNearestEnemyTo(p.x,p.y) || getNearestTreeTo(p.x,p.y); if(nearest) target = aimPointFor(p, nearest); }
+      if(!target) continue;
+      p.angle = Math.atan2(target.y - p.y, target.x - p.x);
+      const wantsFire = i !== 0 || settings.autoShoot || input.mouseDown || !!input.keys[' '];
+      if(wantsFire) fireWeaponFor(p, t, target);
     }
   }
 }
 
 // Drawing helpers reuse earlier drawing but adapt to multi-player
 function drawBackground(){
+  if(window.FX && FX.drawGround()) return;   // [brad-fx] v0.56 warm ground with doodle decals (Map.png kept as fallback)
   const grad = ctx.createLinearGradient(0,0,W,H);
   grad.addColorStop(0, palette.bg1);
   grad.addColorStop(0.55, palette.bg3);
@@ -1310,15 +1608,15 @@ function drawBackground(){
   ctx.fillRect(0,0,W,H);
 
   // Draw map sprite if available
-  if(mapImage && mapImage.complete && mapImage.naturalWidth){
+  const mapSprite = spriteReady('map');
+  if(mapSprite){
+    // cover the arena, crisp pixels
     ctx.save();
-    ctx.globalAlpha = 0.15;
-    const scale = Math.max(W / mapImage.naturalWidth, H / mapImage.naturalHeight);
-    const mapW = mapImage.naturalWidth * scale;
-    const mapH = mapImage.naturalHeight * scale;
-    const mapX = (W - mapW) / 2;
-    const mapY = (H - mapH) / 2;
-    ctx.drawImage(mapImage, mapX, mapY, mapW, mapH);
+    ctx.globalAlpha = 0.18;
+    ctx.imageSmoothingEnabled = false;
+    const iw = mapSprite.img.naturalWidth, ih = mapSprite.img.naturalHeight;
+    const scale = Math.max(W / iw, H / ih);
+    ctx.drawImage(mapSprite.img, (W - iw*scale)/2, (H - ih*scale)/2, iw*scale, ih*scale);
     ctx.restore();
   }
 
@@ -1372,21 +1670,33 @@ function drawBackground(){
   ctx.fillRect(0,0,W,H);
 }
 
-function drawWeaponIcon(w, x, y){
+// generic gun silhouette used when a weapon has no sprite (flamethrower, railgun, ...)
+function drawWeaponFallback(w, len){
+  const h = Math.max(6, len * 0.28);
   ctx.save();
-  ctx.translate(x, y);
-  const img = weaponImages[w.id];
-  if(img && img.complete && img.naturalWidth){
-    const scale = 28 / img.naturalWidth;
-    const h = img.naturalHeight * scale;
-    ctx.drawImage(img, 0, 6, 28, h);
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = palette.outline;
+  ctx.fillStyle = w.color || palette.uiAccent;
+  roundRect(-len*0.5, -h*0.5, len, h, h*0.35); ctx.fill(); ctx.stroke();         // body
+  ctx.fillStyle = shade(w.color || '#48e0c2', -40);
+  roundRect(len*0.2, -h*0.3, len*0.45, h*0.6, 2); ctx.fill();                   // barrel shroud
+  ctx.fillStyle = shade(w.color || '#48e0c2', -60);
+  roundRect(-len*0.3, h*0.3, len*0.18, h*0.9, 2); ctx.fill(); ctx.stroke();     // grip
+  ctx.restore();
+}
+
+// shop / HUD icon: weapon fitted into a box of size bw x bh with its top-left at (x, y)
+function drawWeaponIcon(w, x, y, bw=44, bh=22){
+  ctx.save();
+  const s = spriteReady('w_' + w.id);
+  if(s){
+    const [, , cw, ch] = s.crop;
+    const k = Math.min(bw / cw, bh / ch);
+    ctx.translate(x + bw/2, y + bh/2);
+    drawSprite('w_' + w.id, cw*k, ch*k);
   } else {
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = palette.outline;
-    ctx.fillStyle = w.color;
-    roundRect(0, 6, 26, 8, 3); ctx.fill(); ctx.stroke();
-    roundRect(10, 2, 10, 6, 2); ctx.fill(); ctx.stroke();
-    roundRect(18, 10, 8, 4, 2); ctx.fill(); ctx.stroke();
+    ctx.translate(x + bw/2, y + bh/2);
+    drawWeaponFallback(w, Math.min(bw, bh*2.2));
   }
   ctx.restore();
 }
@@ -1436,379 +1746,392 @@ function wrapText(text, x, y, maxWidth, lineHeight, maxLines){
   }
 }
 
+function drawPlayerWeapon(p){
+  const w = getWeaponFor(p);
+  const len = weaponHandLength[w.id] || 26;
+  const facingLeft = Math.cos(p.angle) < 0;
+  ctx.save();
+  ctx.translate(0, 4);
+  ctx.rotate(p.angle);
+  ctx.translate(12 + len*0.35 - p.kick*30, 0);
+  if(facingLeft) ctx.scale(1, -1);        // keep the gun upright when aiming left
+  if(!drawSprite('w_' + w.id, len, null)) drawWeaponFallback(w, len);
+  ctx.restore();
+}
+
 function drawPlayers(){
   for(let i=0;i<players.length;i++){
     const p = players[i];
     if(p.dead) continue;
     const body = i===0 ? '#4a9eff' : '#ff6b6b';
+    const moving = p.dashTimer > 0 || (state.phase === 'wave' && (p._lastX !== undefined) && (Math.abs(p.x - p._lastX) + Math.abs(p.y - p._lastY) > 0.2));
+    p._lastX = p.x; p._lastY = p.y;
+    const bob = moving ? Math.abs(Math.sin(state.animTime * 12 + i)) * -2.5 : Math.sin(state.animTime * 3 + i) * 0.8;
+
+    drawGroundShadow(p.x, p.y + 20, 14, 5);
     ctx.save();
-    const bob = Math.sin(state.animTime * 6 + i) * 1.6;
     ctx.translate(p.x, p.y + bob);
 
-    // ground shadow
-    ctx.save();
-    ctx.fillStyle = 'rgba(0,0,0,0.35)';
-    ctx.beginPath();
-    ctx.ellipse(0, 16, 16, 6, 0, 0, Math.PI*2);
-    ctx.fill();
-    ctx.restore();
+    // direction -> sprite (down / side / up), side is mirrored for left
+    let deg = p.angle * 180 / Math.PI;
+    deg = ((deg % 360) + 360) % 360;
+    let key = 'playerSide', flipX = false;
+    if(deg >= 45 && deg < 135) key = 'playerDown';
+    else if(deg >= 225 && deg < 315) key = 'playerUp';
+    else if(deg >= 135 && deg < 225) flipX = true;
 
-    // Determine which sprite to use based on angle
-    let spriteImg = null;
-    let flipX = false;
-    const angle = p.angle;
-    const angleDeg = angle * 180 / Math.PI;
-    
-    // Normalize angle to 0-360
-    let normalizedAngle = angleDeg;
-    while(normalizedAngle < 0) normalizedAngle += 360;
-    while(normalizedAngle >= 360) normalizedAngle -= 360;
-    
-    // Choose sprite based on direction
-    if(normalizedAngle >= 45 && normalizedAngle < 135){
-      // Facing down
-      spriteImg = playerImages.down;
-    } else if(normalizedAngle >= 135 && normalizedAngle < 225){
-      // Facing left
-      spriteImg = playerImages.side;
-      flipX = true;
-    } else if(normalizedAngle >= 225 && normalizedAngle < 315){
-      // Facing up
-      spriteImg = playerImages.up;
-    } else {
-      // Facing right
-      spriteImg = playerImages.side;
-      flipX = false;
+    // weapon goes behind the body when facing up
+    if(key === 'playerUp') drawPlayerWeapon(p);
+
+    // co-op: coloured ring so players can tell each other apart
+    if(players.length > 1){
+      ctx.save();
+      ctx.strokeStyle = body; ctx.lineWidth = 2; ctx.globalAlpha = 0.85;
+      ctx.beginPath(); ctx.ellipse(0, 20 - bob, 15, 6, 0, 0, Math.PI*2); ctx.stroke();
+      ctx.restore();
     }
 
-    // Draw player sprite or fallback to ellipse
-    if(spriteImg && spriteImg.complete && spriteImg.naturalWidth){
+    const flash = p.hitFlash > 0 ? p.hitFlash / 0.12 : 0;
+    const blink = p.iFrames > 0 && p.dashTimer <= 0 && Math.floor(state.animTime * 20) % 2 === 0;
+    ctx.save();
+    if(blink) ctx.globalAlpha = 0.55;
+    // [brad-fx] animated v0.56 sprite sheets (fx.js); falls back to the original PNGs
+    const drawn = (window.FX && FX.drawPlayer(p, i, key, flipX, flash, moving)) || drawSprite(key, null, 46, {flipX, flash});
+    ctx.restore();
+    if(!drawn){
+      // fallback body
       ctx.save();
-      if(flipX){
-        ctx.scale(-1, 1);
-      }
-      const spriteSize = 32;
-      ctx.drawImage(spriteImg, flipX ? -spriteSize/2 : -spriteSize/2, -spriteSize/2, spriteSize, spriteSize);
-      ctx.restore();
-    } else {
-      // Fallback to original ellipse rendering
-      ctx.save();
-      ctx.rotate(angle);
-      // outline
+      ctx.rotate(p.angle);
       ctx.fillStyle = palette.outline;
       ctx.beginPath(); ctx.ellipse(0,0,18,14,0,0,Math.PI*2); ctx.fill();
-      // body
-      ctx.fillStyle = body;
+      ctx.fillStyle = flash > 0 ? '#ffffff' : body;
       ctx.beginPath(); ctx.ellipse(0,0,16,12,0,0,Math.PI*2); ctx.fill();
-      // face
       ctx.fillStyle = '#2b1e10';
       ctx.beginPath(); ctx.arc(4,-3,2,0,Math.PI*2); ctx.fill();
       ctx.beginPath(); ctx.arc(9,-3,2,0,Math.PI*2); ctx.fill();
-      ctx.strokeStyle = '#2b1e10'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(6,2,4,0,Math.PI); ctx.stroke();
       ctx.restore();
     }
 
-    // weapon
-    const w = getWeaponFor(p);
-    const img = weaponImages[w.id];
-    ctx.save();
-    ctx.rotate(angle);
-    ctx.translate(10 + p.kick*30, 0);
-    if(img && img.complete && img.naturalWidth){
-      const scale = 22 / img.naturalWidth;
-      const h = img.naturalHeight * scale;
-      ctx.drawImage(img, -2, -h/2, 22, h);
-    } else {
-      ctx.fillStyle = w.color;
-      roundRect(2,-3,14,6,2); ctx.fill();
-      ctx.strokeStyle = palette.outline; ctx.lineWidth = 2; ctx.stroke();
+    if(key !== 'playerUp') drawPlayerWeapon(p);
+
+    if(players.length > 1){
+      ctx.fillStyle = body;
+      ctx.font = uiFont(11, 'bold');
+      ctx.textAlign = 'center';
+      ctx.fillText(`P${i+1}`, 0, -30);
+      ctx.textAlign = 'start';
     }
     ctx.restore();
-
-    ctx.restore();
   }
+}
+
+// HUD scales with the window (it is never clicked, so a plain transform is safe)
+function hudScale(){ return Math.max(0.8, Math.min(1.25, Math.min(W/1280, H/720) * 1.05)); }
+
+function drawBar(x, y, w, h, frac, c1, c2, label){
+  ctx.fillStyle = 'rgba(4,7,13,0.85)';
+  roundRect(x-2, y-2, w+4, h+4, (h+4)/2); ctx.fill();
+  ctx.fillStyle = palette.uiMid;
+  roundRect(x, y, w, h, h/2); ctx.fill();
+  const f = Math.max(0, Math.min(1, frac || 0));
+  if(f > 0){
+    const g = ctx.createLinearGradient(x, y, x + w, y);
+    g.addColorStop(0, c1); g.addColorStop(1, c2);
+    ctx.fillStyle = g;
+    roundRect(x, y, w * f, h, h/2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    roundRect(x + 2, y + 1, Math.max(0, w * f - 4), Math.max(1, h * 0.35), h/4); ctx.fill();
+  }
+  if(label){
+    ctx.font = uiFont(Math.max(10, Math.round(h * 0.78)), 'bold');
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillText(label, x + w/2 + 1, y + h*0.8 + 1);
+    ctx.fillStyle = palette.text;
+    ctx.fillText(label, x + w/2, y + h*0.8);
+    ctx.textAlign = 'start';
+  }
+}
+
+function drawCoin(x, y, r){
+  if(window.FX && FX.drawMaterialIcon(x, y, r)) return;   // [brad-fx] same green gem as the pickups
+  ctx.fillStyle = palette.outline;
+  ctx.beginPath(); ctx.arc(x, y, r+1.5, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = palette.uiGreen;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
+  ctx.beginPath(); ctx.arc(x - r*0.3, y - r*0.3, r*0.35, 0, Math.PI*2); ctx.fill();
+}
+
+function drawPlayerCard(p, x, y, w, title, accent){
+  panel(x, y, w, 96, palette.uiLight, palette.outline, 12);
+  ctx.fillStyle = accent;
+  roundRect(x + 10, y + 10, 4, 76, 2); ctx.fill();
+  ctx.font = uiFont(13, 'bold');
+  ctx.fillStyle = palette.textLight;
+  ctx.fillText(title, x + 22, y + 24);
+  ctx.textAlign = 'right';
+  ctx.fillText(`Lv ${p.level}`, x + w - 14, y + 24);
+  ctx.textAlign = 'start';
+  const bw = w - 36;
+  const hpLabel = p.dead ? 'DOWN' : `${Math.max(0, Math.round(p.hp))} / ${p.baseMaxHp}`;
+  drawBar(x + 22, y + 32, bw, 16, p.dead ? 0 : p.hp / p.baseMaxHp, '#ff5d5d', '#ff9b6b', hpLabel);
+  drawBar(x + 22, y + 56, bw, 8, p.xp / p.xpNext, '#7cff6b', '#6cd6ff');
+  drawCoin(x + 29, y + 80, 5.5);
+  ctx.font = uiFont(13, 'bold');
+  ctx.fillStyle = palette.text;
+  ctx.fillText(`${p.currency}`, x + 40, y + 85);
+}
+
+// y (in HUD units) for the P2 card: 8px below the DOM Pause button, measured in canvas pixels
+function hudP2CardY(S){
+  let bottomPx = 62 * S;
+  if(pauseBtn && pauseBtn.style.display !== 'none'){
+    const br = pauseBtn.getBoundingClientRect(), cr = canvas.getBoundingClientRect();
+    if(br.height > 0) bottomPx = br.bottom - cr.top + 8;
+  }
+  return Math.max(62, bottomPx / S);
 }
 
 function drawHUD(){
   const p = players[0];
-  ctx.font = '14px "Trebuchet MS", system-ui, sans-serif';
-  const pulse = 0.6 + 0.4 * Math.sin(state.animTime * 4);
+  const S = hudScale();
+  const VW = W / S, VH = H / S;       // virtual size in HUD units
+  ctx.save();
+  ctx.scale(S, S);
 
-  // main HUD panel
-  panel(12, 12, 300, 84, palette.uiLight, palette.outline, 12);
-  ctx.fillStyle = palette.text;
-  ctx.fillText(`Wave ${state.wave}`, 24, 34);
-  ctx.fillText(`HP ${Math.max(0,Math.round(p.hp))}/${p.baseMaxHp}`, 24, 56);
-  ctx.fillText(`Coins ${p.currency}`, 24, 78);
+  // --- top-left: player 1 card
+  drawPlayerCard(p, 12, 12, 250, players.length > 1 ? 'PLAYER 1' : 'PLAYER', '#4a9eff');
 
-  // XP bar
-  const barX = 310, barY = 20, barW = 220, barH = 12;
-  panel(barX-6, barY-6, barW+12, 26, palette.uiLight, palette.outline, 10);
-  ctx.fillStyle = palette.uiMid;
-  roundRect(barX, barY, barW, barH, 6); ctx.fill();
-  const xpGrad = ctx.createLinearGradient(barX, barY, barX+barW, barY);
-  xpGrad.addColorStop(0, `rgba(124,255,107,${0.6 + pulse*0.2})`);
-  xpGrad.addColorStop(1, `rgba(108,214,255,${0.9 + pulse*0.2})`);
-  ctx.fillStyle = xpGrad;
-  roundRect(barX, barY, barW * (p.xp / p.xpNext), barH, 6); ctx.fill();
-  ctx.fillStyle = palette.text;
-  ctx.fillText(`Lv ${p.level}`, barX, barY + 26);
-
-  // player2 HUD
-  if(players[1]){
-    const p2 = players[1];
-    panel(W-240, 12, 228, 60, palette.uiLight, palette.outline, 12);
-    ctx.fillStyle = palette.text;
-    const hpText = p2.dead ? 'P2 DOWN' : `P2 HP ${Math.max(0,Math.round(p2.hp))}/${p2.baseMaxHp}`;
-    ctx.fillText(hpText, W-228, 34);
-    ctx.fillText(`P2 Coins ${p2.currency}`, W-228, 52);
+  // --- top-centre: wave + enemies remaining
+  const ww = 220, wx = VW/2 - ww/2;
+  panel(wx, 12, ww, 52, palette.uiLight, palette.outline, 12);
+  ctx.font = uiFont(16, 'bold');
+  ctx.textAlign = 'center';
+  ctx.fillStyle = palette.uiAccent;
+  const isBoss = state.wave >= state.maxWave;
+  ctx.fillText(isBoss ? `WAVE ${state.wave} — BOSS` : `WAVE ${state.wave} / ${state.maxWave}`, VW/2, 33);
+  ctx.textAlign = 'start';
+  if(state.phase === 'wave'){
+    const remaining = Math.max(0, state.waveTotal - state.waveSpawned) + enemies.length;
+    drawBar(wx + 14, 42, ww - 28, 10, state.waveTotal ? 1 - remaining / state.waveTotal : 0, '#48e0c2', '#5fb0ff');
+    ctx.font = uiFont(10);
+    ctx.fillStyle = palette.textLight;
+    ctx.textAlign = 'center';
+    ctx.fillText(`${remaining} enemies left`, VW/2, 76);
+    ctx.textAlign = 'start';
+  } else {
+    ctx.font = uiFont(11);
+    ctx.fillStyle = palette.textLight;
+    ctx.textAlign = 'center';
+    ctx.fillText(state.phase === 'shop' ? 'Shop — prepare for the next wave' : 'Wave cleared!', VW/2, 52);
+    ctx.textAlign = 'start';
   }
 
-  // weapon + ammo
+  // --- top-right: player 2 card (below the DOM pause button)
+  // [brad-ui] (b) P2 card below the DOM Pause button at every HUD scale (Greg's hudP2CardY)
+  if(players[1]) drawPlayerCard(players[1], VW - 262, hudP2CardY(S), 250, 'PLAYER 2', '#ff6b6b');
+
+  // --- bottom-left: weapon + ammo, dash
   const w = getWeaponFor(p);
-  panel(12, H-56, 220, 42, palette.uiLight, palette.outline, 12);
+  // [brad-ui] (d) card is 66 tall so the ammo line has room above the bottom border
+  const by = VH - 78;
+  panel(12, by, 250, 66, palette.uiLight, palette.outline, 12);
+  ctx.fillStyle = 'rgba(190,215,255,0.16)';
+  roundRect(20, by + 9, 58, 48, 8); ctx.fill();
+  drawWeaponIcon(w, 24, by + 18, 50, 30);
+  ctx.font = uiFont(13, 'bold');
   ctx.fillStyle = palette.text;
-  ctx.fillText(`${w.name}`, 24, H-32);
-  if(w.elemental){ ctx.fillText(`Element: ${w.elemental}`, 120, H-32); }
+  ctx.fillText(w.name, 88, by + 23);
+  if(w.elemental){
+    const ec = w.elemental === 'fire' ? '#ff8c42' : w.elemental === 'ice' ? '#6cd6ff' : '#b27bff';
+    ctx.font = uiFont(10, 'bold');
+    const tw = ctx.measureText(w.elemental.toUpperCase()).width + 10;
+    ctx.fillStyle = ec; roundRect(250 - tw - 4, by + 11, tw, 15, 6); ctx.fill();
+    ctx.fillStyle = '#041018'; ctx.fillText(w.elemental.toUpperCase(), 250 - tw + 1, by + 22);
+  }
   if(!w.melee){
     const magMax = Math.max(1, (w.mag||0) + p.magBonus);
-    const ammoBarW = 120;
-    const ammoX = 24;
-    const ammoY = H-20;
-    ctx.fillStyle = palette.uiMid;
-    roundRect(ammoX, ammoY, ammoBarW, 6, 3); ctx.fill();
-    const ammoGrad = ctx.createLinearGradient(ammoX, ammoY, ammoX+ammoBarW, ammoY);
-    ammoGrad.addColorStop(0, palette.uiAccent);
-    ammoGrad.addColorStop(1, palette.uiGreen);
-    ctx.fillStyle = ammoGrad;
-    roundRect(ammoX, ammoY, ammoBarW * (p.ammoInMag / magMax), 6, 3); ctx.fill();
+    if(p.reloading > 0){
+      // [brad-ui] reload bar fills against the effective reload time (fireWeaponFor sets reloading = w.reload * reloadSpeed)
+      drawBar(88, by + 32, 160, 10, 1 - p.reloading / Math.max(0.01, w.reload * (p.reloadSpeed || 1)), '#ffd166', '#ffb44c', '');
+      ctx.font = uiFont(10, 'bold'); ctx.fillStyle = '#ffd166'; ctx.fillText('RELOADING', 88, by + 53);
+    } else {
+      drawBar(88, by + 32, 160, 10, p.ammoInMag / magMax, palette.uiAccent, palette.uiGreen, '');
+      ctx.font = uiFont(10); ctx.fillStyle = palette.textLight; ctx.fillText(`${p.ammoInMag} / ${magMax}`, 88, by + 53);
+    }
+  } else {
+    ctx.font = uiFont(10); ctx.fillStyle = palette.textLight; ctx.fillText('Melee', 88, by + 42);
   }
-  // dash meter
-  const dashPanelY = H-104;
-  panel(12, dashPanelY, 160, 36, palette.uiLight, palette.outline, 10, {shadow:false});
+  if(w.overheatMax){
+    drawBar(170, by + 48, 78, 4, w.heat / w.overheatMax, '#ffd166', '#ff5d5d', '');
+  }
+  const dy = by - 42;
+  panel(12, dy, 170, 32, palette.uiLight, palette.outline, 10, {shadow:false});
+  ctx.font = uiFont(12, 'bold');
   ctx.fillStyle = palette.text;
-  ctx.fillText('Dash', 22, dashPanelY + 20);
-  const dashBarX = 74, dashBarW = 82, dashBarH = 10;
-  ctx.fillStyle = palette.uiMid;
-  roundRect(dashBarX, dashPanelY + 12, dashBarW, dashBarH, 5); ctx.fill();
+  ctx.fillText('DASH', 22, dy + 21);
   const dashReady = 1 - Math.min(1, Math.max(0, p.dashCooldown) / 2.1);
-  const dashGrad = ctx.createLinearGradient(dashBarX, 0, dashBarX + dashBarW, 0);
-  dashGrad.addColorStop(0, palette.uiBlue);
-  dashGrad.addColorStop(1, palette.uiGreen);
-  ctx.fillStyle = dashGrad;
-  roundRect(dashBarX, dashPanelY + 12, dashBarW * dashReady, dashBarH, 5); ctx.fill();
-  if(dashReady >= 0.999){
-    ctx.fillStyle = palette.uiGreen;
-    ctx.fillText('READY', dashBarX - 2, dashPanelY + 30);
-  }
+  drawBar(66, dy + 10, 106, 12, dashReady, palette.uiBlue, palette.uiGreen, dashReady >= 0.999 ? 'READY' : '');
 
-  // audio mute indicator
+  // --- bottom-right: mute indicator
   if(audio.muted){
-    panel(W-130, H-48, 118, 32, palette.uiLight, palette.outline, 10, {shadow:false});
+    panel(VW-130, VH-44, 118, 32, palette.uiLight, palette.outline, 10, {shadow:false});
+    ctx.font = uiFont(12, 'bold');
     ctx.fillStyle = palette.text;
-    ctx.fillText('MUTED (M)', W-118, H-28);
+    ctx.fillText('MUTED (M)', VW-110, VH-23);
   }
+  ctx.restore();
+}
+
+// ---- shared layouts: used by both drawing and click hit-testing ----------
+function getUpgradeLayout(){
+  const n = Math.max(1, upgradeChoices.items.length);
+  const panelW = Math.min(720, W * 0.92);
+  const cardGap = 12;
+  const cardW = (panelW - 32 - cardGap * (n - 1)) / n;
+  const cardH = 150;
+  const panelH = cardH + 110;
+  const px = (W - panelW) / 2, py = (H - panelH) / 2;
+  const cards = [];
+  for(let i=0;i<n;i++) cards.push({x: px + 16 + i * (cardW + cardGap), y: py + 70, w: cardW, h: cardH});
+  return {px, py, panelW, panelH, cards};
+}
+
+// [brad-ui] v0.56: the shop layout lives in ui.js (ShopUI). These delegates keep game.js click
+// handling and the shop drawing on the same rects.
+function getShopCardRect(def, i){ return ShopUI.cardRect(def, i); }
+function getShopButtons(){ return ShopUI.buttons(); }
+function inRect(mx, my, r){ return mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h; }
+
+function drawButton(r, label, {primary=false, disabled=false}={}){
+  const hover = !disabled && inRect(input.mx, input.my, r);
+  const lift = 0;   // no hover lift: drawn button == click rect
+  ctx.save();
+  ctx.fillStyle = palette.outline;
+  roundRect(r.x, r.y + 4, r.w, r.h, 10); ctx.fill();          // drop edge
+  const g = ctx.createLinearGradient(0, r.y + lift, 0, r.y + r.h + lift);
+  if(primary && !disabled){ g.addColorStop(0, hover ? '#6af0d4' : '#48e0c2'); g.addColorStop(1, '#2dbba0'); }
+  else { g.addColorStop(0, hover ? '#2a4259' : '#1f3346'); g.addColorStop(1, '#152436'); }
+  ctx.fillStyle = g;
+  roundRect(r.x, r.y + lift, r.w, r.h, 10); ctx.fill();
+  ctx.lineWidth = 3; ctx.strokeStyle = palette.outline; ctx.stroke();
+  ctx.font = uiFont(14, 'bold');
+  ctx.textAlign = 'center';
+  ctx.fillStyle = primary && !disabled ? '#041018' : (disabled ? '#6f839b' : palette.text);
+  ctx.fillText(label, r.x + r.w/2, r.y + r.h/2 + 5 + lift);
+  ctx.textAlign = 'start';
+  ctx.restore();
+  return hover;
 }
 
 function drawUpgradeSelector(){
   if(state.phase !== 'upgrade') return;
-  const panelW = Math.min(620, W*0.85);
-  const panelH = 220;
-  const px = (W-panelW)/2;
-  const py = (H-panelH)/2;
-  panel(px, py, panelW, panelH, palette.uiLight, palette.outline, 14);
-  ctx.fillStyle = palette.text;
-  ctx.font = '18px "Trebuchet MS", system-ui, sans-serif';
-  ctx.fillText('LEVEL UP — CHOOSE ONE', px+18, py+30);
+  ctx.fillStyle = 'rgba(2,6,12,0.55)';
+  ctx.fillRect(0, 0, W, H);
+  const L = getUpgradeLayout();
+  panel(L.px, L.py, L.panelW, L.panelH, palette.uiLight, palette.outline, 16);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = palette.uiAccent;
+  ctx.font = uiFont(22, 'bold');
+  ctx.fillText('LEVEL UP', W/2, L.py + 34);
+  ctx.font = uiFont(12);
+  ctx.fillStyle = palette.textLight;
+  ctx.fillText(players.length > 1 ? 'Choose one upgrade (applies to both players)' : 'Choose one upgrade', W/2, L.py + 54);
+  ctx.textAlign = 'start';
 
-  const cardW = (panelW - 40) / 4;
-  const cardH = 132;
+  let anyHover = false;
   for(let i=0;i<upgradeChoices.items.length;i++){
     const choice = upgradeChoices.items[i];
-    const x = px + 16 + i * cardW; const y = py + 60;
-    const pulse = 1 + Math.sin(state.animTime * 3 + i) * 0.01;
+    const c = L.cards[i];
+    const hover = inRect(input.mx, input.my, c);
+    anyHover = anyHover || hover;
+    // [brad-ui] (f) the card face rises inside its own rect on hover, so the lifted card is exactly the click area
+    const lift = hover ? 0 : 4;
     ctx.save();
-    ctx.translate(x + (cardW-8)/2, y + cardH/2);
-    ctx.scale(pulse, pulse);
-    ctx.translate(-(x + (cardW-8)/2), -(y + cardH/2));
-    panel(x, y, cardW-8, cardH, palette.uiMid, palette.outline, 10);
+    ctx.translate(0, lift);
+    panel(c.x, c.y, c.w, c.h - 4, hover ? '#2a4259' : palette.uiMid, hover ? choice.tier.color : palette.outline, 12);
+    // tier band
     ctx.fillStyle = choice.tier.color;
-    roundRect(x+8, y+8, 10, 20, 4); ctx.fill();
+    roundRect(c.x + 8, c.y + 8, c.w - 16, 6, 3); ctx.fill();
+    ctx.textAlign = 'center';
+    ctx.font = uiFont(11, 'bold');
+    ctx.fillStyle = choice.tier.color;
+    ctx.fillText(choice.tier.name.toUpperCase(), c.x + c.w/2, c.y + 34);
+    ctx.font = uiFont(c.w < 130 ? 13 : 15, 'bold');
     ctx.fillStyle = palette.text;
-    ctx.font = '12px "Trebuchet MS", system-ui, sans-serif';
-    ctx.fillText(choice.stat.name, x+22, y+24);
-    ctx.font = '10px "Trebuchet MS", system-ui, sans-serif';
-    ctx.fillText(`${choice.tier.name} +${Math.round((choice.tier.mult-1)*100)}%`, x+22, y+42);
+    ctx.fillText(choice.stat.name, c.x + c.w/2, c.y + 66);
+    ctx.font = uiFont(26, 'bold');
+    ctx.fillStyle = choice.tier.color;
+    ctx.fillText(`+${Math.round((choice.tier.mult-1)*100)}%`, c.x + c.w/2, c.y + 106);
+    ctx.font = uiFont(10);
+    ctx.fillStyle = palette.textLight;
+    ctx.fillText(hover ? 'Click to pick' : `Tier multiplier x${choice.tier.mult}`, c.x + c.w/2, c.y + c.h - 18);
+    ctx.textAlign = 'start';
     ctx.restore();
   }
+  canvas.style.cursor = anyHover ? 'pointer' : 'default';
 }
 
+// [brad-ui] v0.56 Brotato-style shop screen, drawn by ui.js; Tab still opens the full stats view
 function drawShop(){
   if(state.phase !== 'shop') return;
   if(state.shopView === 'stats'){
     drawStatsMenu();
     return;
   }
-  const a = state.shopAnim || 1;
-  const fog = ctx.createRadialGradient(W/2, H/2, 80, W/2, H/2, Math.max(W,H)*0.6);
-  fog.addColorStop(0, `rgba(0,0,0,${0.35*a})`);
-  fog.addColorStop(1, `rgba(0,0,0,${0.7*a})`);
-  ctx.fillStyle = fog;
-  ctx.fillRect(0,0,W,H);
-
-  const panels = getShopPanels();
-  for(const p of panels){
-    drawShopPanel(p);
-  }
-  // reroll button (single, bottom)
-  panel(W/2-70, (H*0.82), 140, 36, palette.uiLight, palette.outline, 12);
-  ctx.fillStyle = palette.text;
-  ctx.font = '12px "Trebuchet MS", system-ui, sans-serif';
-  ctx.fillText(`Reroll $${shop.rerollCost}`, W/2-50, (H*0.82)+22);
+  ShopUI.draw();
 }
 
-function getShopPanels(){
-  if(state.coop && players[1]){
-    const gap = 14;
-    const panelW = Math.min(560, (W - gap*3) / 2);
-    const panelH = Math.min(380, H*0.72);
-    const py = (H - panelH)/2 + (1-(state.shopAnim||1))*50;
-    return [
-      {x: gap, y: py, w: panelW, h: panelH, player: players[0], title: 'P1 SHOP'},
-      {x: W - panelW - gap, y: py, w: panelW, h: panelH, player: players[1], title: 'P2 SHOP'},
-    ];
-  }
-  const panelW = Math.min(780, W*0.92);
-  const panelH = Math.min(380, H*0.72);
-  return [{x: (W-panelW)/2, y: (H-panelH)/2 + (1-(state.shopAnim||1))*50, w: panelW, h: panelH, player: players[0], title: 'SHOP'}];
-}
-
-function drawShopPanel(def){
-  const {x: px, y: py, w: panelW, h: panelH, player: p, title} = def;
-  panel(px, py, panelW, panelH, palette.uiLight, palette.outline, 14);
-  ctx.fillStyle = palette.text;
-  ctx.font = '18px "Trebuchet MS", system-ui, sans-serif';
-  ctx.fillText(title, px+18, py+30);
-  ctx.font = '12px "Trebuchet MS", system-ui, sans-serif';
-  ctx.fillText('Click cards to buy. Enter to start next wave.', px+18, py+50);
-
-  const cols = 3;
-  const cardW = (panelW - 44) / cols;
-  const cardH = 132;
-
-  let hover = -1;
-  for(let i=0;i<shop.items.length;i++){
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    const x = px + 16 + col * cardW;
-    const y = py + 64 + row * (cardH + 12);
-    if(input.mx >= x && input.mx <= x + cardW - 12 && input.my >= y && input.my <= y + cardH) hover = i;
-
-    const isSelected = i === shop.selection;
-    const isHover = i === hover;
-    const pulse = 1 + (isHover ? 0.03 : 0.0) + Math.sin(state.animTime * 4 + i) * 0.003;
-    const cx = x + (cardW-12)/2;
-    const cy = y + cardH/2;
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.scale(pulse, pulse);
-    ctx.translate(-cx, -cy);
-    panel(x, y, cardW-12, cardH, isSelected ? palette.uiMid : palette.uiLight, palette.outline, 12);
-    ctx.save();
-    roundRect(x, y, cardW-12, cardH, 10); ctx.clip();
-    if(isHover){
-      ctx.strokeStyle = palette.uiAccent; ctx.lineWidth = 3;
-      roundRect(x, y, cardW-12, cardH, 10); ctx.stroke();
-    }
-
-    const it = shop.items[i];
-    if(!it || !it.data){
-      ctx.fillStyle = 'rgba(0,0,0,0.2)';
-      ctx.font = '10px "Trebuchet MS", system-ui, sans-serif';
-      ctx.fillText('EMPTY', x+20, y+24);
-      ctx.restore();
-      ctx.restore();
-      continue;
-    }
-    const rarity = rarities.find(r=>r.id === (it.rarity || it.data.rarity));
-    ctx.fillStyle = (rarity && rarity.color) || palette.uiMid;
-    ctx.fillRect(x+10, y+10, 6, 26);
-
-    ctx.fillStyle = palette.text;
-    ctx.font = '12px "Trebuchet MS", system-ui, sans-serif';
-    ctx.fillText(it.data.name, x+20, y+24);
-
-    if(it.type === 'weapon'){
-      drawWeaponIcon(it.data, x+20, y+30);
-      ctx.fillStyle = palette.text;
-      ctx.font = '9px "Trebuchet MS", system-ui, sans-serif';
-      const wInst = it.preview || (it.preview = createWeaponInstance(it.data, it.rarity || it.data.rarity));
-      ctx.fillText(`DMG ${wInst.damage}`, x+20, y+56);
-      ctx.fillText(`ROF ${wInst.fireRate.toFixed(2)}`, x+78, y+56);
-      ctx.fillText(`RLD ${wInst.reload.toFixed(1)}s`, x+20, y+70);
-      ctx.fillText(`MAG ${wInst.mag}`, x+20, y+84);
-    } else {
-      drawItemIcon(it.data.id, x+20, y+52);
-      ctx.fillStyle = palette.text;
-      ctx.font = '9px "Trebuchet MS", system-ui, sans-serif';
-      wrapText(it.data.desc, x+42, y+62, cardW-60, 11, 2);
-    }
-
-    ctx.restore();
-    // price badge (green if affordable, gray if not)
-    const canAfford = p.currency >= it.price;
-    panel(x+16, y+100, 70, 22, canAfford ? palette.uiGreen : palette.uiMid, palette.outline, 10, {shadow:false});
-    if(canAfford){
-      ctx.save();
-      ctx.shadowColor = 'rgba(124,255,107,0.6)';
-      ctx.shadowBlur = 10;
-      ctx.strokeStyle = 'rgba(124,255,107,0.6)';
-      roundRect(x+16, y+100, 70, 22, 10); ctx.stroke();
-      ctx.restore();
-    }
-    ctx.fillStyle = palette.text;
-    ctx.font = '12px "Trebuchet MS", system-ui, sans-serif';
-    ctx.fillText(`$${it.price}`, x+28, y+116);
-    if(shop.locked[i]){
-      ctx.fillStyle = palette.text;
-      ctx.fillText('LOCK', x+70, y+116);
-    }
-    ctx.restore();
-  }
-}
+function getShopPanels(){ return ShopUI.panels(); }   // [brad-ui] one panel: the shopping player's card area
 
 function drawStatsMenu(){
   const p = players[0];
-  const panelW = Math.min(560, W*0.82);
-  const panelH = Math.min(380, H*0.7);
+  ctx.fillStyle = 'rgba(2,6,12,0.6)';
+  ctx.fillRect(0, 0, W, H);
+  const panelW = Math.min(720, W*0.92);
+  const panelH = Math.min(440, H*0.88);
   const px = (W-panelW)/2;
   const py = (H-panelH)/2;
-  panel(px, py, panelW, panelH, palette.uiLight, palette.outline, 14);
-  ctx.fillStyle = palette.text;
-  ctx.font = '18px "Trebuchet MS", system-ui, sans-serif';
-  ctx.fillText('STATS (TAB to return)', px+18, py+28);
-  ctx.font = '12px "Trebuchet MS", system-ui, sans-serif';
+  panel(px, py, panelW, panelH, palette.uiLight, palette.outline, 16);
+  ctx.fillStyle = palette.uiAccent;
+  ctx.font = uiFont(20, 'bold');
+  ctx.fillText('STATS', px+20, py+34);
+  ctx.font = uiFont(12);
+  ctx.fillStyle = palette.textLight;
+  ctx.fillText('Tab to return to the shop', px+92, py+33);
   const rows = [
-    `Class: ${p.className}`,
-    `HP: ${Math.round(p.hp)} / ${p.baseMaxHp}`,
-    `Speed: ${p.baseSpeed}`,
-    `Armor: ${p.armor}`,
-    `Life Steal: ${(p.lifesteal*100).toFixed(1)}%`,
-    `Reload Speed: ${p.reloadSpeed.toFixed(2)}`,
-    `Accuracy: ${p.accuracy.toFixed(2)}`,
-    `Mag Bonus: +${p.magBonus}`,
-    `Damage Bonus: +${p.damageBonus}`,
-    `Crit Chance: ${(p.critChance*100).toFixed(1)}%`,
-    `Elemental Bonus: +${Math.round(p.elementalBonus*100)}%`,
-    `Luck: ${p.luck}`,
+    ['Class', p.className],
+    ['HP', `${Math.round(p.hp)} / ${p.baseMaxHp}`],
+    ['Speed', `${p.baseSpeed}`],
+    ['Armor', `${p.armor}`],
+    ['Life Steal', `${(p.lifesteal*100).toFixed(1)}%`],
+    ['Reload Speed', p.reloadSpeed.toFixed(2)],
+    ['Accuracy', p.accuracy.toFixed(2)],
+    ['Mag Bonus', `+${p.magBonus}`],
+    ['Damage Bonus', `+${p.damageBonus}`],
+    ['Crit Chance', `${(p.critChance*100).toFixed(1)}%`],
+    ['Elemental Bonus', `+${Math.round(p.elementalBonus*100)}%`],
+    ['Luck', `${p.luck}`],
   ];
+  const colW = Math.min(260, panelW * 0.4);
   for(let i=0;i<rows.length;i++){
-    ctx.fillText(rows[i], px+24, py+60 + i*20);
+    const ry = py + 64 + i * 22;
+    if(i % 2 === 0){ ctx.fillStyle = 'rgba(255,255,255,0.04)'; ctx.fillRect(px + 16, ry - 15, colW, 22); }
+    ctx.font = uiFont(12);
+    ctx.fillStyle = palette.textLight;
+    ctx.fillText(rows[i][0], px + 24, ry);
+    ctx.font = uiFont(12, 'bold');
+    ctx.fillStyle = palette.text;
+    ctx.textAlign = 'right';
+    ctx.fillText(rows[i][1], px + 16 + colW - 8, ry);
+    ctx.textAlign = 'start';
   }
-
-  // modifier explanations
-  ctx.fillText('Modifiers:', px+24, py+260);
+  const mx = px + 16 + colW + 24;
+  const mw = panelW - (mx - px) - 20;
+  ctx.font = uiFont(13, 'bold');
+  ctx.fillStyle = palette.uiAccent;
+  ctx.fillText('What the stats do', mx, py + 64);
   const mods = [
     'Engineering: increases bonus damage from effects (mapped to Damage Bonus).',
     'Elemental Dmg: adds extra damage and boosts status effects (fire/ice/shock/explosive).',
@@ -1819,14 +2142,19 @@ function drawStatsMenu(){
     'Crit Chance: chance to deal 1.5x damage.',
     'Luck: improves rarity rolls in shop (more rare items).',
   ];
-  for(let i=0;i<mods.length;i++){
-    ctx.fillText(mods[i], px+24, py+280 + i*16);
+  ctx.font = uiFont(11);
+  ctx.fillStyle = palette.textLight;
+  let yy = py + 86;
+  for(const m of mods){
+    const lines = Math.max(1, Math.ceil(ctx.measureText(m).width / Math.max(60, mw)));
+    wrapText(m, mx, yy, mw, 14, 3);
+    yy += Math.min(3, lines) * 14 + 6;
   }
 }
 
 function drawEffects(){
-  // money drops
-  for(const m of moneyDrops){
+  // money drops ([brad-fx] v0.56 green material gems with bob/pulse/swoop in fx.js; old squares are the fallback)
+  if(!(window.FX && FX.drawMoney())) for(const m of moneyDrops){
     const bob = Math.sin(m.t * 10) * 2.4;
     ctx.shadowColor = 'rgba(124,255,107,0.7)';
     ctx.shadowBlur = 12;
@@ -1851,17 +2179,24 @@ function drawEffects(){
 
   // trees (draw)
   for(const tr of trees){
+    drawGroundShadow(tr.x, tr.y + 22, 18, 6);
     ctx.save();
     ctx.translate(tr.x, tr.y);
-    if(treeImage.complete && treeImage.naturalWidth){
-      const scale = (tr.r*2) / treeImage.naturalWidth;
-      const h = treeImage.naturalHeight * scale;
-      ctx.drawImage(treeImage, -tr.r, -h/2, tr.r*2, h);
-    } else {
-      ctx.fillStyle = '#5a7f3a';
-      ctx.beginPath(); ctx.arc(0,0,tr.r,0,Math.PI*2); ctx.fill();
+    const sway = Math.sin(state.animTime * 1.5 + tr.x * 0.05) * 0.03;
+    ctx.rotate(sway);
+    // [brad-fx] v0.56 tree in the ground palette (fx.js); the original Tree.png is the fallback
+    if(!(window.FX && FX.drawTree()) && !drawSprite('tree', 46, null, {anchorY: 0.62})){     // 1:1 with the 64px source art
+      ctx.fillStyle = '#3b2a1a'; ctx.fillRect(-4, 4, 8, 16);
+      ctx.fillStyle = palette.outline;
+      ctx.beginPath(); ctx.arc(0,-4,tr.r+2,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#5a9f3a';
+      ctx.beginPath(); ctx.arc(0,-4,tr.r,0,Math.PI*2); ctx.fill();
     }
     ctx.restore();
+    if(tr.hp < tr.maxHp){
+      ctx.fillStyle = palette.outline; roundRect(tr.x-16, tr.y-36, 32, 5, 2); ctx.fill();
+      ctx.fillStyle = palette.uiGreen; roundRect(tr.x-15, tr.y-35, 30 * Math.max(0, tr.hp/tr.maxHp), 3, 1.5); ctx.fill();
+    }
   }
 
   // fruits (draw)
@@ -1886,58 +2221,74 @@ function drawEffects(){
   // enemies
   for(const e of enemies){
     const wob = 1 + Math.sin(state.animTime * 5 + e.x * 0.02 + e.y * 0.01) * 0.03;
+    const flash = e.hitFlash > 0 ? e.hitFlash / 0.1 : 0;
+    drawGroundShadow(e.x, e.y + e.r * 0.9 + 2, e.r * 0.95, e.r * 0.35);
     ctx.save();
     ctx.translate(e.x, e.y);
     ctx.scale(wob, wob);
-    const lightImg = enemyImages.light;
-    if(e.id === 'runner' && lightImg && lightImg.complete && lightImg.naturalWidth){
-      const scale = (e.r*2) / lightImg.naturalWidth;
-      const h = lightImg.naturalHeight * scale;
-      ctx.drawImage(lightImg, -e.r, -h/2, e.r*2, h);
-    } else {
+    // yellow "light" enemy (spitter) uses EnemyLight.png, drawn 1:1 with its pixel art
+    // [brad-fx] animated v0.56 enemy sheets (fx.js) return the sprite's half-height; else the old art
+    const fxTop = window.FX ? FX.drawEnemy(e, flash) : 0;
+    const useSprite = fxTop > 0 || (e.id === 'spitter' && drawSprite('enemyLight', null, 36, {flipX: e.face < 0, flash}));
+    if(!useSprite){
       ctx.fillStyle = palette.outline;
       ctx.beginPath(); ctx.arc(0,0,e.r+2,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle = e.color;
+      ctx.fillStyle = flash > 0 ? '#ffffff' : e.color;
       ctx.beginPath(); ctx.arc(0,0,e.r,0,Math.PI*2); ctx.fill();
+      // soft highlight
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      ctx.beginPath(); ctx.arc(-e.r*0.3,-e.r*0.35,e.r*0.45,0,Math.PI*2); ctx.fill();
+      // eyes look toward travel direction
+      const look = (e.face || 1) * Math.min(3, e.r*0.2);
       ctx.fillStyle = '#2b1e10';
-      ctx.beginPath(); ctx.arc(-3,-2,2,0,Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.arc(3,-2,2,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(-e.r*0.3 + look,-e.r*0.15,Math.max(1.6, e.r*0.16),0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(e.r*0.3 + look,-e.r*0.15,Math.max(1.6, e.r*0.16),0,Math.PI*2); ctx.fill();
     }
 
-    // hp bar
-    ctx.fillStyle = palette.outline;
-    roundRect(-e.r-2, -e.r-10, e.r*2+4, 6, 3); ctx.fill();
-    const hpGrad = ctx.createLinearGradient(-e.r, 0, e.r, 0);
-    hpGrad.addColorStop(0, palette.uiAccent);
-    hpGrad.addColorStop(1, palette.uiGreen);
-    ctx.fillStyle = hpGrad;
-    roundRect(-e.r, -e.r-9, (e.r*2) * (e.hp/e.maxHp), 4, 2); ctx.fill();
+    // hp bar (only once damaged, keeps crowds readable)
+    const barTop = fxTop > 0 ? -fxTop - 6 : useSprite ? -22 : -e.r-10;
+    if(e.hp < e.maxHp || e.isBoss){
+      ctx.fillStyle = palette.outline;
+      roundRect(-e.r-2, barTop, e.r*2+4, 6, 3); ctx.fill();
+      ctx.fillStyle = e.isBoss ? '#ff6b6b' : '#ff8a5c';
+      roundRect(-e.r, barTop+1, (e.r*2) * Math.max(0, e.hp/e.maxHp), 4, 2); ctx.fill();
+    }
     if(e.isBoss){
       ctx.fillStyle = '#ffb44c';
-      ctx.beginPath(); ctx.moveTo(-6,-e.r-18); ctx.lineTo(0,-e.r-28); ctx.lineTo(6,-e.r-18); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-6,barTop-8); ctx.lineTo(0,barTop-18); ctx.lineTo(6,barTop-8); ctx.closePath(); ctx.fill();
     }
     ctx.restore();
   }
 
-  // particles
+  // particles ([brad-fx] v0.56: soft additive glows instead of flat discs; fx.js adds the sparks)
+  ctx.save();
+  if(window.FX) ctx.globalCompositeOperation = 'lighter';
   for(const p of particles){
+    const a = Math.max(0, Math.min(1, p.life*5));
+    if(window.FX && FX.glow(p.color, p.x, p.y, p.r * 1.6, a * 0.7)) continue;
     ctx.fillStyle = p.color;
-    ctx.globalAlpha = Math.max(0, p.life*5);
+    ctx.globalAlpha = a;
     ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
     ctx.globalAlpha = 1;
   }
+  ctx.restore();
 }
 
 function drawWaveBanner(){
   if(state.waveBanner <= 0) return;
   const t = state.waveBanner;
   const alpha = Math.min(1, t);
-  panel(W/2 - 120, H*0.08, 240, 46, palette.uiLight, palette.outline, 12, {alpha});
-  ctx.fillStyle = palette.text;
-  ctx.font = 'bold 18px "Trebuchet MS", system-ui, sans-serif';
+  const slide = Math.max(0, (t - 1.9)) * 60;   // small drop-in
+  const y = H*0.2 - slide;
+  panel(W/2 - 150, y, 300, 60, palette.uiLight, palette.outline, 14, {alpha});
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = state.wave >= state.maxWave ? '#ff6b6b' : palette.uiAccent;
+  ctx.font = uiFont(26, 'bold');
   ctx.textAlign = 'center';
-  ctx.fillText(`WAVE ${state.wave}`, W/2, H*0.08 + 28);
+  ctx.fillText(state.wave >= state.maxWave ? 'BOSS WAVE' : `WAVE ${state.wave}`, W/2, y + 40);
   ctx.textAlign = 'start';
+  ctx.restore();
 }
 
 function drawGameOver(){
@@ -1946,23 +2297,24 @@ function drawGameOver(){
   ctx.fillStyle=palette.uiLight;
   panel(W/2-200, 24, 400, 56, palette.uiLight, palette.outline, 14);
   ctx.fillStyle=palette.text;
-  ctx.font='bold 22px "Trebuchet MS", system-ui, sans-serif';
+  ctx.font=uiFont(22,'bold');
   ctx.textAlign='center';
   ctx.fillText('RUN OVER', W/2, 58);
   ctx.textAlign='start';
 
   const cols = players.length;
-  const panelW = Math.min(420, (W - 40) / cols);
-  const panelH = Math.min(420, H - 120);
+  const panelW = Math.min(420, (W - 40 - 20*(cols-1)) / cols);
+  const panelH = Math.max(200, Math.min(420, H - 100 - 90));   // leave room for the Restart button
+  const startX = (W - (cols * panelW + (cols-1) * 20)) / 2;
   for(let i=0;i<players.length;i++){
     const p = players[i];
-    const px = 20 + i * (panelW + 20);
+    const px = startX + i * (panelW + 20);
     const py = 100;
     panel(px, py, panelW, panelH, palette.uiLight, palette.outline, 12);
     ctx.fillStyle = palette.text;
-    ctx.font = '14px "Trebuchet MS", system-ui, sans-serif';
+    ctx.font = uiFont(14,'bold');
     ctx.fillText(`Player ${i+1}`, px+16, py+24);
-    ctx.font = '12px "Trebuchet MS", system-ui, sans-serif';
+    ctx.font = uiFont(12);
     const stats = [
       `Class: ${p.className}`,
       `Wave: ${state.wave} / ${state.maxWave}`,
@@ -2002,27 +2354,41 @@ function drawGameOver(){
 }
 
 function draw(){
+  if(window.FX) FX.frame();   // [brad-fx] effects bookkeeping (draw-side only)
   ctx.clearRect(0,0,W,H);
   drawBackground();
+  if(state.phase === 'menu'){
+    // menu is DOM; don't paint the in-game HUD behind it
+    restartBtn.style.display = 'none';
+    if(pauseBtn) pauseBtn.style.display = 'none';
+    canvas.style.cursor = 'default';
+    return;
+  }
+  if(state.phase === 'wave' || state.phase === 'gameover') canvas.style.cursor = 'crosshair';
   ctx.save();
   ctx.translate(camera.x, camera.y);
   drawEffects();
+  if(window.FX) FX.drawUnder();   // [brad-fx] dash trail
   drawPlayers();
+  if(window.FX) FX.drawOver();    // [brad-fx] particles, glows, muzzle flash, tracers
   ctx.restore();
-  drawHUD();
-  drawWaveBanner();
+  // [brad-ui] the HUD is hidden behind the shop (it shows wallet/stats itself) and the game-over screen
+  if(state.phase !== 'shop' && state.phase !== 'gameover'){ drawHUD(); drawWaveBanner(); }
   drawUpgradeSelector();
   drawShop();
   if(state.paused){
     ctx.fillStyle = 'rgba(0,0,0,0.45)';
     ctx.fillRect(0,0,W,H);
-    panel(W/2-120, H/2-40, 240, 80, palette.uiLight, palette.outline, 14);
+    // [brad-ui] (e) during level-up the PAUSED box goes above the level-up panel, not over it
+    let pcy = H/2;
+    if(state.phase === 'upgrade'){ const Lu = getUpgradeLayout(); if(Lu.py - 100 >= 8) pcy = Lu.py - 50; }
+    panel(W/2-120, pcy-40, 240, 80, palette.uiLight, palette.outline, 14);
     ctx.fillStyle = palette.text;
-    ctx.font = 'bold 18px "Trebuchet MS", system-ui, sans-serif';
+    ctx.font = uiFont(18,'bold');
     ctx.textAlign = 'center';
-    ctx.fillText('PAUSED', W/2, H/2);
-    ctx.font = '12px "Trebuchet MS", system-ui, sans-serif';
-    ctx.fillText('Press P to resume', W/2, H/2 + 18);
+    ctx.fillText('PAUSED', W/2, pcy);
+    ctx.font = uiFont(12);
+    ctx.fillText('Press P to resume', W/2, pcy + 18);
     ctx.textAlign = 'start';
   }
   const anchor = players[0];
@@ -2042,7 +2408,8 @@ function draw(){
     drawGameOver();
   } else {
     restartBtn.style.display = 'none';
-    if(pauseBtn && state.phase !== 'menu') pauseBtn.style.display = 'block';
+    // [brad-ui] no Pause button over the shop (nothing runs there and it covered the Stats panel)
+    if(pauseBtn && state.phase !== 'menu') pauseBtn.style.display = state.phase === 'shop' ? 'none' : 'block';
   }
 }
 
@@ -2052,9 +2419,6 @@ function loop(now){ const t = now/1000; let dt = t - last; if(dt>0.05) dt=0.05; 
 // init: render menu, prepare shop
 function showMenu(){ menuEl.style.display = 'block'; if(pauseBtn) pauseBtn.style.display = 'none'; if(settingsPanel) settingsPanel.style.display='none'; renderDangerButtons(); renderClassButtons(); }
 showMenu();
-loadWeaponImages();
-loadEnemyImages();
-  loadPlayerImages();
 requestAnimationFrame(loop);
 
 function resetRun(){

@@ -6,69 +6,96 @@
   <title>Brotato-lite</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23ffb44c'/%3E%3Ccircle cx='32' cy='32' r='18' fill='%230b0b0b'/%3E%3Ccircle cx='32' cy='32' r='12' fill='%23f6dfb3'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
-  <!-- WASM systems loader (module) -->
-  <script type="module" src="wasm/systems.loader.js"></script>
+  <!-- WASM systems loader (module). Only injected over http(s): on file:// (and in Electron, which uses
+       loadFile) the browser blocks module scripts with a CORS error, and the game uses its JS shop anyway. -->
+  <script>
+    (function(){
+      var proto = location.protocol;
+      if((proto === 'http:' || proto === 'https:') && window.DISABLE_WASM !== true){
+        window.__systemsWasmWanted = true;
+        var s = document.createElement('script');
+        s.type = 'module';
+        s.src = 'wasm/systems.loader.js';
+        s.onerror = function(){ window.dispatchEvent(new CustomEvent('systemswasm', { detail: null })); };
+        document.head.appendChild(s);
+      }
+    })();
+  </script>
 </head>
 <body>
   <div id="ui">
     <canvas id="game"></canvas>
 
     <div id="menu" class="overlay">
-      <h1>Brotato‑lite</h1>
-      <div class="row">
+      <h1>Brotato&#8209;lite</h1>
+      <div class="subtitle">Survive 20 waves. Beat the Overlord.</div>
+
+      <section class="menu-section">
         <div class="label">Danger</div>
         <div id="dangerList" class="danger-list"></div>
-      </div>
-      <div class="row">
+      </section>
+
+      <section class="menu-section">
         <div class="label">Class</div>
         <div id="classList" class="class-list"></div>
+        <div id="classDesc" class="class-desc">Select a class to see stats and starter weapon.</div>
+      </section>
+
+      <section class="menu-section">
+        <label class="toggle"><input type="checkbox" id="coopToggle"> Co&#8209;op (local, 2 players)</label>
+        <div class="hint">P1: WASD + Shift (dash) &nbsp;•&nbsp; P2: Arrow keys + U (dash)</div>
+      </section>
+
+      <div class="menu-actions">
+        <button id="settingsBtn" class="btn btn-secondary" type="button">Settings</button>
+        <button id="startBtn" class="btn btn-primary" type="button">Start Game</button>
       </div>
-      <div id="classDesc" class="class-desc">Select a class to see stats and starter weapon.</div>
-      <div class="row">
-        <label><input type="checkbox" id="coopToggle"> Co-op (local)</label>
-        <div class="hint" style="font-size: 11px; margin-top: 4px; color: #8aa0b8;">P1: WASD + Shift (dash) | P2: IJKL + U (dash)</div>
-      </div>
-      <div class="row">
-        <button id="settingsBtn">Settings</button>
-      </div>
-      <div class="row">
-        <button id="startBtn">Start Game</button>
-      </div>
-      <div class="hint">Use mouse to select difficulty. Unlock higher dangers by completing Wave 20.</div>
+      <div class="hint">Pick a danger level with the mouse. Beat Wave 20 to unlock the next one.<br>In game: P pause • M mute • Tab stats (shop)</div>
     </div>
 
     <div id="settingsPanel" class="overlay settings" style="display:none">
       <div class="settings-header">
         <h2>Settings</h2>
-        <button id="settingsCloseIcon" class="icon-btn" aria-label="Close settings">×</button>
+        <button id="settingsCloseIcon" class="icon-btn" type="button" aria-label="Close settings">×</button>
       </div>
-      <div class="settings-row">
-        <label>Graphics Preset
-          <select id="gfxPreset">
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-            <option value="custom">Custom</option>
-          </select>
-        </label>
-        <label><input type="checkbox" id="shakeToggle"> Screen Shake</label>
-        <label><input type="checkbox" id="autoShootToggle" checked> Auto Shoot</label>
-        <label><input type="checkbox" id="mouseAimToggle" checked> Mouse Aim</label>
+      <div class="settings-group">
+        <div class="settings-title">Graphics</div>
+        <div class="settings-row">
+          <label>Preset
+            <select id="gfxPreset">
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+              <option value="custom">Custom</option>
+            </select>
+          </label>
+          <label><input type="checkbox" id="shakeToggle"> Screen Shake</label>
+        </div>
+        <div class="settings-row" id="customGfxRow" style="display:none">
+          <label><input type="checkbox" id="bgEffectsToggle" checked> Background FX</label>
+          <label><input type="checkbox" id="particleEffectsToggle" checked> Particle FX</label>
+        </div>
       </div>
-      <div class="settings-row" id="customGfxRow" style="display:none">
-        <label><input type="checkbox" id="bgEffectsToggle" checked> Background FX</label>
-        <label><input type="checkbox" id="particleEffectsToggle" checked> Particle FX</label>
+      <div class="settings-group">
+        <div class="settings-title">Controls</div>
+        <div class="settings-row">
+          <label><input type="checkbox" id="autoShootToggle" checked> Auto Shoot</label>
+          <label><input type="checkbox" id="mouseAimToggle" checked> Mouse Aim</label>
+        </div>
       </div>
-      <div class="row">
-        <button id="settingsCloseBtn">Close</button>
+      <div class="menu-actions">
+        <button id="settingsCloseBtn" class="btn btn-primary" type="button">Done</button>
       </div>
     </div>
 
     <div id="msg" class="overlay small" style="display:none"></div>
-    <button id="pauseBtn" class="pause-btn" style="display:none">Pause</button>
-    <button id="restartBtn" class="restart-btn" style="display:none">Restart</button>
+    <button id="pauseBtn" class="btn btn-primary pause-btn" type="button" style="display:none">Pause</button>
+    <button id="restartBtn" class="btn btn-primary restart-btn" type="button" style="display:none">Back to Menu</button>
   </div>
 
+  <!-- v0.56 graphics (fx.js) and shop/UI screens (ui.js); both only draw, game.js stays the logic -->
+  <script src="fx.js"></script>
+  <script src="ui.js"></script>
   <script src="game.js"></script>
 </body>
 </html>
