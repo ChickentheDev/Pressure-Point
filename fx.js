@@ -494,5 +494,14 @@
   }
 
   function stats(){ return {particles: parts.length, rings: rings.length, flashes: flashes.length, ghosts: ghosts.length, max: maxParts(), density: density()}; }
-  window.FX = { glow, drawGround, drawTree, drawMoney, drawMaterialIcon, frame, drawPlayer, drawCosmetic, drawEnemy, drawUnder, drawOver, ready, stats, SHEETS };
+  // transient light sources for the WebGL lighting pass (v0.6.9): muzzle
+  // flashes and explosion rings. `kind` distinguishes the two; life/max give
+  // the intensity falloff.
+  function getLights(){
+    const out = [];
+    for(const f of flashes) out.push({kind:'flash', x:f.x, y:f.y, life:f.life, max:f.max, color:f.color, big:!!f.big});
+    for(const r of rings) out.push({kind:'ring', x:r.x, y:r.y, life:r.life, max:0.32, color:r.color, big:true});
+    return out;
+  }
+  window.FX = { glow, drawGround, drawTree, drawMoney, drawMaterialIcon, frame, drawPlayer, drawCosmetic, drawEnemy, drawUnder, drawOver, ready, stats, getLights, SHEETS };
 })();

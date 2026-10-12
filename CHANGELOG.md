@@ -1,3 +1,8 @@
+## v0.6.9 — WebGL lighting
+- **Dynamic 2D lighting**: the world now renders to an offscreen canvas and is composited through a fullscreen WebGL shader (`js/webgl.js`) — players cast a warm glow, elites/bosses pulse, muzzle flashes and explosion rings throw light. Includes a subtle vignette and cool-shadow/warm-highlight color grade.
+- **HUD stays crisp**: HUD, shop, banners and menus draw directly to the visible canvas after the lighting pass, unaffected by it.
+- **Lighting FX toggle** in Settings; automatic Canvas2D fallback when WebGL is unavailable. No reload needed to toggle.
+
 ## v0.6.8.1 — Map fix + Glassjaw 1-HP lock
 - **Map off-center fix**: ground blit now runs under identity transform (hidpi regression from perf pass).
 - **Glassjaw 1-HP invariant enforced**: Vitality, in-wave Max HP upgrades, shop +Max HP items, and level-up HP no longer raise Glassjaw above 1 HP (in-wave Max HP choice heals to full instead). Co-op revive can no longer revive at 0 HP.

@@ -1,7 +1,7 @@
 // Pressure Point — core.js (split from game.js for v0.6.1)
 // Brotato-lite extended game logic
 const canvas = document.getElementById('game');
-const ctx = canvas.getContext('2d');
+let ctx = canvas.getContext('2d');   // `let`: WebGLFX.beginWorld/endWorld swaps this to the offscreen world ctx during the world pass
 
 // DOM UI
 const menuEl = document.getElementById('menu');
@@ -20,6 +20,7 @@ const settingsCloseBtn = document.getElementById('settingsCloseBtn');
 const settingsCloseIcon = document.getElementById('settingsCloseIcon');
 const bgEffectsToggle = document.getElementById('bgEffectsToggle');
 const particleEffectsToggle = document.getElementById('particleEffectsToggle');
+const webglToggle = document.getElementById('webglToggle');
 const customGfxRow = document.getElementById('customGfxRow');
 const msgEl = document.getElementById('msg');
 const pauseBtn = document.getElementById('pauseBtn');
@@ -33,6 +34,7 @@ function resize(){
   canvas.width = Math.floor(W * ratio);
   canvas.height = Math.floor(H * ratio);
   ctx.setTransform(ratio,0,0,ratio,0,0);
+  if(window.WebGLFX) WebGLFX.onResize(W, H, canvas.width, canvas.height, ratio);
 }
 window.addEventListener('resize', resize);
 resize();
@@ -276,7 +278,7 @@ const state = {
 
 // settings
 const SETTINGS_KEY = 'brotato_settings_v1';
-const settings = { screenShake: true, graphics: 'high', autoShoot: true, mouseAim: true, bgFx: true, particleFx: true };
+const settings = { screenShake: true, graphics: 'high', autoShoot: true, mouseAim: true, bgFx: true, particleFx: true, webgl: true };
 try{
   const savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
   if(typeof savedSettings.screenShake === 'boolean') settings.screenShake = savedSettings.screenShake;
@@ -285,6 +287,7 @@ try{
   if(typeof savedSettings.mouseAim === 'boolean') settings.mouseAim = savedSettings.mouseAim;
   if(typeof savedSettings.bgFx === 'boolean') settings.bgFx = savedSettings.bgFx;
   if(typeof savedSettings.particleFx === 'boolean') settings.particleFx = savedSettings.particleFx;
+  if(typeof savedSettings.webgl === 'boolean') settings.webgl = savedSettings.webgl;
 }catch(e){}
 
 function saveSettings(){
@@ -337,6 +340,14 @@ if(bgEffectsToggle){
 if(particleEffectsToggle){
   particleEffectsToggle.checked = settings.particleFx;
   particleEffectsToggle.addEventListener('change', ()=>{ settings.particleFx = !!particleEffectsToggle.checked; settings.graphics = 'custom'; if(gfxPreset) gfxPreset.value='custom'; if(customGfxRow) customGfxRow.style.display='flex'; saveSettings(); });
+}
+if(webglToggle){
+  webglToggle.checked = settings.webgl;
+  webglToggle.addEventListener('change', ()=>{
+    settings.webgl = !!webglToggle.checked;
+    if(window.WebGLFX) WebGLFX.setEnabled(settings.webgl);
+    saveSettings();
+  });
 }
 
 // load/unlock persistence

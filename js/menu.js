@@ -394,10 +394,9 @@ function renderMeta(){
     const maxed = lvl >= u.max;
     const cost = maxed ? null : u.costs[lvl];
     const afford = !maxed && essence >= cost;
-    const desc = (state.classId === 'glassjaw' && u.glassjawDesc) ? u.glassjawDesc : u.desc;
     return `<div class="achievement-card ${lvl > 0 ? 'unlocked' : 'locked'}">
       <div class="ach-name">${u.name} <span style="color:#888">Lv ${lvl}/${u.max}</span></div>
-      <div class="ach-desc">${desc}</div>
+      <div class="ach-desc">${u.desc}</div>
       <div style="margin-top:8px">
         ${maxed ? '<span style="color:#f5c542">MAX</span>' :
           `<button class="btn btn-secondary" data-meta="${u.id}" ${afford ? '' : 'disabled'} style="${afford ? '' : 'opacity:0.4'}">Buy (${cost} essence)</button>`}

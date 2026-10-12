@@ -828,10 +828,14 @@ function drawVictory(){
 
 function draw(){
   if(window.FX) FX.frame();   // [brad-fx] effects bookkeeping (draw-side only)
-  ctx.clearRect(0,0,W,H);
+  // v0.6.9 WebGL: the world renders to an offscreen canvas and is composited
+  // through the lighting shader; HUD/menus draw directly to the screen after.
+  const glOn = window.WebGLFX && WebGLFX.active();
+  if(glOn) WebGLFX.beginWorld(); else ctx.clearRect(0,0,W,H);
   drawBackground();
   if(state.phase === 'menu'){
     // menu is DOM; don't paint the in-game HUD behind it
+    if(glOn) WebGLFX.endWorld();
     setDisplay(restartBtn, 'none');
     setDisplay(pauseBtn, 'none');
     setCursor('default');
@@ -845,6 +849,7 @@ function draw(){
   drawPlayers();
   if(window.FX) FX.drawOver();    // [brad-fx] particles, glows, muzzle flash, tracers
   ctx.restore();
+  if(glOn) WebGLFX.endWorld();   // world composited with lighting; ctx is the screen again
   // [brad-ui] the HUD is hidden behind the shop (it shows wallet/stats itself) and the game-over screen
   if(state.phase !== 'shop' && state.phase !== 'gameover'){ drawHUD(); drawWaveBanner(); }
   if(state.phase === 'victory') drawVictory();

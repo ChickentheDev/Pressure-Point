@@ -48,7 +48,7 @@ function applyItemEffects(player, itemData, rarity, sign=1){
   if(e.speedMult) player.baseSpeed = Math.max(80, Math.floor(player.baseSpeed * (1 + e.speedMult * m)));
   if(e.reloadMult) player.reloadSpeed = Math.max(0.5, player.reloadSpeed * (1 + e.reloadMult * m));
   if(e.accuracyMult) player.accuracy = Math.max(0.5, player.accuracy * (1 + e.accuracyMult * m));
-  if(e.maxHpAdd && !isGlassjaw(player)){ player.baseMaxHp = Math.max(1, Math.floor(player.baseMaxHp + e.maxHpAdd * m)); player.hp = Math.min(player.hp, player.baseMaxHp); }
+  if(e.maxHpAdd){ player.baseMaxHp = Math.max(1, Math.floor(player.baseMaxHp + e.maxHpAdd * m)); player.hp = Math.min(player.hp, player.baseMaxHp); }
   if(e.lifestealAdd) player.lifesteal = Math.max(0, player.lifesteal + e.lifestealAdd * m);
   if(e.magBonus) player.magBonus += Math.round(e.magBonus * m);
   if(e.damageBonus) player.damageBonus += Math.round(e.damageBonus * m);
@@ -336,7 +336,7 @@ function startWave(){
 
 function openShop(){ moneyDrops.length = 0; state.phase='shop'; state.shopAnim=0; buildShop(); audio.beep(660,0.08,'triangle',0.05); }
 
-function levelUp(player){ player.level += 1; player.xp -= player.xpNext; player.xpNext = Math.floor(player.xpNext * 1.2 + 15); if(!isGlassjaw(player)){ player.baseMaxHp += 6; player.hp = player.baseMaxHp; } }
+function levelUp(player){ player.level += 1; player.xp -= player.xpNext; player.xpNext = Math.floor(player.xpNext * 1.2 + 15); player.baseMaxHp += 6; player.hp = player.baseMaxHp; }
 
 function spawnTree(){
   const margin = 40;
@@ -767,7 +767,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
         downed.reviveProgress += dt;
         if(downed.reviveProgress >= 3){
           downed.dead = false;
-          downed.hp = Math.max(1, Math.floor(downed.baseMaxHp * 0.5));
+          downed.hp = Math.floor(downed.baseMaxHp * 0.5);
           downed.reviveProgress = 0;
           runStats.revives++;
           checkAchievements();
