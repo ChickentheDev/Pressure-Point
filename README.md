@@ -1,18 +1,21 @@
-# Pressure Point — v0.6.3
+# Pressure Point — v0.6.4
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.6.3 — Achievements)
-- **15 achievements**: First Blood, Exterminator, Genocide, Survivor, Veteran, Unstoppable, Danger Zone, Gun Collector, Legendary Arsenal, Shopaholic, One of a Kind, Big Spender, Medic, Lifesaver, Untouchable. Unlock toasts fire mid-run; the Achievements screen on the main menu tracks progress and persists unlocks.
+## Latest Changes (v0.6.4 — New enemies + Meta progression)
+- **3 new enemies**: Dasher (burst-dashes at you), Aegis (shield aura — nearby enemies take 30% less damage), Nester (spawns runners). Unlock at waves 19/22/25.
+- **Meta progression**: earn Essence from every run, spend it on 6 permanent upgrades (Vitality, Power, Swiftness, Fortune, Wealth, Haste). New Upgrades screen on the main menu; everything persists.
+
+## Previous Update (v0.6.3 — Achievements)
+- 15 achievements with unlock toasts, menu achievements screen, localStorage persistence.
 
 ## Previous Update (v0.6.2 — Balance, Endless, Co-op, Weapons)
 - Rarity/DPS rebalance; endless mode past wave 20; co-op revive + synergy; 10 new weapons (25 total).
 
-## Previous Update (v0.6.1 — File system cleanup)
-- Removed legacy cruft, moved docs to `docs/`, reorganized `assets/` into subfolders, split `game.js` into 8 modules. No gameplay changes.
-
 ## What's Included
+- **Meta progression**: 6 permanent upgrades bought with Essence earned from runs.
 - **Achievements**: 15 unlockable, persisted across runs.
+- **9 enemy types**: Runner, Spitter, Bruiser, Burster, Splitter, Bulwark, Dasher, Aegis, Nester.
 - **Wave system**: Wave 1 → 20 with horde-scaled counts, then **endless mode** past 20.
 - **25 weapons** across rarities, all firing simultaneously.
 - **109 items** across 5 categories (Tech/Primal/Arcane/Unique/Exclusive).
