@@ -369,7 +369,7 @@ function spawnEnemy(opts){
   const eliteHP = elite ? 3 : 1, eliteDmg = elite ? 1.4 : 1;
   const xp = Math.floor((t.xp + Math.floor(state.wave*0.6)*(state.danger)) * (elite ? 3 : 1));
   const money = Math.max(1, Math.floor((Math.floor(t.money * 0.7) + Math.floor(state.wave*0.2) * state.danger) * (elite ? 3 : 1)));
-  enemies.push({ id: t.id, x,y, r: Math.floor(t.r * (elite ? 1.35 : 1)), hp: Math.floor(t.hp * waveScale * dangerHP * eliteHP), maxHp: Math.floor(t.hp * waveScale * dangerHP * eliteHP), speed: Math.floor((t.speed + state.wave*2) * dangerSpeed), dmg: Math.floor(t.dmg * dangerDmg * lateDmg * eliteDmg + state.wave*1.2), color: t.color, xp, money, explodes: !!t.explodes, splits: !!t.splits, dashes: !!t.dashes, shields: !!t.shields, spawns: !!t.spawns, elite, dashTimer: 2 + Math.random()*2, dashTime: 0, spawnTimer: 3 });
+  enemies.push({ id: t.id, x,y, r: Math.floor(t.r * (elite ? 1.35 : 1)), hp: Math.floor(t.hp * waveScale * dangerHP * eliteHP), maxHp: Math.floor(t.hp * waveScale * dangerHP * eliteHP), speed: Math.floor((t.speed + state.wave*2) * dangerSpeed * (elite && t.id === 'runner' ? 1.5 : 1)), dmg: Math.floor(t.dmg * dangerDmg * lateDmg * eliteDmg + state.wave*1.2), color: t.color, xp, money, explodes: !!t.explodes, splits: !!t.splits, dashes: !!t.dashes, shields: !!t.shields, spawns: !!t.spawns, elite, eliteName: elite ? t.eliteName : null, dashTimer: 2 + Math.random()*2, dashTime: 0, spawnTimer: 3 });
   if(enemies.length > 120){ enemies.shift(); }
   addParticle({x, y, life:0.35, r:18, color: elite ? '#ffd166' : palette.uiAccent});
 }
@@ -495,7 +495,8 @@ function repairNonFinite(){
 // Player: velocity eases toward the input direction (acceleration) and back to zero (deceleration).
 const PLAYER_ACCEL = 12, PLAYER_DECEL = 16;    // 1/s: higher = snappier (95% of target in ~0.25s / ~0.19s)
 function updatePlayerVelocity(p, dx, dy, dt){
-  const tx = dx * p.baseSpeed, ty = dy * p.baseSpeed;
+  const slowed = (p.slowUntil || 0) > state.animTime ? 0.6 : 1;
+  const tx = dx * p.baseSpeed * slowed, ty = dy * p.baseSpeed * slowed;
   const k = 1 - Math.exp(-((dx || dy) ? PLAYER_ACCEL : PLAYER_DECEL) * dt);
   p.vx = (p.vx || 0) + (tx - (p.vx || 0)) * k;
   p.vy = (p.vy || 0) + (ty - (p.vy || 0)) * k;
@@ -573,13 +574,21 @@ function killEnemy(index, ownerId){
   runStats.kills++;
   if(runStats.kills === 1 || runStats.kills === 500 || runStats.kills === 2000) checkAchievements();
   awardToPlayerById(ownerId, e.xp, e.money);
+  // elites drop bonus loot: extra money shower + floating text
+  if(e.elite){
+    for(let k=0;k<8;k++){ moneyDrops.push({x:e.x+rand(-16,16), y:e.y+rand(-16,16), r:5, life:6, t:0}); }
+    floatingTexts.push({x:e.x, y:e.y-20, vx:0, vy:-50, life:1.5, text: `${e.eliteName} slain!`, color:'#ffd166'});
+    addShake(6);
+  }
+  awardToPlayerById(ownerId, e.xp, e.money);
   addParticle({x:e.x,y:e.y,life:0.35,r:16,color:'#ff5d5d'});
   addShake(e.isBoss ? 12 : 3);
   audio.beep(140,0.06,'triangle',0.04);
-  // splitter: bursts into two runners on death (runners never split)
+  // splitter: bursts into runners on death (elite: 4 instead of 2)
   if(e.splits){
     const rt = enemyTypes[0];
-    for(let k=0;k<2;k++){
+    const count = e.elite ? 4 : 2;
+    for(let k=0;k<count;k++){
       const a = Math.random()*Math.PI*2;
       enemies.push({ id: rt.id, x: e.x + Math.cos(a)*14, y: e.y + Math.sin(a)*14, r: rt.r,
         hp: Math.floor(rt.hp * (1 + Math.max(0, state.wave-1) * 0.12)), maxHp: Math.floor(rt.hp * (1 + Math.max(0, state.wave-1) * 0.12)),
@@ -593,7 +602,7 @@ function killEnemy(index, ownerId){
 
 // burster: proximity-fused explosion. One AoE hit, then the enemy is gone (no contact DPS).
 function explodeEnemy(e, index){
-  const R = 85, base = e.dmg * 3;
+  const R = e.elite ? 140 : 85, base = e.dmg * (e.elite ? 4 : 3);
   for(const p of players){
     if(p.dead) continue;
     const d = Math.hypot(p.x - e.x, p.y - e.y);
@@ -959,18 +968,18 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
 
     const slowMult = e.status.slow > 0 ? 0.6 : 1;
     const ang = Math.atan2(target.y - e.y, target.x - e.x);
-    // dasher: periodic burst toward the player
+    // dasher: periodic burst toward the player (elite: relentless)
     let dashMult = 1;
     if(e.dashes){
       e.dashTimer -= dt;
       if(e.dashTime > 0){ e.dashTime -= dt; dashMult = 3; }
-      else if(e.dashTimer <= 0){ e.dashTime = 0.5; e.dashTimer = 2.5 + Math.random()*1.5; addParticle({x:e.x,y:e.y,life:0.25,r:12,color:'#ff9f43'}); }
+      else if(e.dashTimer <= 0){ e.dashTime = e.elite ? 0.7 : 0.5; e.dashTimer = e.elite ? 1.2 + Math.random() : 2.5 + Math.random()*1.5; addParticle({x:e.x,y:e.y,life:0.25,r:12,color:'#ff9f43'}); }
     }
-    // nester: spawns a runner every 5s (capped so it can't flood)
+    // nester: spawns a runner periodically (elite: rapid)
     if(e.spawns){
       e.spawnTimer -= dt;
       if(e.spawnTimer <= 0 && enemies.length < 110){
-        e.spawnTimer = 5;
+        e.spawnTimer = e.elite ? 3 : 5;
         const rt = enemyTypes[0];
         enemies.push({ id:'runner', x:e.x+rand(-20,20), y:e.y+rand(-20,20), r:rt.r, hp:Math.floor(rt.hp*(1+state.wave*0.12)), maxHp:Math.floor(rt.hp*(1+state.wave*0.12)), speed:rt.speed, dmg:Math.floor(rt.dmg+state.wave*1.2), color:rt.color, xp:rt.xp, money:rt.money });
         addParticle({x:e.x,y:e.y,life:0.3,r:16,color:'#9b59b6'});
@@ -1001,10 +1010,16 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
           // Perf: squared distance instead of Math.hypot here — this runs per bullet/enemy pair.
           if(b.rehit && b.lastHit === e){ const rdx = b.x - e.x, rdy = b.y - e.y, rr2 = e.r + BULLET_HIT_R; if(rdx*rdx + rdy*rdy >= rr2*rr2) continue; }
           if(segmentHitsCircle(b.px ?? b.x, b.py ?? b.y, b.x, b.y, e.x, e.y, e.r + BULLET_HIT_R)){
-            // aegis shield aura: nearby enemies take 30% less damage
+            // aegis shield aura: nearby enemies take 30% less damage (elite: wider aura)
             let dmgMult = 1;
-            for(const o of enemies){ if(o.shields && o !== e){ const dx=o.x-e.x, dy=o.y-e.y; if(dx*dx+dy*dy < 150*150){ dmgMult = 0.7; break; } } }
-            e.hp -= b.damage * dmgMult;
+            for(const o of enemies){ if(o.shields && o !== e){ const auraR = o.elite ? 220 : 150; const dx=o.x-e.x, dy=o.y-e.y; if(dx*dx+dy*dy < auraR*auraR){ dmgMult = 0.7; break; } } }
+            const finalDmg = b.damage * dmgMult;
+            e.hp -= finalDmg;
+            // elite bulwark (Ironwall): reflects 20% damage back to the shooter
+            if(e.elite && e.id === 'bulwark' && b.ownerId){
+              const shooter = players.find(p=>p.id === b.ownerId);
+              if(shooter && !shooter.dead){ shooter.hp -= Math.max(1, finalDmg * 0.2); runStats.tookDamage = true; shooter.hitFlash = 0.12; }
+            }
             e.lastHitBy = b.ownerId;
             applyKnockback(e, b.vx, b.vy, b.damage);
             e.hitFlash = 0.1; // visual only
@@ -1042,6 +1057,14 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
       if(d < p.r + e.r){
         p.hp -= Math.max(1, (e.dmg - p.armor) * dt);
         runStats.tookDamage = true;
+        // elite spitter (Plaguewing): venomous touch slows the player
+        if(e.elite && e.id === 'spitter') p.slowUntil = Math.max(p.slowUntil || 0, state.animTime + 2);
+        // elite bruiser (Skullcrusher): shockwave slam knocks the player back
+        if(e.elite && e.id === 'bruiser' && p.hitFlash <= 0){
+          const ka = Math.atan2(p.y - e.y, p.x - e.x);
+          p.vx += Math.cos(ka) * 400; p.vy += Math.sin(ka) * 400;
+          addShake(8); addParticle({x:e.x,y:e.y,life:0.3,r:24,color:'#c43'});
+        }
         addShake(p.hitFlash > 0 ? 0.3 : 5);   // a kick on first contact, not a constant max shake
         p.hitFlash = 0.12;
         if(p.hp <= 0){
