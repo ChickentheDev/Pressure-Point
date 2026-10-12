@@ -1,6 +1,8 @@
 ## v0.6.2 — Balance patch
 - Rarity/DPS rebalance: SMG tamed (common 50→38 DPS); RPG, Titan Cannon, Railgun, Harpoon, Arc Thrower, Mine Layer, Flamethrower buffed to match their rarities; Arc Blade brought in line. Minigun untouched as the legendary benchmark.
 - **Endless mode**: after clearing wave 20, a "Continue: Endless" button appears on the victory screen. Waves 21+ scale enemy HP/damage/count, with elites every 4th wave and a boss every 5th. Best endless wave tracked in localStorage and shown on summaries.
+- **Co-op**: in-wave revive — stand near a downed partner for 3s to bring them back at 50% HP (progress ring shown); proximity synergy — +15% damage when within 150px of your partner.
+- **10 new weapons**: Scattergun, Crossbow (common); Sniper, Plasma Cutter, Mortar (rare); Katana, Grenade Launcher, Flak Cannon (epic); Tesla Coil, Energy Sword (legendary). All with pixel-art sprites.
 - No other gameplay changes.
 
 ## v0.6.1 — File system cleanup
