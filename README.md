@@ -1,8 +1,8 @@
-# Pressure Point — v0.5.8A
+# Pressure Point — v0.5.8B
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.5.8A)
+## Latest Changes (v0.5.8B)
 - **Menu revamp**: Brotato-style 3-step flow — Class → Weapon → Danger. Class select is a grid with a detail panel (starting weapon, green/red stat lines vs the Ironheart baseline, tagline). New weapon select: grid of all 15 weapons with a detail panel (damage, fire delay, magazine/reload, spread, traits); your pick becomes the run's starting weapon (class stat mods still apply). Danger select shows numbered 1-5 buttons with a detail panel listing that danger's full modifiers.
 - **Difficulty buffs**: each danger now has explicit modifiers (`DANGER_MODS`), displayed and applied for real — D2: +8% enemy speed; D3: +15% horde size; D4: +15% enemy damage; D5: +30% horde size and TWO Overlords on wave 20. Elites unchanged (wave 12 on D2-5, wave 16 on D4-5, wave 20 on D1-5).
 - **Run Won screen**: replaces the bare banner — "Run Won / Danger N" with Stats, Weapons, Items, and Progress panels, a gold "DANGER N UNLOCKED!" banner when earned, and Retry / New Run / Main Menu buttons (confetti + fanfare still play).
@@ -149,7 +149,7 @@ Shows:
 - See `IMPROVEMENTS.md` for the v0.51 improvement notes (historical; `game-improvements.js` was removed in v0.56A — its balance tweaks conflicted with tuned values, its pooling was superseded by the perf pass, and its bug fixes were already applied)
 
 ## Changelog
-- **v0.5.8A** (2026-10-12): Menu/UI revamp — Brotato-style class select, weapon select step, danger selection with per-danger modifiers, Run Won / Run Over summary screens
+- **v0.5.8B** (2026-10-12): Menu/UI revamp — Brotato-style class select, weapon select step, danger selection with per-danger modifiers, Run Won / Run Over summary screens
 - **v0.5.7** (2026-10-12): Hordes (16 + (wave-1)*8 enemies), enemy HP +20%, weapon rebalance for all-weapons-fire, rarity tiers fixed (common/rare/epic/legendary), elites on waves 12/16/20 by danger
 - **v0.5.6** (2026-10-12): Wave-20 danger unlock (no victory screen), all owned weapons fire at once, 3 new enemies (Bulwark/Burster/Splitter), R rerolls shop, shared co-op locks, removed game-improvements.js and 5 old PNGs
 - **v0.56A** (2026-10-12): Web performance pass (identical visuals), co-op dash split to Left Shift (P1) / Right Shift (P2)
