@@ -1,3 +1,7 @@
+## v0.6.4 — New enemies + Meta progression
+- **3 new enemies**: Dasher (periodic burst dashes toward you), Aegis (projects a shield aura — nearby enemies take 30% less damage), Nester (spawns runners every 5s). Unlock at waves 19/22/25; late-game spawn weights widened so they actually appear.
+- **Meta progression**: earn Essence from runs (wave reached + kills), spend it on 6 permanent upgrades — Vitality (+HP), Power (+damage), Swiftness (+speed), Fortune (+luck), Wealth (+starting currency), Haste (+fire rate). Upgrades screen on the main menu; essence and levels persist in localStorage. Run summaries show essence earned.
+
 ## v0.6.3 — Achievements
 - **15 achievements** with unlock toasts: First Blood, Exterminator (500 kills), Genocide (2,000 kills), Survivor (wave 10), Veteran (clear wave 20), Unstoppable (wave 30 endless), Danger Zone (D5 wave 20), Gun Collector (6 weapons), Legendary Arsenal (3 legendaries), Shopaholic (spend 500), One of a Kind (Unique item), Big Spender (Exclusive item), Medic (revive), Lifesaver (3 revives), Untouchable (clear a wave damage-free).
 - Achievements screen on the main menu; unlocks persist in localStorage.
