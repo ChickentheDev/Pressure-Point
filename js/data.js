@@ -61,6 +61,20 @@ const enemyTypes = [
 
 const bossType = {id:'overlord', name:'Overlord', color:'#ff6b6b', r:36, hp:1440, speed:60, dmg:40, xp:120, money:40};
 
+// One boss per danger level, each with unique abilities
+const bossTypes = [
+  {id:'overlord', name:'Overlord', color:'#ff6b6b', r:36, hp:1440, speed:60, dmg:40, xp:120, money:40,
+   ability:'burrow', desc:'Bursts from the ground'},
+  {id:'hive', name:'Hive Tyrant', color:'#9b59b6', r:34, hp:1800, speed:55, dmg:44, xp:150, money:50,
+   ability:'spawn', desc:'Spawns minions'},
+  {id:'storm', name:'Stormcaller', color:'#4cc3ff', r:32, hp:2200, speed:85, dmg:48, xp:180, money:60,
+   ability:'shockwave', desc:'Shockwave slams + dashes'},
+  {id:'ironclad', name:'Ironclad', color:'#8a8a8a', r:40, hp:3200, speed:40, dmg:55, xp:220, money:75,
+   ability:'fortress', desc:'Armored + reflects damage'},
+  {id:'void', name:'Voidreaver', color:'#1a1a2e', r:36, hp:4200, speed:100, dmg:65, xp:300, money:100,
+   ability:'annihilator', desc:'Dashes, spawns, shockwaves'},
+];
+
 const rarities = [
   {id:'common', name:'Common', color:'#8aa0b8'},
   {id:'rare', name:'Rare', color:'#4cc3ff'},
