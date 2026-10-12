@@ -404,8 +404,14 @@
     if(!ready('decals')) return false;
     const key = W + 'x' + H + '@' + canvas.width + 'x' + canvas.height;
     if(key !== groundKey){ groundCv = buildGround(); groundKey = key; }
-    // Perf: 1:1 blit of the backing-store-sized canvas — the old (0,0,W,H) form resampled it.
+    // Perf: true 1:1 blit of the backing-store-sized canvas. The CTM is DPR-scaled
+    // (resize()), so blit under identity — drawImage(cv,0,0) under the scaled CTM
+    // zoomed the ground by DPR and pushed the baked vignette center off screen-center
+    // on hidpi displays ("map off center"). save/restore keeps the DPR transform intact.
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.drawImage(groundCv, 0, 0);
+    ctx.restore();
     return true;
   }
   function drawTree(){                              // called with the tree's transform already applied

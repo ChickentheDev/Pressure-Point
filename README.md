@@ -18,13 +18,15 @@ A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canva
 ## What's Included
 - **11 classes**: 9 unlock via achievements, Glassjaw (1 HP) unlocks by beating Nightmare.
 - **Achievements**: 15 unlockable, persisted across runs.
+- **Elite mini-bosses**: 9 named elites with unique traits, HP bars, and bonus loot.
+- **Meta progression**: earn Essence from runs; spend on 6 permanent upgrades.
 - **9 enemy types**: Runner, Spitter, Bruiser, Burster, Splitter, Bulwark, Dasher, Aegis, Nester.
 - **Wave system**: Wave 1 → 20 with horde-scaled counts, then **endless mode** past 20.
 - **25 weapons** across rarities, all firing simultaneously.
 - **109 items** across 5 categories (Tech/Primal/Arcane/Unique/Exclusive).
-- **10 character classes** with unique sprites.
-- **Boss at Wave 20**: Overlord boss plus elites; bosses every 5 waves in endless.
-- **Danger levels (1–5)** with unlocks stored in `localStorage`.
+- **11 character classes** with unique sprites.
+- **Bosses**: one unique boss per danger level at wave 20 (Overlord, Hive Tyrant, Stormcaller, Ironclad, Voidreaver, Nightmare); bosses every 5 waves in endless.
+- **Danger levels (1–6)** — D5 Inferno, D6 Nightmare; unlocks stored in `localStorage`.
 - **Co-op**: two local players, in-wave revive, proximity damage synergy.
 - **Shop + Reroll + Lock**: reroll for increasing cost, lock cards, wave-1 starter deal.
 - **Items + Rarity + Combining**: 6 slots, combine two of same item + rarity into next tier.

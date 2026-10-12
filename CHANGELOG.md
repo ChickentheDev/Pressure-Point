@@ -1,3 +1,6 @@
+## Unreleased
+- **Map off-center fix**: the ground blit in `FX.drawGround()` drew the backing-store-sized ground canvas under the DPR-scaled transform, zooming the map by `devicePixelRatio` and shifting the vignette center off screen-center on hidpi displays (regression from the perf pass in 129367c; invisible at DPR 1, which is why headless tests passed). Now blits under an identity transform — a true 1:1 copy with no resample.
+
 ## v0.6.8 — Class unlocks + Glassjaw
 - **New class: Glassjaw** — unlocks by beating Nightmare (D6). Has exactly 1 HP but massive damage (+15), speed (300), and accuracy. Crystal sprite.
 - **Classes now unlock via achievements**: 9 of 11 classes locked behind achievements (First Blood, Exterminator, Survivor, Veteran, Shopaholic, Untouchable, Genocide, Medic, One of a Kind). Ironheart stays as starter. Locked classes show as ??? with unlock requirement.
