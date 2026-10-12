@@ -180,6 +180,12 @@ function flashMsg(text, dur=1.6){
   setTimeout(()=>{ msgEl.style.display = 'none'; }, dur*1000);
 }
 
+// Achievement unlock toast — gold banner, more prominent than flashMsg
+function achievementToast(a){
+  flashMsg(`ACHIEVEMENT: ${a.name} — ${a.desc}`, 3);
+  audio.pickup(); setTimeout(()=>audio.buy(), 120);
+}
+
 // Simple audio
 const audio = {
   ctx: null,
