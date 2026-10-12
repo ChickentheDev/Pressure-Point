@@ -25,6 +25,11 @@
     aegis:    {src:'assets/sprites/enemies/enemy_aegis.png',    fw:32, fh:32, n:4, ax:16, ay:16,  fps:6},
     nester:   {src:'assets/sprites/enemies/enemy_nester.png',   fw:32, fh:32, n:4, ax:16, ay:16,  fps:6},
     boss:     {src:'assets/sprites/enemies/enemy_sandworm.png', fw:52, fh:56, n:6, ax:27, ay:30,  fps:4, loop:4, faceLeft:true},
+    overlord: {src:'assets/sprites/enemies/enemy_sandworm.png', fw:52, fh:56, n:6, ax:27, ay:30,  fps:4, loop:4, faceLeft:true},
+    hive:     {src:'assets/sprites/enemies/enemy_hive.png',     fw:52, fh:56, n:6, ax:26, ay:28,  fps:4},
+    storm:    {src:'assets/sprites/enemies/enemy_storm.png',    fw:52, fh:56, n:6, ax:26, ay:28,  fps:6},
+    ironclad: {src:'assets/sprites/enemies/enemy_ironclad.png', fw:52, fh:56, n:6, ax:26, ay:28,  fps:4},
+    void:     {src:'assets/sprites/enemies/enemy_void.png',     fw:52, fh:56, n:6, ax:26, ay:28,  fps:6},
     tree:     {src:'assets/sprites/fx/tree.png',           fw:26, fh:32, n:1, ax:13, ay:20},
     decals:   {src:'assets/sprites/fx/ground_decals.png',  fw:16, fh:16, n:8, ax:8,  ay:8},
   };
@@ -241,7 +246,7 @@
   }
   // returns the sprite's top (px above the centre) for the HP bar, or 0 when not drawn
   function drawEnemy(e, flash){
-    const k = e.isBoss ? 'boss' : e.id;
+    const k = e.isBoss ? (SHEETS[e.id] ? e.id : 'boss') : e.id;
     const s = SHEETS[k];
     if(!s || !ready(k)) return 0;
     const slow = e.status && e.status.slow > 0 ? 0.5 : 1;
