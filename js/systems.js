@@ -273,11 +273,19 @@ function computeWaveTotal(wave){ return 16 + (Math.max(1, wave) - 1) * 8; }
 
 // Elites: tougher enemy variants on danger-gated waves.
 // Wave 12 → danger 2-5, wave 16 → danger 4-5, wave 20 (boss) → danger 1-5.
+// Endless: elites every 4th wave past 20, boss every 5th wave past 20.
 function eliteCountFor(wave, danger){
-  if(wave !== 12 && wave !== 16 && wave !== 20) return 0;
+  if(wave !== 12 && wave !== 16 && wave !== 20){
+    if(wave <= 20 || wave % 4 !== 0) return 0;
+    return 2 + Math.floor((wave - 20) / 8);
+  }
   if(wave === 12 && danger < 2) return 0;
   if(wave === 16 && danger < 4) return 0;
   return 2 + (danger >= 4 ? 1 : 0);
+}
+function isBossWave(wave){
+  if(wave === 20) return true;
+  return wave > 20 && wave % 5 === 0;
 }
 
 function startWave(){
@@ -285,7 +293,7 @@ function startWave(){
   state.waveSpawned = 0;
   state.waveCompleteTimer = 0;
   state.waveTotal = Math.floor(computeWaveTotal(state.wave) * (state.coop ? 1.5 : 1) * (1 + (state.danger-1)*0.15) * dangerMods(state.danger).countMult);
-  if(state.wave >= state.maxWave){
+  if(isBossWave(state.wave)){
     state.waveTotal = dangerMods(state.danger).doubleBoss ? 2 : 1;
     state.bossSpawned = false;
   }
@@ -617,7 +625,23 @@ function buyShopItemFor(player){
 // UI: build dangers
 // ---- Menu: element refs ----
 // mouse/shop interaction: compute if click on a shop card
-function startNextWave(){ state.wave = Math.min(state.maxWave, state.wave + 1); startWave(); canvas.style.cursor = 'default'; }
+function startNextWave(){
+  state.wave = state.endless ? state.wave + 1 : Math.min(state.maxWave, state.wave + 1);
+  // track best endless wave
+  if(state.endless && state.wave > state.bestEndless){
+    state.bestEndless = state.wave;
+    try{ localStorage.setItem('pp_bestEndless', String(state.bestEndless)); }catch(e){}
+  }
+  startWave(); canvas.style.cursor = 'default';
+}
+
+// Continue past wave 20 into endless mode (from victory screen)
+function startEndless(){
+  state.endless = true;
+  state.phase = 'upgrade';
+  buildUpgradeChoices();
+  if(pauseBtn) pauseBtn.style.display = 'block';
+}
 
 canvas.addEventListener('contextmenu', (e)=>{
   if(state.phase !== 'shop') return;
@@ -778,7 +802,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     state.spawnTimer -= dt;
     const spawnInterval = Math.max(0.12, baseSpawnRate / dangerSpawnMult / (state.coop?1.4:1));
     if(state.spawnTimer <= 0){ state.spawnTimer = spawnInterval; }
-    if(state.wave >= state.maxWave){
+    if(isBossWave(state.wave)){
       if(!state.bossSpawned){
         spawnBoss();
         if(dangerMods(state.danger).doubleBoss){ spawnBoss(); state.waveSpawned++; }  // D5: two Overlords at once
@@ -792,7 +816,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     if(state.waveSpawned >= state.waveTotal && enemies.length === 0){ // wave complete
       state.waveCompleteTimer += dt;
       moneyDrops.length = 0;
-      if(state.wave >= state.maxWave){
+      if(state.wave >= state.maxWave && !state.endless){
         // Final wave cleared: unlock the next danger level (if this run earned it), celebrate
         // briefly, then return to the menu where the new danger is selectable. No victory screen.
         let newlyUnlocked = 0;

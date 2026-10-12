@@ -1,3 +1,7 @@
+## v0.6.2 — Balance patch
+- Rarity/DPS rebalance: SMG tamed (common 50→38 DPS); RPG, Titan Cannon, Railgun, Harpoon, Arc Thrower, Mine Layer, Flamethrower buffed to match their rarities; Arc Blade brought in line. Minigun untouched as the legendary benchmark.
+- No other gameplay changes.
+
 ## v0.6.1 — File system cleanup
 - Removed legacy cruft: `Brotato-Lite.sln`, `Extra.cs`, `electron/`, `wasm/`, `build/` (old C#/Electron experiments, unreferenced).
 - Moved loose docs (`AC_TASKS.md`, `IMPROVEMENTS.md`, `INSTALL.md`, `INTEGRATION_EXAMPLE.js`) into `docs/`.

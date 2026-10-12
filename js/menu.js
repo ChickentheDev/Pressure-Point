@@ -216,8 +216,9 @@ function itemCellsHTML(p){
 }
 function progressRowsHTML(){
   const mm = Math.floor(state.runTime / 60), ss = Math.floor(state.runTime % 60);
+  const waveLabel = state.endless ? `${state.wave} (Endless)` : `${Math.min(state.wave, state.maxWave)} / ${state.maxWave}`;
   return statRowsHTML([
-    ['Wave', `${Math.min(state.wave, state.maxWave)} / ${state.maxWave}`],
+    ['Wave', waveLabel],
     ['Kills', state.runKills],
     ['Time', `${mm}:${String(ss).padStart(2,'0')}`],
     ['Danger', state.danger],
@@ -284,6 +285,8 @@ function wireSummaryButtons(){
   const retry = ()=>{ startRun(); };
   const newRun = ()=>{ hideSummaryOverlays(); resetRun(); setMenuStep('class'); };
   const toMenu = ()=>{ hideSummaryOverlays(); resetRun(); };
+  const endless = ()=>{ hideSummaryOverlays(); startEndless(); };
+  on('wonEndlessBtn', endless);
   on('wonRetryBtn', retry); on('wonNewRunBtn', newRun); on('wonMenuBtn', toMenu);
   on('overRetryBtn', retry); on('overNewRunBtn', newRun); on('overMenuBtn', toMenu);
   on('pauseResumeBtn', ()=>togglePause());

@@ -38,6 +38,7 @@ function resetRun(){
   fruits.length = 0;
   floatingTexts.length = 0;
   state.wave = 1;
+  state.endless = false;
   state.waveSpawned = 0;
   state.waveCompleteTimer = 0;
   state.bossSpawned = false;
