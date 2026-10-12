@@ -68,11 +68,6 @@ const palette = {
 // scaled by what is actually drawn, not by its transparent padding.
 // pixel = true -> nearest-neighbour scaling (pixel art); false -> smooth downscale (hi-res art).
 const SPRITE_DEFS = {
-  playerUp:    {src:'PlayerUp.png',     crop:[14,10,34,46], pixel:true},
-  playerDown:  {src:'PlayerDown.png',   crop:[14,10,34,46], pixel:true},
-  playerSide:  {src:'PlayerSide.png',   crop:[20,10,22,42], pixel:true},
-  enemyLight:  {src:'EnemyLight.png',   crop:[3,1,31,37],   pixel:true},
-  tree:        {src:'Tree.png',         crop:[2,12,46,52],  pixel:true},
   map:         {src:'Map.png',          crop:[0,0,512,512], pixel:true},
   w_pistol:    {src:'CobaltPistol.png', crop:[69,279,893,480], pixel:false},
   w_shotgun:   {src:'GravShotgun.png',  crop:[80,88,345,310],  pixel:false, fallback:'w_shotgunAlt'},
@@ -387,7 +382,7 @@ function togglePause(){
 
 // Game State
 const state = {
-  phase: 'menu', // menu | wave | shop | gameover
+  phase: 'menu', // menu | wave | shop | gameover | victory
   wave: 1,
   waveBanner: 0,
   waveSpawned: 0,
@@ -398,6 +393,8 @@ const state = {
   spawnTimer: 0,
   unlockedDanger: 1,
   animTime: 0,
+  victoryTimer: 0,     // celebration beat after clearing the final wave
+  victoryUnlocked: 0,  // danger level unlocked by the victory (0 = already at max)
   classId: 'ironheart',
   pendingUpgrade: null,
   shopView: 'shop', // shop | stats
@@ -481,7 +478,7 @@ function createPlayer(x,y){ return {
   x, y, r:14, angle:0, baseSpeed:220, baseMaxHp:120, hp:120,
   level:1, xp:0, xpNext:60, armor:0, lifesteal:0, reloadSpeed:1, accuracy:1, magBonus:0,
   damageBonus:0, damageMult:1, recoil:1, luck:0, critChance:0.05, critMult:1.5, elementalBonus:0,
-  ownedWeapons: [], weaponIndex:0, ammoInMag:12, reloading:0, kick:0,
+  ownedWeapons: [], kick:0,
   currency:0, id: Math.random().toString(36).slice(2,8), hitFlash:0,
   items: [], dead: false, pierceBonus:0,
   dashTimer:0, dashCooldown:0, dashDir:0, iFrames:0, vx:0, vy:0,
@@ -494,8 +491,11 @@ let player = players[0];
 // enemy, weapon, item definitions (kept similar to earlier)
 const enemyTypes = [
   {id:'runner', name:'Runner', color:'#e85', r:10, hp:18, speed:120, dmg:10, xp:6, money:2},
-  {id:'bruiser', name:'Bruiser', color:'#c43', r:16, hp:50, speed:70, dmg:18, xp:14, money:4},
   {id:'spitter', name:'Spitter', color:'#d94', r:12, hp:30, speed:95, dmg:12, xp:9, money:3},
+  {id:'bruiser', name:'Bruiser', color:'#c43', r:16, hp:50, speed:70, dmg:18, xp:14, money:4},
+  {id:'burster', name:'Burster', color:'#e07a8a', r:9, hp:16, speed:155, dmg:10, xp:8, money:3, explodes:true},
+  {id:'splitter', name:'Splitter', color:'#8fd4e8', r:13, hp:42, speed:85, dmg:12, xp:12, money:4, splits:true},
+  {id:'bulwark', name:'Bulwark', color:'#8f7654', r:20, hp:150, speed:42, dmg:26, xp:22, money:6},
 ];
 
 const bossType = {id:'overlord', name:'Overlord', color:'#ff6b6b', r:36, hp:1200, speed:60, dmg:40, xp:120, money:40};
@@ -688,6 +688,9 @@ function createWeaponInstance(base, rarity){
     heat: 0,
     overheated: false,
     overheatTimer: 0,
+    // every owned weapon is equipped and fires on its own: each tracks its own ammo/reload
+    ammoInMag: Math.max(1, Math.round(base.mag * mult)),
+    reloading: 0,
   };
 }
 
@@ -789,10 +792,12 @@ function updateCamera(dt){
 }
 
 function getWeaponFor(player){
-  return player.ownedWeapons[player.weaponIndex] || createWeaponInstance(weapons[0], 'common');
+  // All owned weapons are equipped at once; this returns the first for single-weapon
+  // contexts (aim lead, held-weapon art). Firing iterates the whole arsenal.
+  return player.ownedWeapons[0] || createWeaponInstance(weapons[0], 'common');
 }
 
-function refreshAmmoFor(player){ const w = getWeaponFor(player); player.ammoInMag = Math.max(1, (w.mag||999) + player.magBonus); }
+function refreshAmmoFor(player){ for(const w of player.ownedWeapons){ if(w) w.ammoInMag = Math.max(1, (w.mag||999) + player.magBonus); } }
 
 function applyClassToPlayer(player, classData){
   // class level scales with unlocked danger (D1 -> L1, D2 -> L2, etc.)
@@ -820,12 +825,10 @@ function applyClassToPlayer(player, classData){
   player.dead = false;
   const baseW = weapons.find(w=>w.id===classData.weapon) || weapons[0];
   player.ownedWeapons = [createWeaponInstance(baseW, 'common')];
-  player.weaponIndex = 0;
   player.level = 1;
   player.xp = 0;
   player.xpNext = 60;
   player.currency = 0;
-  player.reloading = 0;
   refreshAmmoFor(player);
 }
 
@@ -969,14 +972,16 @@ function spawnEnemy(){
   const edge = Math.floor(Math.random()*4);
   let x,y; if(edge===0){ x=-20; y=Math.random()*H } else if(edge===1){ x=W+20; y=Math.random()*H } else if(edge===2){ x=Math.random()*W; y=-20 } else { x=Math.random()*W; y=H+20 }
   const tier = Math.min(enemyTypes.length-1, Math.floor((state.wave-1)/3));
-  const base = enemyTypes[Math.random() < 0.6 ? 0 : (Math.random()<0.7 ? 1 : 2)];
-  const t = enemyTypes[Math.min(enemyTypes.length-1, Math.max(0, tier + (base===enemyTypes[0]?0:1)))];
+  // weighted pick: swarms of weak types early, tougher types as the tier unlocks
+  const roll = Math.random();
+  const idx = roll < 0.55 ? 0 : roll < 0.8 ? Math.min(tier, 1) : roll < 0.93 ? Math.min(tier, 2) : tier;
+  const t = enemyTypes[Math.max(0, idx)];
   // danger scaling
   const dangerHP = 1 + (state.danger-1) * 0.35;
   const dangerDmg = 1 + (state.danger-1) * 0.28;
   const waveScale = 1 + Math.max(0, state.wave-1) * 0.12;
   const lateDmg = 1 + Math.max(0, state.wave-1) * 0.18;
-  enemies.push({ id: t.id, x,y, r: t.r, hp: Math.floor(t.hp * waveScale * dangerHP), maxHp: Math.floor(t.hp * waveScale * dangerHP), speed: t.speed + state.wave*2, dmg: Math.floor(t.dmg * dangerDmg * lateDmg + state.wave*1.2), color: t.color, xp: t.xp + Math.floor(state.wave*0.6)*(state.danger), money: Math.max(1, Math.floor(t.money * 0.7) + Math.floor(state.wave*0.2) * state.danger) });
+  enemies.push({ id: t.id, x,y, r: t.r, hp: Math.floor(t.hp * waveScale * dangerHP), maxHp: Math.floor(t.hp * waveScale * dangerHP), speed: t.speed + state.wave*2, dmg: Math.floor(t.dmg * dangerDmg * lateDmg + state.wave*1.2), color: t.color, xp: t.xp + Math.floor(state.wave*0.6)*(state.danger), money: Math.max(1, Math.floor(t.money * 0.7) + Math.floor(state.wave*0.2) * state.danger), explodes: !!t.explodes, splits: !!t.splits });
   if(enemies.length > 120){ enemies.shift(); }
   addParticle({x, y, life:0.35, r:18, color: palette.uiAccent});
 }
@@ -1135,34 +1140,42 @@ function integrateEnemyKnockback(e, dt){
 function getNearestEnemyTo(x,y){ let best=null, bd=Infinity; for(const e of enemies){ const d=(e.x-x)**2 + (e.y-y)**2; if(d<bd){ bd=d; best=e; } } return best; }
 function getNearestTreeTo(x,y){ let best=null, bd=Infinity; for(const tr of trees){ const d=(tr.x-x)**2 + (tr.y-y)**2; if(d<bd){ bd=d; best=tr; } } return best; }
 
-function fireWeaponFor(player, time, target){ if(!target) return; if(player.reloading>0) return; const w = getWeaponFor(player); if(w.overheated) return; const fireRate = w.fireRate * player.reloadSpeed; if(time - (w.last||0) < fireRate) return; if(player.ammoInMag <= 0){ player.reloading = w.reload * player.reloadSpeed; audio.beep(240,0.08,'sawtooth',0.04); return; }
-  w.last = time; player.ammoInMag -= 1; player.kick = Math.max(player.kick, 0.08 * w.recoil);
-  if(w.overheatMax){
-    w.heat += w.overheatPerShot;
-    if(w.heat >= w.overheatMax){
-      w.overheated = true;
-      w.overheatTimer = w.overheatLock || 1.2;
-      audio.deny();
+function fireWeaponFor(player, time, target){
+  if(!target) return;
+  // All owned weapons are equipped at once: each fires on its own cooldown, ammo and overheat.
+  for(const w of player.ownedWeapons){
+    if(!w || w.reloading > 0 || w.overheated) continue;
+    const fireRate = w.fireRate * player.reloadSpeed;
+    if(time - (w.last||0) < fireRate) continue;
+    if(w.ammoInMag <= 0){ w.reloading = w.reload * player.reloadSpeed; audio.beep(240,0.08,'sawtooth',0.04); continue; }
+    w.last = time; w.ammoInMag -= 1; player.kick = Math.max(player.kick, 0.08 * w.recoil);
+    if(w.overheatMax){
+      w.heat += w.overheatPerShot;
+      if(w.heat >= w.overheatMax){
+        w.overheated = true;
+        w.overheatTimer = w.overheatLock || 1.2;
+        audio.deny();
+      }
     }
+    const angle = Math.atan2(target.y - player.y, target.x - player.x);
+    const count = w.pellets || 1;
+    for(let i=0;i<count;i++){
+      const spread = (w.spread || 0) / player.accuracy;
+      const a = angle + ((Math.random()-0.5) * spread);
+      const speed = w.bulletSpeed * (0.9 + Math.random()*0.2);
+      let dmg = (w.damage + (player.damageBonus||0)) * (player.damageMult || 1);
+      const isCrit = Math.random() < (player.critChance || 0);
+      if(isCrit) dmg *= (player.critMult || 1.5);
+      const elementalBonus = (w.elemental || w.explosive) ? (player.elementalBonus || 0) : 0;
+      dmg *= (1 + elementalBonus);
+      const elemental = w.elemental || (w.explosive ? 'fire' : null);
+      // px/py = previous position for the swept hit test. A new bullet starts its sweep at the player's
+      // centre, so an enemy overlapping the player (inside the muzzle offset) still gets hit.
+      bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, px: player.x, py: player.y, fresh: true, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, pierce: (w.pierce||0) + (player.pierceBonus||0), rehit: !!w.rehit });
+    }
+    addParticle({x:player.x + Math.cos(angle)*16, y:player.y + Math.sin(angle)*16, life:0.15, r: w.type==='heavy'?18:w.type==='shotgun'?14:10, color:w.color});
+    if(audio.ctx && time - (w.lastSound||0) > 0.06){ w.lastSound = time; const freq = w.type==='heavy'?120:w.type==='shotgun'?180:w.type==='rifle'?240:320; audio.beep(freq,0.04,'square',0.03); }
   }
-  const angle = Math.atan2(target.y - player.y, target.x - player.x);
-  const count = w.pellets || 1;
-  for(let i=0;i<count;i++){
-    const spread = (w.spread || 0) / player.accuracy;
-    const a = angle + ((Math.random()-0.5) * spread);
-    const speed = w.bulletSpeed * (0.9 + Math.random()*0.2);
-    let dmg = (w.damage + (player.damageBonus||0)) * (player.damageMult || 1);
-    const isCrit = Math.random() < (player.critChance || 0);
-    if(isCrit) dmg *= (player.critMult || 1.5);
-    const elementalBonus = (w.elemental || w.explosive) ? (player.elementalBonus || 0) : 0;
-    dmg *= (1 + elementalBonus);
-    const elemental = w.elemental || (w.explosive ? 'fire' : null);
-    // px/py = previous position for the swept hit test. A new bullet starts its sweep at the player's
-    // centre, so an enemy overlapping the player (inside the muzzle offset) still gets hit.
-    bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, px: player.x, py: player.y, fresh: true, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, pierce: (w.pierce||0) + (player.pierceBonus||0), rehit: !!w.rehit });
-  }
-  addParticle({x:player.x + Math.cos(angle)*16, y:player.y + Math.sin(angle)*16, life:0.15, r: w.type==='heavy'?18:w.type==='shotgun'?14:10, color:w.color});
-  if(audio.ctx && time - (w.lastSound||0) > 0.06){ w.lastSound = time; const freq = w.type==='heavy'?120:w.type==='shotgun'?180:w.type==='rifle'?240:320; audio.beep(freq,0.04,'square',0.03); }
 }
 
 function killEnemy(index, ownerId){
@@ -1172,18 +1185,44 @@ function killEnemy(index, ownerId){
   addParticle({x:e.x,y:e.y,life:0.35,r:16,color:'#ff5d5d'});
   addShake(e.isBoss ? 12 : 3);
   audio.beep(140,0.06,'triangle',0.04);
+  // splitter: bursts into two runners on death (runners never split)
+  if(e.splits){
+    const rt = enemyTypes[0];
+    for(let k=0;k<2;k++){
+      const a = Math.random()*Math.PI*2;
+      enemies.push({ id: rt.id, x: e.x + Math.cos(a)*14, y: e.y + Math.sin(a)*14, r: rt.r,
+        hp: Math.floor(rt.hp * (1 + Math.max(0, state.wave-1) * 0.12)), maxHp: Math.floor(rt.hp * (1 + Math.max(0, state.wave-1) * 0.12)),
+        speed: rt.speed + state.wave*2, dmg: e.dmg, color: rt.color, xp: Math.max(1, Math.floor(rt.xp/2)), money: 1 });
+    }
+  }
   // drop money pickups
   for(let k=0;k<e.money;k++){ moneyDrops.push({x:e.x+rand(-10,10), y:e.y+rand(-10,10), r:5, life:6, t:0}); }
   enemies.splice(index,1);
 }
 
-function awardToPlayerById(id, xp, money){ const p = players.find(x=>x.id===id) || players[0]; p.xp += xp; p.currency += money; while(p.xp >= p.xpNext){ levelUp(p); } }
-
-function switchWeaponFor(player, dir){
-  if(player.ownedWeapons.length === 0) return;
-  player.weaponIndex = (player.weaponIndex + dir + player.ownedWeapons.length) % player.ownedWeapons.length;
-  refreshAmmoFor(player);
+// burster: proximity-fused explosion. One AoE hit, then the enemy is gone (no contact DPS).
+function explodeEnemy(e, index){
+  const R = 85, base = e.dmg * 3;
+  for(const p of players){
+    if(p.dead) continue;
+    const d = Math.hypot(p.x - e.x, p.y - e.y);
+    if(d < R + p.r){
+      p.hp -= Math.max(1, base * (1 - d / (R + p.r)) - p.armor);
+      p.hitFlash = 0.12;
+      addShake(6);
+      if(p.hp <= 0){
+        p.hp = 0; p.dead = true; addShake(10);
+        if(players.every(pl=>pl.dead)) state.phase = 'gameover';
+      }
+    }
+  }
+  addParticle({x:e.x, y:e.y, life:0.4, r:26, color:'#ff8c42'});
+  addParticle({x:e.x, y:e.y, life:0.3, r:16, color:'#ff5d2a'});
+  audio.deny();
+  enemies.splice(index, 1);
 }
+
+function awardToPlayerById(id, xp, money){ const p = players.find(x=>x.id===id) || players[0]; p.xp += xp; p.currency += money; while(p.xp >= p.xpNext){ levelUp(p); } }
 
 function buyShopItemFor(player){
   const item = shop.items[shop.selection];
@@ -1193,7 +1232,6 @@ function buyShopItemFor(player){
   player.currency -= item.price;
   if(item.type === 'weapon'){
     player.ownedWeapons.push(createWeaponInstance(item.data, item.rarity || item.data.rarity));
-    player.weaponIndex = player.ownedWeapons.length - 1;
     refreshAmmoFor(player);
   } else {
     addItemToPlayer(player, item.data, item.rarity || item.data.rarity);
@@ -1401,7 +1439,10 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
     }
     if(p.x < 0 || p.x > W){ p.x = Math.max(0, Math.min(W, p.x)); p.vx = 0; }
     if(p.y < 0 || p.y > H){ p.y = Math.max(0, Math.min(H, p.y)); p.vy = 0; }
-    if(p.reloading > 0){ p.reloading -= dt; if(p.reloading <= 0){ refreshAmmoFor(p); audio.beep(320,0.05,'triangle',0.04); } }
+    // each equipped weapon reloads on its own timer
+    for(const w of p.ownedWeapons){
+      if(w.reloading > 0){ w.reloading -= dt; if(w.reloading <= 0){ w.ammoInMag = Math.max(1, (w.mag||999) + p.magBonus); audio.beep(320,0.05,'triangle',0.04); } }
+    }
     if(p.kick > 0) p.kick -= dt * 2.5; if(p.hitFlash > 0) p.hitFlash -= dt;
   }
 
@@ -1445,17 +1486,39 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
     }
     if(state.waveSpawned >= state.waveTotal && enemies.length === 0){ // wave complete
       state.waveCompleteTimer += dt;
-      // if reached max wave, and completed on this danger, unlock next danger
-      if(state.wave >= state.maxWave){ if(state.danger < 5 && state.danger <= state.unlockedDanger){ state.unlockedDanger = Math.min(5, state.danger+1); localStorage.setItem(UNLOCK_KEY, state.unlockedDanger); msgEl.style.display='block'; msgEl.textContent = `Unlocked Danger ${state.unlockedDanger}!`; setTimeout(()=>msgEl.style.display='none',3000); } }
-      // open stat selector before shop
       moneyDrops.length = 0;
-      state.phase = 'upgrade';
-      buildUpgradeChoices();
+      if(state.wave >= state.maxWave){
+        // Final wave cleared: unlock the next danger level (if this run earned it), celebrate
+        // briefly, then return to the menu where the new danger is selectable. No victory screen.
+        let newlyUnlocked = 0;
+        if(state.danger < 5 && state.danger <= state.unlockedDanger){
+          newlyUnlocked = state.danger + 1;
+          state.unlockedDanger = Math.min(5, newlyUnlocked);
+          localStorage.setItem(UNLOCK_KEY, state.unlockedDanger);
+        }
+        state.victoryUnlocked = newlyUnlocked;
+        state.phase = 'victory';
+        state.victoryTimer = 0;
+        audio.pickup(); setTimeout(()=>audio.buy(), 140); setTimeout(()=>audio.pickup(), 280);
+      } else {
+        // open stat selector before shop
+        state.phase = 'upgrade';
+        buildUpgradeChoices();
+      }
     }
     if(state.waveCompleteTimer > 6 && enemies.length === 0){
       state.phase = 'upgrade';
       buildUpgradeChoices();
     }
+  } else if(state.phase === 'victory'){
+    // Celebration beat after clearing the final wave: confetti, then back to the menu
+    // where the newly unlocked danger is selectable.
+    state.victoryTimer += dt;
+    if(Math.random() < dt * 24){
+      addParticle({x: Math.random()*W, y: Math.random()*H*0.55, life: 0.9, r: 5,
+        color: ['#ffd166','#6ef2b1','#6cd6ff','#ff6b6b'][(Math.random()*4)|0]});
+    }
+    if(state.victoryTimer > 4.5) resetRun();
   } else if(state.phase === 'upgrade'){
     // wait for click selection in UI
   } else if(state.phase === 'shop'){
@@ -1470,6 +1533,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
       if(input.keys[' ']){ input.keys[' '] = false; buyShopItemFor(players[0]); }
     }
     if(input.keys['enter']){ input.keys['enter'] = false; startNextWave(); }
+    if(input.keys['r']){ input.keys['r'] = false; rerollShop(); }
   }
 
   // bullets update
@@ -1522,6 +1586,13 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
     e.x += e.vx * dt;
     e.y += e.vy * dt;
     integrateEnemyKnockback(e, dt);
+
+    // burster proximity fuse: pops when close to a player, dealing AoE damage once
+    if(e.explodes && waveAlive.length > 0){
+      let nearestD2 = Infinity;
+      for(const p of waveAlive){ const d2 = (p.x-e.x)*(p.x-e.x) + (p.y-e.y)*(p.y-e.y); if(d2 < nearestD2) nearestD2 = d2; }
+      if(nearestD2 < 48*48){ explodeEnemy(e, i); continue; }
+    }
 
     // bullets collision (swept: previous -> current bullet position vs enemy radius + bullet radius)
     let killed = false;
@@ -1818,16 +1889,21 @@ function wrapText(text, x, y, maxWidth, lineHeight, maxLines){
 }
 
 function drawPlayerWeapon(p){
-  const w = getWeaponFor(p);
-  const len = weaponHandLength[w.id] || 26;
-  const facingLeft = Math.cos(p.angle) < 0;
-  ctx.save();
-  ctx.translate(0, 4);
-  ctx.rotate(p.angle);
-  ctx.translate(12 + len*0.35 - p.kick*30, 0);
-  if(facingLeft) ctx.scale(1, -1);        // keep the gun upright when aiming left
-  if(!drawSprite('w_' + w.id, len, null)) drawWeaponFallback(w, len);
-  ctx.restore();
+  // All owned weapons are equipped at once: draw them fanned around the aim direction.
+  const ws = p.ownedWeapons.filter(Boolean);
+  const n = ws.length;
+  ws.forEach((w, i) => {
+    const len = weaponHandLength[w.id] || 26;
+    const off = n > 1 ? (i - (n - 1) / 2) * 0.16 : 0;   // fan spread
+    const facingLeft = Math.cos(p.angle) < 0;
+    ctx.save();
+    ctx.translate(0, 4);
+    ctx.rotate(p.angle + off);
+    ctx.translate(12 + len*0.35 - (i === 0 ? p.kick*30 : 0), 0);
+    if(facingLeft) ctx.scale(1, -1);        // keep the gun upright when aiming left
+    if(!drawSprite('w_' + w.id, len, null)) drawWeaponFallback(w, len);
+    ctx.restore();
+  });
 }
 
 function drawPlayers(){
@@ -2024,40 +2100,31 @@ function drawHUD(){
   // [brad-ui] (b) P2 card below the DOM Pause button at every HUD scale (Greg's hudP2CardY)
   if(players[1]) drawPlayerCard(players[1], VW - 262, hudP2CardY(S), 250, 'PLAYER 2', '#ff6b6b');
 
-  // --- bottom-left: weapon + ammo, dash
-  const w = getWeaponFor(p);
+  // --- bottom-left: weapon arsenal + ammo, dash (all owned weapons fire at once)
   // [brad-ui] (d) card is 66 tall so the ammo line has room above the bottom border
   const by = VH - 78;
   panel(12, by, 250, 66, palette.uiLight, palette.outline, 12);
-  ctx.fillStyle = 'rgba(190,215,255,0.16)';
-  roundRect(20, by + 9, 58, 48, 8); ctx.fill();
-  drawWeaponIcon(w, 24, by + 18, 50, 30);
-  ctx.font = uiFont(13, 'bold');
-  ctx.fillStyle = palette.text;
-  ctx.fillText(w.name, 88, by + 23);
-  if(w.elemental){
-    const ec = w.elemental === 'fire' ? '#ff8c42' : w.elemental === 'ice' ? '#6cd6ff' : '#b27bff';
-    ctx.font = uiFont(10, 'bold');
-    const tw = ctx.measureText(w.elemental.toUpperCase()).width + 10;
-    ctx.fillStyle = ec; roundRect(250 - tw - 4, by + 11, tw, 15, 6); ctx.fill();
-    ctx.fillStyle = '#041018'; ctx.fillText(w.elemental.toUpperCase(), 250 - tw + 1, by + 22);
-  }
-  if(!w.melee){
-    const magMax = Math.max(1, (w.mag||0) + p.magBonus);
-    if(p.reloading > 0){
-      // [brad-ui] reload bar fills against the effective reload time (fireWeaponFor sets reloading = w.reload * reloadSpeed)
-      drawBar(88, by + 32, 160, 10, 1 - p.reloading / Math.max(0.01, w.reload * (p.reloadSpeed || 1)), '#ffd166', '#ffb44c', '');
-      ctx.font = uiFont(10, 'bold'); ctx.fillStyle = '#ffd166'; ctx.fillText('RELOADING', 88, by + 53);
-    } else {
-      drawBar(88, by + 32, 160, 10, p.ammoInMag / magMax, palette.uiAccent, palette.uiGreen, '');
-      ctx.font = uiFont(10); ctx.fillStyle = palette.textLight; ctx.fillText(`${p.ammoInMag} / ${magMax}`, 88, by + 53);
+  ctx.font = uiFont(11, 'bold'); ctx.fillStyle = palette.textLight;
+  ctx.fillText(`WEAPONS (${p.ownedWeapons.length}/6)`, 20, by + 16);
+  const arsenal = p.ownedWeapons.slice(0, 6);
+  arsenal.forEach((w, i) => {
+    const ix = 20 + i * 38;
+    ctx.fillStyle = 'rgba(190,215,255,0.10)';
+    roundRect(ix, by + 22, 34, 34, 6); ctx.fill();
+    drawWeaponIcon(w, ix + 2, by + 24, 30, 18);
+    if(!w.melee){
+      // per-weapon ammo: yellow fill while reloading, teal/green otherwise
+      const magMax = Math.max(1, (w.mag || 0) + p.magBonus);
+      const frac = w.reloading > 0
+        ? 1 - w.reloading / Math.max(0.01, w.reload * (p.reloadSpeed || 1))
+        : w.ammoInMag / magMax;
+      drawBar(ix + 2, by + 48, 30, 5, Math.max(0, Math.min(1, frac)),
+        w.reloading > 0 ? '#ffd166' : palette.uiAccent, w.reloading > 0 ? '#ffb44c' : palette.uiGreen, '');
     }
-  } else {
-    ctx.font = uiFont(10); ctx.fillStyle = palette.textLight; ctx.fillText('Melee', 88, by + 42);
-  }
-  if(w.overheatMax){
-    drawBar(170, by + 48, 78, 4, w.heat / w.overheatMax, '#ffd166', '#ff5d5d', '');
-  }
+    if(w.overheatMax && w.heat > 0){
+      drawBar(ix + 2, by + 48, 30, 5, Math.min(1, w.heat / w.overheatMax), '#ffd166', '#ff5d5d', '');
+    }
+  });
   const dy = by - 42;
   panel(12, dy, 170, 32, palette.uiLight, palette.outline, 10, {shadow:false});
   ctx.font = uiFont(12, 'bold');
@@ -2276,7 +2343,7 @@ function drawEffects(){
     ctx.translate(tr.x, tr.y);
     const sway = Math.sin(state.animTime * 1.5 + tr.x * 0.05) * 0.03;
     ctx.rotate(sway);
-    // [brad-fx] v0.56 tree in the ground palette (fx.js); the original Tree.png is the fallback
+    // [brad-fx] v0.56 tree in the ground palette (fx.js); falls back to a drawn shape
     if(!(window.FX && FX.drawTree()) && !drawSprite('tree', 46, null, {anchorY: 0.62})){     // 1:1 with the 64px source art
       ctx.fillStyle = '#3b2a1a'; ctx.fillRect(-4, 4, 8, 16);
       ctx.fillStyle = palette.outline;
@@ -2317,7 +2384,7 @@ function drawEffects(){
     ctx.save();
     ctx.translate(e.x, e.y);
     ctx.scale(wob, wob);
-    // yellow "light" enemy (spitter) uses EnemyLight.png, drawn 1:1 with its pixel art
+    // spitter: animated v0.56 enemy sheet (fx.js); falls back to a drawn shape
     // [brad-fx] animated v0.56 enemy sheets (fx.js) return the sprite's half-height; else the old art
     const fxTop = window.FX ? FX.drawEnemy(e, flash) : 0;
     const useSprite = fxTop > 0 || (e.id === 'spitter' && drawSprite('enemyLight', null, 36, {flipX: e.face < 0, flash}));
@@ -2378,6 +2445,23 @@ function drawWaveBanner(){
   ctx.font = uiFont(26, 'bold');
   ctx.textAlign = 'center';
   ctx.fillText(state.wave >= state.maxWave ? 'BOSS WAVE' : `WAVE ${state.wave}`, W/2, y + 40);
+  ctx.textAlign = 'start';
+  ctx.restore();
+}
+
+// Celebration banner after clearing the final wave: names the unlocked danger (if any),
+// then update() returns to the menu after a few seconds. Not a victory screen.
+function drawVictory(){
+  const t = Math.min(1, state.victoryTimer * 2);
+  const y = H * 0.26;
+  ctx.save();
+  ctx.globalAlpha = t;
+  panel(W/2 - 230, y, 460, 122, palette.uiLight, palette.uiAccent, 16);
+  ctx.fillStyle = '#ffd166';
+  ctx.font = uiFont(30, 'bold'); ctx.textAlign = 'center';
+  ctx.fillText(state.victoryUnlocked > 0 ? `DANGER ${state.victoryUnlocked} UNLOCKED!` : `DANGER ${state.danger} CLEARED!`, W/2, y + 54);
+  ctx.fillStyle = palette.text; ctx.font = uiFont(14);
+  ctx.fillText(state.victoryUnlocked > 0 ? 'The next danger level awaits in the menu.' : 'You beat the highest danger. Legendary!', W/2, y + 86);
   ctx.textAlign = 'start';
   ctx.restore();
 }
@@ -2465,6 +2549,7 @@ function draw(){
   ctx.restore();
   // [brad-ui] the HUD is hidden behind the shop (it shows wallet/stats itself) and the game-over screen
   if(state.phase !== 'shop' && state.phase !== 'gameover'){ drawHUD(); drawWaveBanner(); }
+  if(state.phase === 'victory') drawVictory();
   drawUpgradeSelector();
   drawShop();
   if(state.paused){
