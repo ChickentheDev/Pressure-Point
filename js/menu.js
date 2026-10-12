@@ -218,23 +218,25 @@ function itemCellsHTML(p){
   }).join('');
   return cells || '<div class="icon-cell empty">—</div>';
 }
-function progressRowsHTML(){
+function progressRowsHTML(essenceGained){
   const mm = Math.floor(state.runTime / 60), ss = Math.floor(state.runTime % 60);
   const waveLabel = state.endless ? `${state.wave} (Endless)` : `${Math.min(state.wave, state.maxWave)} / ${state.maxWave}`;
-  return statRowsHTML([
+  const rows = [
     ['Wave', waveLabel],
     ['Kills', state.runKills],
     ['Time', `${mm}:${String(ss).padStart(2,'0')}`],
     ['Danger', state.danger],
-  ]);
+  ];
+  if(essenceGained > 0) rows.push(['Essence', `+${essenceGained}`]);
+  return statRowsHTML(rows);
 }
-function fillSummary(prefix){
+function fillSummary(prefix, essenceGained){
   const p = players[0] || {};
   const set = (id, html)=>{ const el = document.getElementById(prefix+id); if(el) el.innerHTML = html; };
   set('Stats', playerStatRows(p));
   set('Weapons', weaponCellsHTML(p));
   set('Items', itemCellsHTML(p));
-  set('Progress', progressRowsHTML());
+  set('Progress', progressRowsHTML(essenceGained));
   const dEl = document.getElementById(prefix+'Danger');
   if(dEl){ const m = dangerMods(state.danger); dEl.innerHTML = `Danger <b style="color:${m.color}">${state.danger} — ${m.title}</b>`; }
 }
@@ -242,7 +244,8 @@ function fillSummary(prefix){
 function showRunWon(){
   state.phase = 'runwon';
   state.summaryShown = true;
-  fillSummary('won');
+  const gained = awardEssence();
+  fillSummary('won', gained);
   const u = document.getElementById('wonUnlock');
   if(u){
     if(state.victoryUnlocked > 0){
@@ -260,7 +263,8 @@ function showRunWon(){
 function showRunOver(){
   if(state.summaryShown) return;
   state.summaryShown = true;
-  fillSummary('over');
+  const gained = awardEssence();
+  fillSummary('over', gained);
   if(runOverEl) runOverEl.style.display = 'block';
   if(pauseBtn) pauseBtn.style.display = 'none';
 }
@@ -329,6 +333,7 @@ function startRun(){
   const chosenWeapon = state.weaponId || chosenClass.weapon;
   applyClassToPlayer(players[0], chosenClass, chosenWeapon);
   if(players[1]) applyClassToPlayer(players[1], chosenClass, chosenWeapon);
+  applyMetaUpgrades(players[0]);
   for(const p of players){ p.dashCooldown = 0; p.dashTimer = 0; p.iFrames = 0; p.vx = 0; p.vy = 0; }   // fresh dash + no leftover momentum each run
   state.wave = 1;
   state.runKills = 0;
@@ -366,6 +371,45 @@ if(achievementsBtn && achievementsScreen){
   });
   achievementsCloseBtn.addEventListener('click', ()=>{
     audio.click(); achievementsScreen.style.display = 'none';
+  });
+}
+
+// Meta upgrades screen
+const metaBtn = document.getElementById('metaBtn');
+const metaScreen = document.getElementById('metaScreen');
+const metaList = document.getElementById('metaList');
+const metaEssence = document.getElementById('metaEssence');
+const metaCloseBtn = document.getElementById('metaCloseBtn');
+function renderMeta(){
+  metaEssence.textContent = essence;
+  metaList.innerHTML = META_UPGRADES.map(u=>{
+    const lvl = getMetaLevel(u.id);
+    const maxed = lvl >= u.max;
+    const cost = maxed ? null : u.costs[lvl];
+    const afford = !maxed && essence >= cost;
+    return `<div class="achievement-card ${lvl > 0 ? 'unlocked' : 'locked'}">
+      <div class="ach-name">${u.name} <span style="color:#888">Lv ${lvl}/${u.max}</span></div>
+      <div class="ach-desc">${u.desc}</div>
+      <div style="margin-top:8px">
+        ${maxed ? '<span style="color:#f5c542">MAX</span>' :
+          `<button class="btn btn-secondary" data-meta="${u.id}" ${afford ? '' : 'disabled'} style="${afford ? '' : 'opacity:0.4'}">Buy (${cost} essence)</button>`}
+      </div>
+    </div>`;
+  }).join('');
+  metaList.querySelectorAll('[data-meta]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(buyMetaUpgrade(btn.dataset.meta)){ audio.buy(); renderMeta(); }
+      else audio.deny();
+    });
+  });
+}
+if(metaBtn && metaScreen){
+  metaBtn.addEventListener('click', ()=>{
+    audio.click(); renderMeta();
+    metaScreen.style.display = 'flex';
+  });
+  metaCloseBtn.addEventListener('click', ()=>{
+    audio.click(); metaScreen.style.display = 'none';
   });
 }
 
