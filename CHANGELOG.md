@@ -6,6 +6,8 @@
 - Removed per-frame garbage from the hot loop: no array allocations inside the enemy update loop, no per-frame `Set` in the FX system, no regex tested on every bullet's colour every frame.
 - Fixed forced layout every frame: the HUD no longer measures DOM rectangles per frame, and cursor/button-visibility writes are skipped when unchanged.
 - The ground layer is now blitted 1:1 instead of being resampled every frame.
+- Co-op dash: Player 1 dashes with Left Shift and Player 2 dashes with Right Shift, so each player dashes independently on a shared keyboard (`U` still works for P2).
+
 
 ## v0.56 ALPHA — 2026-10-07 (graphics division)
 - New animated pixel-art player: a blue armored suit (red for Player 2) with a 4-frame walk cycle facing up, down and sideways (mirrored for left). The body is 28 px wide, the same as the player hitbox.
