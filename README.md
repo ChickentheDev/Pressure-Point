@@ -1,8 +1,13 @@
-# Pressure Point — v0.5.8B
+# Pressure Point — v0.6.0 Class expansion
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.5.8B)
+## Latest Changes (v0.6.0 — Class expansion)
+- **Custom class sprites**: every class has its own walk-animated sprite — Ironheart (steel-blue armor), Foxglove (green hunter), Gravelord (bulky brown iron), Scrapjack (orange scavenger), Voltblade (yellow with arc spikes), Circuitry (cyan with glowing traces), Bulwark (heavy gray plate, bulkier frame), Redline (aggressive red), Skylark (white, slimmer frame), Nightreap (dark purple hood). Shown as portraits in class select; P2 shares P1's sprite (co-op ring tells players apart).
+- **Cosmetic equipment**: shop items now show on your character — Dense Plating (shoulder armor), Ammo Belt (pouches), and the new epic War Crown (+2 Luck, +6% Damage) which puts a gold crown on your head.
+- **100 new items** across 5 categories: **Tech** (engineering gadgets), **Primal** (beast/blood), **Arcane** (elemental/void), **Unique** (gold tag — at most one per player, never combines), **Exclusive** (magenta tag — epic/legendary only, 1.5x price).
+
+## Previous Update (v0.5.8B)
 - **Menu revamp**: Brotato-style 3-step flow — Class → Weapon → Danger. Class select is a grid with a detail panel (starting weapon, green/red stat lines vs the Ironheart baseline, tagline). New weapon select: grid of all 15 weapons with a detail panel (damage, fire delay, magazine/reload, spread, traits); your pick becomes the run's starting weapon (class stat mods still apply). Danger select shows numbered 1-5 buttons with a detail panel listing that danger's full modifiers.
 - **Difficulty buffs**: each danger now has explicit modifiers (`DANGER_MODS`), displayed and applied for real — D2: +8% enemy speed; D3: +15% horde size; D4: +15% enemy damage; D5: +30% horde size and TWO Overlords on wave 20. Elites unchanged (wave 12 on D2-5, wave 16 on D4-5, wave 20 on D1-5).
 - **Run Won screen**: replaces the bare banner — "Run Won / Danger N" with Stats, Weapons, Items, and Progress panels, a gold "DANGER N UNLOCKED!" banner when earned, and Retry / New Run / Main Menu buttons (confetti + fanfare still play).

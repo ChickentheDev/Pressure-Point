@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — v0.6.0 Class expansion
+- **Custom class sprites**: all 10 classes now have their own distinct 4-direction walk-animated sprite (same pixel-art pipeline/style as the v0.56 set): steel-blue Ironheart, green Foxglove hunter, bulky brown Gravelord, orange Scrapjack, yellow Voltblade with arc shoulder spikes, cyan Circuitry with glowing traces, heavy gray Bulwark (bulkier frame), aggressive red Redline, white Skylark (slimmer), purple Nightreap with dark hood. Class select shows the sprite as the class portrait. P2 uses the same sprite as P1 (co-op ring still distinguishes players); old p1/p2 sheets kept as fallback.
+- **Cosmetic equipment (paper-doll)**: certain shop items now visibly render on your character — Dense Plating adds shoulder/chest armor, Ammo Belt adds ammo pouches, and the NEW epic item **War Crown** (+2 Luck, +6% Damage) puts a gold crown on your head. Works for P1 and P2 independently.
+- **100 new items** (shop pool now 110): 40 common / 30 rare / 20 epic / 10 legendary with evocative names and accurate auto-generated descriptions.
+- **5 item categories** (colored tag on shop cards): Tech (cyan), Primal (green), Arcane (purple), Unique (gold), Exclusive (magenta).
+- **Unique rule**: at most ONE Unique item per player — no duplicates, exempt from combining; shop stops offering Uniques once owned.
+- **Exclusive rule**: only rolls at epic/legendary; 1.5x shop price multiplier.
+- New items use category-glyph icons until dedicated art exists. Buying can no longer charge when the add is refused.
+
 ## Unreleased — menu revamp
 - Menu flow is now Class → Weapon → Danger → Start (Brotato-style): class grid with detail panel (starting weapon, green/red stat lines vs Ironheart baseline, tagline); NEW weapon-select step with all 15 weapons (icon grid + detail panel: damage, fire delay, magazine/reload, spread, traits) — the pick becomes the run's starting weapon; danger select with numbered buttons and a detail panel showing each danger's full modifier list.
 - Difficulty buffs (`DANGER_MODS`, displayed and applied): D1 baseline; D2 +8% enemy speed; D3 +15% horde size; D4 +15% enemy damage; D5 +30% horde size and TWO Overlords on wave 20. Elite gating unchanged (12 on D2-5, 16 on D4-5, 20 on D1-5).
