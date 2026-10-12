@@ -2,7 +2,11 @@
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Update (v0.56) — graphics division
+## Latest Changes (Unreleased)
+- **Performance**: The web build runs faster with identical visuals. Bullets use cached glow sprites instead of per-bullet `shadowBlur`; HUD panels and bars cache their gradients and shadows; the hot loop no longer allocates arrays or objects per frame; the HUD no longer forces a layout every frame; the ground layer is blitted 1:1 instead of resampled.
+- **Controls**: In co-op, Player 1 dashes with `Left Shift` and Player 2 dashes with `Right Shift`, so each player dashes independently (`U` still works for P2).
+
+## Previous Update (v0.56) — graphics division
 - **Map and money**: Flat warm grey-brown ground with sparse doodles (pebbles, cracks, bones, grass) and matching trees. Money drops are glowing green gems that bob, pulse and swoop toward you, and the HUD/shop currency icon matches.
 - **Sprites**: An animated blue (P1) or red (P2) armored player with 4-frame walk cycles in every direction, sized to the hitbox. New original enemies: a raptor Runner, a spiky dino-head Bruiser, a mosquito Spitter and a spiked sandworm as the Overlord boss, all animated and sized to their hitboxes, and the Flamethrower, Arc Thrower, Railgun, Mine Layer and Frost Sprayer have weapon art.
 - **Effects**: Hit sparks, death bursts with a shockwave ring, muzzle flashes, tracers, fire/ice/shock glows on enemies and bullets, and a dash after-image trail. Particles scale back automatically in big waves.
@@ -44,14 +48,14 @@ Recommended: modern Chromium-based browser for best audio/visual support.
 
 ### Player 1
 - Move: `WASD`
-- Dash: `Shift`
+- Dash: `Left Shift`
 - Aim and fire: see **Auto Shoot / Mouse Aim** below
 - Fire (when Auto Shoot is off): hold the left mouse button or `Space`
 - The last weapon you bought is the one you use
 
 ### Player 2 (co-op)
 - Move: Arrow keys
-- Dash: `U`
+- Dash: `Right Shift` (`U` also works)
 - Always auto-aims at the nearest enemy and auto-fires
 
 ### Auto Shoot / Mouse Aim (Settings)
