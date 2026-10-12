@@ -3,7 +3,11 @@
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
 ## Latest Changes (v0.5.8A)
-- **Menu revamp** (in progress): Brotato-style class selection (grid + stat detail panel), new weapon selection step (pick your starting weapon freely), difficulty selection with per-danger modifiers shown, and proper Run Won / Run Over summary screens with stats, weapons, items, Retry / New Run / Main Menu.
+- **Menu revamp**: Brotato-style 3-step flow — Class → Weapon → Danger. Class select is a grid with a detail panel (starting weapon, green/red stat lines vs the Ironheart baseline, tagline). New weapon select: grid of all 15 weapons with a detail panel (damage, fire delay, magazine/reload, spread, traits); your pick becomes the run's starting weapon (class stat mods still apply). Danger select shows numbered 1-5 buttons with a detail panel listing that danger's full modifiers.
+- **Difficulty buffs**: each danger now has explicit modifiers (`DANGER_MODS`), displayed and applied for real — D2: +8% enemy speed; D3: +15% horde size; D4: +15% enemy damage; D5: +30% horde size and TWO Overlords on wave 20. Elites unchanged (wave 12 on D2-5, wave 16 on D4-5, wave 20 on D1-5).
+- **Run Won screen**: replaces the bare banner — "Run Won / Danger N" with Stats, Weapons, Items, and Progress panels, a gold "DANGER N UNLOCKED!" banner when earned, and Retry / New Run / Main Menu buttons (confetti + fanfare still play).
+- **Run Over screen**: same panel layout on death, with Retry / New Run / Main Menu. Also fixed: death from non-contact sources now reliably ends the run.
+- **Pause menu**: proper panel showing your class (name, trait, weapon), owned weapons, and full stats, with Resume / Quit to Menu.
 
 ## Previous Update (v0.5.7)
 - **Hordes**: Waves are bigger — `16 + (wave-1)*8` enemies (wave 1: 16, wave 19: 160; was 10 + (wave-1)*5), and the spawn interval ramps up faster so late waves keep real pressure. Danger and co-op still multiply the total.

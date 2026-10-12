@@ -41,7 +41,7 @@ canvas#game{display:block;width:100%;height:100%;background:#0b111a}
   animation: overlay-pop 220ms ease-out;
   z-index:2;
 }
-#menu{width:min(640px, calc(100vw - 32px));text-align:center}
+#menu{width:min(780px, calc(100vw - 32px));text-align:center}
 #menu h1{font-size:34px;letter-spacing:1px;color:var(--accent);text-shadow:0 3px 0 rgba(0,0,0,0.55)}
 .subtitle{font-size:13px;color:var(--text-faint);margin:2px 0 12px}
 .menu-section{margin:14px 0}
@@ -140,6 +140,72 @@ input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:po
   border-radius:12px;animation:toast-in 180ms ease-out;pointer-events:none;
 }
 .overlay.small{padding:8px 14px;font-size:13px}
+
+/* ---------- Menu steps (class -> weapon -> danger) ---------- */
+.menu-step{animation:overlay-pop 180ms ease-out}
+.select-layout{display:grid;grid-template-columns:1fr 240px;gap:12px;align-items:start;text-align:left}
+.select-grid{max-height:min(300px,38vh)}
+.detail-panel{
+  background:var(--panel-inset);border:3px solid var(--edge);border-radius:var(--radius);
+  padding:12px 14px;min-height:180px;box-shadow:inset 0 2px 0 rgba(255,255,255,0.06);
+  font-size:13px;color:var(--text-dim);line-height:1.45;
+}
+.detail-panel h3{color:var(--text);font-size:16px;margin-bottom:2px}
+.detail-panel .sub{color:var(--text-faint);font-size:12px;margin-bottom:8px}
+.detail-panel .tagline{font-style:italic;color:var(--text-faint);margin-top:8px}
+.stat-line{margin:2px 0}
+.stat-line.positive{color:#6ef2b1}
+.stat-line.negative{color:#ff7b7b}
+.stat-line.neutral{color:var(--text-dim)}
+.danger-num{
+  font-size:44px;font-weight:800;line-height:1;margin-bottom:4px;
+}
+/* weapon grid */
+.weapon-list{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;
+  max-height:min(300px,38vh);overflow:auto;
+  padding:8px;border:3px solid var(--edge);border-radius:var(--radius);background:var(--panel-inset);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,0.06);
+}
+.weapon-btn{
+  aspect-ratio:1;border-radius:10px;background:linear-gradient(180deg,#1d3147 0%,#132233 100%);
+  cursor:pointer;border:3px solid var(--edge);display:flex;align-items:center;justify-content:center;
+  box-shadow:0 3px 0 var(--edge), inset 0 2px 0 rgba(255,255,255,0.08);
+  transition:transform .12s ease,filter .12s ease;user-select:none;overflow:hidden;
+}
+.weapon-btn img{width:100%;height:100%;object-fit:contain;image-rendering:auto}
+.weapon-btn .fallback{font-weight:800;font-size:20px}
+.weapon-btn:hover{filter:brightness(1.15);transform:translateY(-2px)}
+.weapon-btn.active{outline:3px solid var(--accent);outline-offset:1px;filter:brightness(1.15)}
+
+/* ---------- Run summary screens (won / over / pause) ---------- */
+.overlay.summary{width:min(860px,calc(100vw - 32px));text-align:center}
+.overlay.summary h2{color:var(--accent);letter-spacing:1px;font-size:28px}
+.summary-sub{color:var(--text-faint);font-size:14px;margin:2px 0 10px}
+.unlock-banner{
+  display:inline-block;margin:6px 0 12px;padding:10px 26px;border-radius:12px;
+  background:linear-gradient(180deg,#ffd166 0%,#e0a93e 100%);color:#3a2a08;
+  font-weight:800;font-size:18px;letter-spacing:1px;
+  border:3px solid var(--edge);box-shadow:0 4px 0 var(--edge),0 0 24px rgba(255,209,102,0.45);
+  animation:toast-in 240ms ease-out;
+}
+.summary-panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:8px 0;text-align:left}
+.summary-panel{
+  background:var(--panel-inset);border:3px solid var(--edge);border-radius:var(--radius);
+  padding:10px 12px;min-height:120px;box-shadow:inset 0 2px 0 rgba(255,255,255,0.06);
+}
+.summary-panel h3{color:var(--accent);font-size:14px;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase}
+.stat-rows{font-size:12.5px;color:var(--text-dim);line-height:1.6}
+.stat-rows .row{display:flex;justify-content:space-between;gap:8px}
+.stat-rows .row b{color:var(--text);font-weight:700}
+.icon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px}
+.icon-cell{
+  aspect-ratio:1;border-radius:8px;background:#1d3147;border:2px solid var(--edge);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+  font-size:11px;font-weight:800;color:var(--text);text-align:center;line-height:1.1;padding:2px;
+}
+.icon-cell img{width:100%;height:100%;object-fit:contain}
+.icon-cell.empty{opacity:0.35;border-style:dashed}
 
 @media (max-height:720px){
   .overlay{padding:16px 20px}

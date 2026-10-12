@@ -30,27 +30,105 @@
       <h1>Pressure Point</h1>
       <div class="subtitle">Survive 20 waves. Beat the Overlord.</div>
 
-      <section class="menu-section">
-        <div class="label">Danger</div>
-        <div id="dangerList" class="danger-list"></div>
-      </section>
-
-      <section class="menu-section">
-        <div class="label">Class</div>
-        <div id="classList" class="class-list"></div>
-        <div id="classDesc" class="class-desc">Select a class to see stats and starter weapon.</div>
-      </section>
-
-      <section class="menu-section">
-        <label class="toggle"><input type="checkbox" id="coopToggle"> Co&#8209;op (local, 2 players)</label>
+      <!-- Step 1: class select -->
+      <div id="menuStepClass" class="menu-step">
+        <section class="menu-section">
+          <div class="label">Choose your class</div>
+          <div class="select-layout">
+            <div id="classList" class="class-list select-grid"></div>
+            <div id="classDetail" class="detail-panel"></div>
+          </div>
+        </section>
+        <div class="menu-actions">
+          <button id="settingsBtn" class="btn btn-secondary" type="button">Settings</button>
+          <button id="toWeaponBtn" class="btn btn-primary" type="button">Choose Weapon →</button>
+        </div>
         <div class="hint">P1: WASD + Shift (dash) &nbsp;•&nbsp; P2: Arrow keys + U (dash)</div>
-      </section>
-
-      <div class="menu-actions">
-        <button id="settingsBtn" class="btn btn-secondary" type="button">Settings</button>
-        <button id="startBtn" class="btn btn-primary" type="button">Start Game</button>
       </div>
-      <div class="hint">Pick a danger level with the mouse. Beat Wave 20 to unlock the next one.<br>In game: P pause • M mute • Tab stats (shop)</div>
+
+      <!-- Step 2: weapon select -->
+      <div id="menuStepWeapon" class="menu-step" style="display:none">
+        <section class="menu-section">
+          <div class="label">Choose your starting weapon</div>
+          <div class="select-layout">
+            <div id="weaponList" class="weapon-list select-grid"></div>
+            <div id="weaponDetail" class="detail-panel"></div>
+          </div>
+        </section>
+        <div class="menu-actions">
+          <button id="backToClassBtn" class="btn btn-secondary" type="button">← Class</button>
+          <button id="toDangerBtn" class="btn btn-primary" type="button">Choose Danger →</button>
+        </div>
+      </div>
+
+      <!-- Step 3: danger select -->
+      <div id="menuStepDanger" class="menu-step" style="display:none">
+        <section class="menu-section">
+          <div class="label">Choose danger</div>
+          <div class="select-layout">
+            <div id="dangerList" class="danger-list select-grid"></div>
+            <div id="dangerDetail" class="detail-panel"></div>
+          </div>
+        </section>
+        <section class="menu-section">
+          <label class="toggle"><input type="checkbox" id="coopToggle"> Co&#8209;op (local, 2 players)</label>
+          <div class="hint">P1: WASD + Shift (dash) &nbsp;•&nbsp; P2: Arrow keys + U (dash)</div>
+        </section>
+        <div class="menu-actions">
+          <button id="backToWeaponBtn" class="btn btn-secondary" type="button">← Weapon</button>
+          <button id="startBtn" class="btn btn-primary" type="button">Start Game</button>
+        </div>
+        <div class="hint">Beat Wave 20 to unlock the next danger.<br>In game: P pause • M mute • Tab stats (shop)</div>
+      </div>
+    </div>
+
+    <!-- Run Won summary -->
+    <div id="runWon" class="overlay summary" style="display:none">
+      <h2>Run Won</h2>
+      <div id="wonDanger" class="summary-sub"></div>
+      <div id="wonUnlock" class="unlock-banner" style="display:none"></div>
+      <div class="summary-panels">
+        <div class="summary-panel"><h3>Stats</h3><div id="wonStats" class="stat-rows"></div></div>
+        <div class="summary-panel"><h3>Weapons</h3><div id="wonWeapons" class="icon-grid"></div></div>
+        <div class="summary-panel"><h3>Items</h3><div id="wonItems" class="icon-grid"></div></div>
+        <div class="summary-panel"><h3>Progress</h3><div id="wonProgress" class="stat-rows"></div></div>
+      </div>
+      <div class="menu-actions">
+        <button id="wonRetryBtn" class="btn btn-secondary" type="button">Retry</button>
+        <button id="wonNewRunBtn" class="btn btn-secondary" type="button">New Run</button>
+        <button id="wonMenuBtn" class="btn btn-primary" type="button">Main Menu</button>
+      </div>
+    </div>
+
+    <!-- Run Over summary -->
+    <div id="runOver" class="overlay summary" style="display:none">
+      <h2>Run Over</h2>
+      <div id="overDanger" class="summary-sub"></div>
+      <div class="summary-panels">
+        <div class="summary-panel"><h3>Stats</h3><div id="overStats" class="stat-rows"></div></div>
+        <div class="summary-panel"><h3>Weapons</h3><div id="overWeapons" class="icon-grid"></div></div>
+        <div class="summary-panel"><h3>Items</h3><div id="overItems" class="icon-grid"></div></div>
+        <div class="summary-panel"><h3>Progress</h3><div id="overProgress" class="stat-rows"></div></div>
+      </div>
+      <div class="menu-actions">
+        <button id="overRetryBtn" class="btn btn-secondary" type="button">Retry</button>
+        <button id="overNewRunBtn" class="btn btn-secondary" type="button">New Run</button>
+        <button id="overMenuBtn" class="btn btn-primary" type="button">Main Menu</button>
+      </div>
+    </div>
+
+    <!-- Pause summary -->
+    <div id="pauseMenu" class="overlay summary" style="display:none">
+      <h2>Paused</h2>
+      <div class="summary-panels">
+        <div class="summary-panel"><h3 id="pauseClassName">Class</h3><div id="pauseClass" class="stat-rows"></div></div>
+        <div class="summary-panel"><h3>Weapons</h3><div id="pauseWeapons" class="icon-grid"></div></div>
+        <div class="summary-panel"><h3>Stats</h3><div id="pauseStats" class="stat-rows"></div></div>
+      </div>
+      <div class="menu-actions">
+        <button id="pauseResumeBtn" class="btn btn-primary" type="button">Resume</button>
+        <button id="pauseQuitBtn" class="btn btn-secondary" type="button">Quit to Menu</button>
+      </div>
     </div>
 
     <div id="settingsPanel" class="overlay settings" style="display:none">

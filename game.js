@@ -6,7 +6,6 @@ const ctx = canvas.getContext('2d');
 const menuEl = document.getElementById('menu');
 const dangerListEl = document.getElementById('dangerList');
 const classListEl = document.getElementById('classList');
-const classDescEl = document.getElementById('classDesc');
 const startBtn = document.getElementById('startBtn');
 const coopToggle = document.getElementById('coopToggle');
 const shakeToggle = document.getElementById('shakeToggle');
@@ -377,12 +376,13 @@ function getSystems(){ return wasmSystems.status === 'ready' ? wasmSystems.api :
 function togglePause(){
   state.paused = !state.paused;
   if(pauseBtn) pauseBtn.textContent = state.paused ? 'Resume' : 'Pause';
-  flashMsg(state.paused ? 'Paused — press P to resume' : 'Resumed', 1.2);
+  if(state.paused){ showPauseMenu(); }
+  else { hidePauseMenu(); flashMsg('Resumed', 1.2); }
 }
 
 // Game State
 const state = {
-  phase: 'menu', // menu | wave | shop | gameover | victory
+  phase: 'menu', // menu | wave | shop | upgrade | gameover | victory | runwon
   wave: 1,
   waveBanner: 0,
   eliteBanner: 0,
@@ -397,7 +397,11 @@ const state = {
   victoryTimer: 0,     // celebration beat after clearing the final wave
   victoryUnlocked: 0,  // danger level unlocked by the victory (0 = already at max)
   classId: 'ironheart',
+  weaponId: null,      // starting weapon chosen on the weapon-select step (null = class default)
+  menuStep: 'class',   // menu flow: class -> weapon -> danger
   pendingUpgrade: null,
+  runKills: 0,         // kills this run (for Run Won / Run Over progress panels)
+  runTime: 0,          // seconds this run (for Run Won / Run Over progress panels)
   shopView: 'shop', // shop | stats
   paused: false,
   treeWave: 0,
@@ -473,6 +477,25 @@ if(particleEffectsToggle){
 const UNLOCK_KEY = 'brotato_unlocked_danger_v1';
 const saved = localStorage.getItem(UNLOCK_KEY);
 if(saved){ try{ state.unlockedDanger = Math.max(1, Math.min(5, parseInt(saved)||1)); }catch(e){} }
+
+// ---- Difficulty buffs --------------------------------------------------------------------------
+// Per-danger modifiers: displayed on the danger-select detail panel AND applied for real.
+// The lines describe each danger's TOTAL scaling (base formulas + the new buffs below).
+// Base formulas (unchanged): horde count x(1+(d-1)*0.15), enemy HP x(1+(d-1)*0.35),
+// enemy damage x(1+(d-1)*0.28). The countMult/speedMult/dmgMult here stack on top.
+const DANGER_MODS = {
+  1: { color:'#6ef2b1', title:'Standard', doubleBoss:false, countMult:1,    speedMult:1,    dmgMult:1,
+       lines:['The standard run.', 'Standard horde sizes.', 'No elites.'] },
+  2: { color:'#6cd6ff', title:'Toughened', doubleBoss:false, countMult:1,   speedMult:1.08, dmgMult:1,
+       lines:['Enemies +35% HP, +28% damage.', 'Hordes +15% larger.', 'Elites hunt on wave 12.', 'Enemies move 8% faster.'] },
+  3: { color:'#b67bff', title:'Relentless', doubleBoss:false, countMult:1.15, speedMult:1.08, dmgMult:1,
+       lines:['Enemies +70% HP, +56% damage.', 'Hordes +50% larger.', 'Elites hunt on wave 12.', 'Enemies move 8% faster.'] },
+  4: { color:'#ff9f43', title:'Brutal', doubleBoss:false, countMult:1.15, speedMult:1.08, dmgMult:1.15,
+       lines:['Enemies +105% HP, +84% damage.', 'Hordes +67% larger.', 'Elites hunt on waves 12 and 16.', 'Enemies deal +15% damage, move 8% faster.'] },
+  5: { color:'#ff6b6b', title:'Nightmare', doubleBoss:true, countMult:1.3, speedMult:1.08, dmgMult:1.15,
+       lines:['Enemies +140% HP, +112% damage.', 'Hordes +108% larger.', 'Elites hunt on waves 12, 16 and 20.', 'TWO Overlords on wave 20.'] },
+};
+function dangerMods(d){ return DANGER_MODS[Math.max(1, Math.min(5, d|0))] || DANGER_MODS[1]; }
 
 // Players (support player 1 and optional player 2)
 function createPlayer(x,y){ return {
@@ -801,7 +824,7 @@ function getWeaponFor(player){
 
 function refreshAmmoFor(player){ for(const w of player.ownedWeapons){ if(w) w.ammoInMag = Math.max(1, (w.mag||999) + player.magBonus); } }
 
-function applyClassToPlayer(player, classData){
+function applyClassToPlayer(player, classData, weaponId){
   // class level scales with unlocked danger (D1 -> L1, D2 -> L2, etc.)
   const classLevel = Math.max(1, Math.min(5, state.danger));
   player.classId = classData.id;
@@ -825,7 +848,7 @@ function applyClassToPlayer(player, classData){
   player.items = [];
   player.damageMult = 1;
   player.dead = false;
-  const baseW = weapons.find(w=>w.id===classData.weapon) || weapons[0];
+  const baseW = weapons.find(w=>w.id===(weaponId || classData.weapon)) || weapons.find(w=>w.id===classData.weapon) || weapons[0];
   player.ownedWeapons = [createWeaponInstance(baseW, 'common')];
   player.level = 1;
   player.xp = 0;
@@ -940,9 +963,9 @@ function startWave(){
   state.phase = 'wave';
   state.waveSpawned = 0;
   state.waveCompleteTimer = 0;
-  state.waveTotal = Math.floor(computeWaveTotal(state.wave) * (state.coop ? 1.5 : 1) * (1 + (state.danger-1)*0.15));
+  state.waveTotal = Math.floor(computeWaveTotal(state.wave) * (state.coop ? 1.5 : 1) * (1 + (state.danger-1)*0.15) * dangerMods(state.danger).countMult);
   if(state.wave >= state.maxWave){
-    state.waveTotal = 1;
+    state.waveTotal = dangerMods(state.danger).doubleBoss ? 2 : 1;
     state.bossSpawned = false;
   }
   // elites spawn with the wave and count toward its completion total
@@ -1002,14 +1025,15 @@ function spawnEnemy(opts){
   const t = enemyTypes[Math.max(0, idx)];
   // danger scaling
   const dangerHP = 1 + (state.danger-1) * 0.35;
-  const dangerDmg = 1 + (state.danger-1) * 0.28;
+  const dangerDmg = (1 + (state.danger-1) * 0.28) * dangerMods(state.danger).dmgMult;
+  const dangerSpeed = dangerMods(state.danger).speedMult;
   const waveScale = 1 + Math.max(0, state.wave-1) * 0.12;
   const lateDmg = 1 + Math.max(0, state.wave-1) * 0.18;
   // elites: scaled-up variants — 3x HP, 1.4x damage, bigger body, triple rewards
   const eliteHP = elite ? 3 : 1, eliteDmg = elite ? 1.4 : 1;
   const xp = Math.floor((t.xp + Math.floor(state.wave*0.6)*(state.danger)) * (elite ? 3 : 1));
   const money = Math.max(1, Math.floor((Math.floor(t.money * 0.7) + Math.floor(state.wave*0.2) * state.danger) * (elite ? 3 : 1)));
-  enemies.push({ id: t.id, x,y, r: Math.floor(t.r * (elite ? 1.35 : 1)), hp: Math.floor(t.hp * waveScale * dangerHP * eliteHP), maxHp: Math.floor(t.hp * waveScale * dangerHP * eliteHP), speed: t.speed + state.wave*2, dmg: Math.floor(t.dmg * dangerDmg * lateDmg * eliteDmg + state.wave*1.2), color: t.color, xp, money, explodes: !!t.explodes, splits: !!t.splits, elite });
+  enemies.push({ id: t.id, x,y, r: Math.floor(t.r * (elite ? 1.35 : 1)), hp: Math.floor(t.hp * waveScale * dangerHP * eliteHP), maxHp: Math.floor(t.hp * waveScale * dangerHP * eliteHP), speed: Math.floor((t.speed + state.wave*2) * dangerSpeed), dmg: Math.floor(t.dmg * dangerDmg * lateDmg * eliteDmg + state.wave*1.2), color: t.color, xp, money, explodes: !!t.explodes, splits: !!t.splits, elite });
   if(enemies.length > 120){ enemies.shift(); }
   addParticle({x, y, life:0.35, r:18, color: elite ? '#ffd166' : palette.uiAccent});
 }
@@ -1209,6 +1233,7 @@ function fireWeaponFor(player, time, target){
 function killEnemy(index, ownerId){
   const e = enemies[index];
   if(!e) return;
+  state.runKills++;
   awardToPlayerById(ownerId, e.xp, e.money);
   addParticle({x:e.x,y:e.y,life:0.35,r:16,color:'#ff5d5d'});
   addShake(e.isBoss ? 12 : 3);
@@ -1240,7 +1265,7 @@ function explodeEnemy(e, index){
       addShake(6);
       if(p.hp <= 0){
         p.hp = 0; p.dead = true; addShake(10);
-        if(players.every(pl=>pl.dead)) state.phase = 'gameover';
+        if(players.every(pl=>pl.dead)){ state.phase = 'gameover'; showRunOver(); }
       }
     }
   }
@@ -1268,6 +1293,41 @@ function buyShopItemFor(player){
 }
 
 // UI: build dangers
+// ---- Menu: element refs ----
+const menuStepClassEl = document.getElementById('menuStepClass');
+const menuStepWeaponEl = document.getElementById('menuStepWeapon');
+const menuStepDangerEl = document.getElementById('menuStepDanger');
+const classDetailEl = document.getElementById('classDetail');
+const weaponListEl = document.getElementById('weaponList');
+const weaponDetailEl = document.getElementById('weaponDetail');
+const dangerDetailEl = document.getElementById('dangerDetail');
+const runWonEl = document.getElementById('runWon');
+const runOverEl = document.getElementById('runOver');
+const pauseMenuEl = document.getElementById('pauseMenu');
+
+function setMenuStep(step){
+  state.menuStep = step;
+  if(menuStepClassEl) menuStepClassEl.style.display = step === 'class' ? 'block' : 'none';
+  if(menuStepWeaponEl) menuStepWeaponEl.style.display = step === 'weapon' ? 'block' : 'none';
+  if(menuStepDangerEl) menuStepDangerEl.style.display = step === 'danger' ? 'block' : 'none';
+  if(step === 'class') renderClassButtons();
+  if(step === 'weapon') renderWeaponButtons();
+  if(step === 'danger') renderDangerButtons();
+}
+
+// Weapon icon art (PNGs that exist); others fall back to a colored tile.
+const WEAPON_ICONS = {
+  pistol:'CobaltPistol.png', harpoon:'Harpoongun.png', rifle:'Pulserifle.png',
+  shotgun:'GravShotgun.png', heavy:'TitanCannon.png', blade:'ArcBlade.png',
+  smg:'ViperSMG.png', dmr:'LongshotDMR.png', rpg:'RPG.png', minigun:'Minigun.png',
+};
+function weaponIconHTML(w){
+  const src = WEAPON_ICONS[w.id];
+  if(src) return `<img src="${src}" alt="${w.name}" draggable="false">`;
+  return `<span class="fallback" style="color:${w.color || '#fff'}">${(w.name||'?')[0]}</span>`;
+}
+
+// UI: build dangers (numbered buttons + detail panel with DANGER_MODS)
 function renderDangerButtons(){
   if(!dangerListEl) return;
   dangerListEl.innerHTML = '';
@@ -1282,13 +1342,55 @@ function renderDangerButtons(){
         state.danger = i;
         audio.click();
         renderDangerButtons();
-        renderClassButtons();
       } else {
         audio.deny();
       }
     });
     dangerListEl.appendChild(b);
   }
+  renderDangerDetail();
+}
+
+function renderDangerDetail(){
+  if(!dangerDetailEl) return;
+  const d = state.danger;
+  const m = dangerMods(d);
+  dangerDetailEl.innerHTML =
+    `<div class="danger-num" style="color:${m.color}">${d}</div>` +
+    `<h3 style="color:${m.color}">${m.title}</h3>` +
+    `<div class="sub">Danger ${d} of 5</div>` +
+    m.lines.map(l=>`<div class="stat-line neutral">&bull; ${l}</div>`).join('');
+}
+
+// Class stat lines vs the Ironheart baseline (green = better, red = worse)
+function classStatLines(c){
+  const base = classArchetypes[0].mods;
+  const m = c.mods;
+  const lines = [];
+  const cmp = (label, val, baseVal, kind, invert)=>{
+    const v = (val === undefined ? (kind === 'mult' ? 1 : 0) : val);
+    const b = (baseVal === undefined ? (kind === 'mult' ? 1 : 0) : baseVal);
+    let diff, txt, good;
+    if(kind === 'mult'){ diff = Math.round((v-b)*100); txt = `${diff>=0?'+':''}${diff}% ${label}`; }
+    else { diff = Math.round((v-b)*100)/100; txt = `${diff>=0?'+':''}${diff} ${label}`; }
+    if(diff === 0) return;
+    good = invert ? diff < 0 : diff > 0;
+    lines.push(`<div class="stat-line ${good ? 'positive' : 'negative'}">${txt}</div>`);
+  };
+  cmp('Max HP', m.hpMult, base.hpMult, 'mult');
+  cmp('Speed', m.speed, base.speed, 'num');
+  cmp('Armor', m.armor, base.armor, 'num');
+  cmp('Damage', m.damageBonus, base.damageBonus, 'num');
+  cmp('Accuracy', m.accuracy, base.accuracy, 'mult');
+  cmp('Reload time', m.reloadSpeed, base.reloadSpeed, 'mult', true);
+  cmp('Mag size', m.magBonus, base.magBonus, 'num');
+  cmp('Life steal', (m.lifesteal||0)*100, (base.lifesteal||0)*100, 'num');
+  cmp('Luck', m.luck, base.luck, 'num');
+  if((m.recoil || 1) !== (base.recoil || 1)){
+    const w = (m.recoil||1) > (base.recoil||1);
+    lines.push(`<div class="stat-line ${w ? 'negative' : 'positive'}">${w?'+':'-'}${Math.abs(Math.round(((m.recoil||1)-1)*100))}% Recoil</div>`);
+  }
+  return lines.join('') || '<div class="stat-line neutral">Balanced stats.</div>';
 }
 
 function renderClassButtons(){
@@ -1302,41 +1404,230 @@ function renderClassButtons(){
     btn.addEventListener('click', ()=>{
       state.classId = c.id;
       audio.click();
-      classDescEl.textContent = `${c.name} — ${c.desc} | Class Lv ${state.danger} • Weapon ${c.weapon}`;
       renderClassButtons();
     });
     classListEl.appendChild(btn);
   }
-  const selected = classes.find(x=>x.id === state.classId) || classes[0];
-  if(selected){
-    classDescEl.textContent = `${selected.name} — ${selected.desc} | Class Lv ${state.danger} • Weapon ${selected.weapon}`;
-  }
+  renderClassDetail();
 }
+
+function renderClassDetail(){
+  if(!classDetailEl) return;
+  const c = classes.find(x=>x.id === state.classId) || classes[0];
+  const w = weapons.find(x=>x.id === c.weapon);
+  classDetailEl.innerHTML =
+    `<h3>${c.name}</h3>` +
+    `<div class="sub">Starts with: ${w ? w.name : c.weapon} &bull; Class Lv ${state.danger}</div>` +
+    classStatLines(c) +
+    `<div class="tagline">${c.desc}</div>`;
+}
+
+// Weapon select grid + detail panel
+function selectedWeaponId(){
+  return state.weaponId || (classes.find(x=>x.id === state.classId) || classes[0]).weapon;
+}
+function renderWeaponButtons(){
+  if(!weaponListEl) return;
+  weaponListEl.innerHTML = '';
+  const cur = selectedWeaponId();
+  for(const w of weapons){
+    const b = document.createElement('div');
+    b.className = 'weapon-btn' + (w.id === cur ? ' active' : '');
+    b.title = w.name;
+    b.innerHTML = weaponIconHTML(w);
+    b.addEventListener('click', ()=>{
+      state.weaponId = w.id;
+      audio.click();
+      renderWeaponButtons();
+    });
+    weaponListEl.appendChild(b);
+  }
+  renderWeaponDetail();
+}
+
+function renderWeaponDetail(){
+  if(!weaponDetailEl) return;
+  const w = weapons.find(x=>x.id === selectedWeaponId()) || weapons[0];
+  const r = rarities.find(x=>x.id === w.rarity);
+  const traits = [];
+  if(w.pellets > 1) traits.push(`Fires ${w.pellets} pellets`);
+  if(w.pierce) traits.push(`Pierces ${w.pierce}`);
+  if(w.explosive) traits.push('Explosive');
+  if(w.melee) traits.push('Melee');
+  if(w.elemental) traits.push(w.elemental[0].toUpperCase() + w.elemental.slice(1));
+  if(w.overheatMax) traits.push('Overheats');
+  if(w.rehit) traits.push('Re-hits');
+  weaponDetailEl.innerHTML =
+    `<h3 style="color:${(r && r.color) || '#fff'}">${w.name}</h3>` +
+    `<div class="sub">${(r && r.name) || w.rarity} ${w.type}</div>` +
+    `<div class="stat-line neutral">Damage: <b>${w.damage}</b>${w.pellets > 1 ? ` &times; ${w.pellets}` : ''}</div>` +
+    `<div class="stat-line neutral">Fire delay: <b>${w.fireRate}s</b></div>` +
+    `<div class="stat-line neutral">Magazine: <b>${w.mag}</b> / Reload: <b>${w.reload}s</b></div>` +
+    `<div class="stat-line neutral">Spread: <b>&plusmn;${Math.round((w.spread || 0) * 57.3)}&deg;</b></div>` +
+    (traits.length ? `<div class="stat-line positive">${traits.join(' &bull; ')}</div>` : '');
+}
+
+// ---- Run summary screens (Won / Over) + pause menu ----
+function hideSummaryOverlays(){
+  for(const el of [runWonEl, runOverEl, pauseMenuEl]) if(el) el.style.display = 'none';
+  state.summaryShown = false;
+}
+
+function statRowsHTML(rows){
+  return rows.map(r=>`<div class="row"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('');
+}
+function playerStatRows(p){
+  return statRowsHTML([
+    ['Class', p.className || '-'],
+    ['Level', p.level || 1],
+    ['Max HP', p.baseMaxHp],
+    ['Armor', p.armor],
+    ['Life Steal', `${((p.lifesteal||0)*100).toFixed(1)}%`],
+    ['Damage', `+${p.damageBonus || 0}`],
+    ['Attack Speed', `${(p.reloadSpeed || 1).toFixed(2)}x`],
+    ['Crit Chance', `${((p.critChance||0)*100).toFixed(1)}%`],
+    ['Speed', p.baseSpeed],
+    ['Luck', p.luck || 0],
+  ]);
+}
+function weaponCellsHTML(p){
+  const cells = (p.ownedWeapons || []).filter(Boolean).map(w=>{
+    const r = rarities.find(x=>x.id===w.rarity);
+    return `<div class="icon-cell" title="${w.name}" style="border-color:${(r&&r.color)||'#3a4a5f'}">${weaponIconHTML(w)}</div>`;
+  }).join('');
+  return cells || '<div class="icon-cell empty">—</div>';
+}
+function itemCellsHTML(p){
+  const cells = (p.items || []).map(it=>{
+    const d = items.find(x=>x.id===it.id);
+    const r = rarities.find(x=>x.id===it.rarity);
+    const nm = d ? d.name : it.id;
+    return `<div class="icon-cell" title="${nm}" style="border-color:${(r&&r.color)||'#3a4a5f'}">${nm.split(' ').map(s=>s[0]).join('').slice(0,3)}</div>`;
+  }).join('');
+  return cells || '<div class="icon-cell empty">—</div>';
+}
+function progressRowsHTML(){
+  const mm = Math.floor(state.runTime / 60), ss = Math.floor(state.runTime % 60);
+  return statRowsHTML([
+    ['Wave', `${Math.min(state.wave, state.maxWave)} / ${state.maxWave}`],
+    ['Kills', state.runKills],
+    ['Time', `${mm}:${String(ss).padStart(2,'0')}`],
+    ['Danger', state.danger],
+  ]);
+}
+function fillSummary(prefix){
+  const p = players[0] || {};
+  const set = (id, html)=>{ const el = document.getElementById(prefix+id); if(el) el.innerHTML = html; };
+  set('Stats', playerStatRows(p));
+  set('Weapons', weaponCellsHTML(p));
+  set('Items', itemCellsHTML(p));
+  set('Progress', progressRowsHTML());
+  const dEl = document.getElementById(prefix+'Danger');
+  if(dEl){ const m = dangerMods(state.danger); dEl.innerHTML = `Danger <b style="color:${m.color}">${state.danger} — ${m.title}</b>`; }
+}
+
+function showRunWon(){
+  state.phase = 'runwon';
+  state.summaryShown = true;
+  fillSummary('won');
+  const u = document.getElementById('wonUnlock');
+  if(u){
+    if(state.victoryUnlocked > 0){
+      u.style.display = 'inline-block';
+      u.textContent = `DANGER ${state.victoryUnlocked} UNLOCKED!`;
+    } else {
+      u.style.display = 'none';
+    }
+  }
+  if(runWonEl) runWonEl.style.display = 'block';
+  if(pauseBtn) pauseBtn.style.display = 'none';
+  audio.pickup(); setTimeout(()=>audio.buy(), 140); setTimeout(()=>audio.pickup(), 280);
+}
+
+function showRunOver(){
+  if(state.summaryShown) return;
+  state.summaryShown = true;
+  fillSummary('over');
+  if(runOverEl) runOverEl.style.display = 'block';
+  if(pauseBtn) pauseBtn.style.display = 'none';
+}
+
+function showPauseMenu(){
+  const p = players[0] || {};
+  const c = classes.find(x=>x.id === state.classId);
+  const nm = document.getElementById('pauseClassName');
+  if(nm) nm.textContent = c ? c.name : 'Class';
+  const pc = document.getElementById('pauseClass');
+  if(pc) pc.innerHTML = statRowsHTML([
+    ['Class', (c ? c.name : '-') + ` Lv ${state.danger}`],
+    ['Trait', c ? c.desc : '-'],
+    ['Weapon', (weapons.find(w=>w.id===(p.ownedWeapons && p.ownedWeapons[0] && p.ownedWeapons[0].id)) || {}).name || '-'],
+  ]);
+  const pw = document.getElementById('pauseWeapons');
+  if(pw) pw.innerHTML = weaponCellsHTML(p);
+  const ps = document.getElementById('pauseStats');
+  if(ps) ps.innerHTML = playerStatRows(p);
+  if(pauseMenuEl) pauseMenuEl.style.display = 'block';
+}
+function hidePauseMenu(){ if(pauseMenuEl) pauseMenuEl.style.display = 'none'; }
+
+function wireSummaryButtons(){
+  const on = (id, fn)=>{ const el = document.getElementById(id); if(el) el.addEventListener('click', ()=>{ audio.click(); fn(); }); };
+  const retry = ()=>{ startRun(); };
+  const newRun = ()=>{ hideSummaryOverlays(); resetRun(); setMenuStep('class'); };
+  const toMenu = ()=>{ hideSummaryOverlays(); resetRun(); };
+  on('wonRetryBtn', retry); on('wonNewRunBtn', newRun); on('wonMenuBtn', toMenu);
+  on('overRetryBtn', retry); on('overNewRunBtn', newRun); on('overMenuBtn', toMenu);
+  on('pauseResumeBtn', ()=>togglePause());
+  on('pauseQuitBtn', ()=>{ if(state.paused) togglePause(); hideSummaryOverlays(); resetRun(); });
+}
+
 renderDangerButtons();
 renderClassButtons();
 if(pauseBtn){
   pauseBtn.addEventListener('click', ()=>{
     pauseBtn.blur();   // so Space/Enter don't re-trigger it later
-    if(state.phase === 'menu' || state.phase === 'gameover') return;
+    if(state.phase === 'menu' || state.phase === 'gameover' || state.phase === 'runwon') return;
     togglePause();
   });
 }
 
-startBtn.addEventListener('click', ()=>{
+// Menu step navigation
+function wireMenuNav(){
+  const on = (id, fn)=>{ const el = document.getElementById(id); if(el) el.addEventListener('click', ()=>{ audio.click(); fn(); }); };
+  on('toWeaponBtn', ()=>setMenuStep('weapon'));
+  on('backToClassBtn', ()=>setMenuStep('class'));
+  on('toDangerBtn', ()=>setMenuStep('danger'));
+  on('backToWeaponBtn', ()=>setMenuStep('weapon'));
+}
+
+// Start (or retry) a run with the currently selected class / weapon / danger / co-op
+function startRun(){
+  hideSummaryOverlays();
   state.coop = coopToggle.checked;
   // create or remove second player
-  if(state.coop && players.length < 2){ players[1] = createPlayer(W/2+40, H/2+20); players[1].currency = 0; players[1].xp = 0; renderDangerButtons(); }
+  if(state.coop && players.length < 2){ players[1] = createPlayer(W/2+40, H/2+20); players[1].currency = 0; players[1].xp = 0; }
   if(!state.coop && players.length>1){ players.splice(1,1); }
   player = players[0];
   const chosenClass = classes.find(x=>x.id === state.classId) || classes[0];
-  applyClassToPlayer(players[0], chosenClass);
-  if(players[1]) applyClassToPlayer(players[1], chosenClass);
+  const chosenWeapon = state.weaponId || chosenClass.weapon;
+  applyClassToPlayer(players[0], chosenClass, chosenWeapon);
+  if(players[1]) applyClassToPlayer(players[1], chosenClass, chosenWeapon);
   for(const p of players){ p.dashCooldown = 0; p.dashTimer = 0; p.iFrames = 0; p.vx = 0; p.vy = 0; }   // fresh dash + no leftover momentum each run
+  state.wave = 1;
+  state.runKills = 0;
+  state.runTime = 0;
+  state.victoryUnlocked = 0;
+  state.paused = false;
   menuEl.style.display = 'none';
   if(pauseBtn){ pauseBtn.style.display = 'block'; pauseBtn.textContent = 'Pause'; }
   state.phase = 'wave';
   startWave();
-});
+}
+
+startBtn.addEventListener('click', ()=>{ audio.click(); startRun(); });
+wireMenuNav();
+wireSummaryButtons();
 
 if(settingsBtn && settingsPanel){
   settingsBtn.addEventListener('click', ()=>{
@@ -1403,7 +1694,7 @@ canvas.addEventListener('click', (e)=>{
 });
 
 // Core update loop
-function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover') return;
+function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' || state.phase === 'runwon') return;
   if(menuEl && menuEl.style.display !== 'none') return;
   if(input.keys['p']){
     input.keys['p'] = false;
@@ -1415,6 +1706,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
     flashMsg(audio.muted ? 'Audio muted (M)' : 'Audio unmuted', 1.1);
   }
   if(state.paused) return;
+  if(state.phase === 'wave' || state.phase === 'shop' || state.phase === 'upgrade' || state.phase === 'victory') state.runTime += dt;
   // animation clock, camera shake and the wave banner stop while paused
   state.animTime += dt;
   updateCamera(dt);
@@ -1491,6 +1783,12 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
 
   // phase handling
   if(state.phase === 'wave'){
+    // safety net: death from any source (not just contact damage) ends the run
+    if(players.length > 0 && players.every(pl => pl.dead || pl.hp <= 0)){
+      for(const pl of players){ if(pl.hp <= 0){ pl.hp = 0; pl.dead = true; } }
+      state.phase = 'gameover'; showRunOver();
+      return;
+    }
     if(state.treeWave !== state.wave){
       trees.length = 0;
       const treeCount = Math.max(1, Math.floor(1 + state.wave*0.2));
@@ -1506,6 +1804,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
     if(state.wave >= state.maxWave){
       if(!state.bossSpawned){
         spawnBoss();
+        if(dangerMods(state.danger).doubleBoss){ spawnBoss(); state.waveSpawned++; }  // D5: two Overlords at once
         state.bossSpawned = true;
         state.waveSpawned++;   // elites (if any) already counted in startWave
       }
@@ -1547,7 +1846,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
       addParticle({x: Math.random()*W, y: Math.random()*H*0.55, life: 0.9, r: 5,
         color: ['#ffd166','#6ef2b1','#6cd6ff','#ff6b6b'][(Math.random()*4)|0]});
     }
-    if(state.victoryTimer > 4.5) resetRun();
+    if(state.victoryTimer > 2.8 && !state.summaryShown) showRunWon();
   } else if(state.phase === 'upgrade'){
     // wait for click selection in UI
   } else if(state.phase === 'shop'){
@@ -1677,7 +1976,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
           addShake(10);
           // game over only if all players are dead
           if(players.every(pl=>pl.dead)){
-            state.phase = 'gameover';
+            state.phase = 'gameover'; showRunOver();
           }
         }
       }
@@ -2513,67 +2812,6 @@ function drawVictory(){
   ctx.restore();
 }
 
-function drawGameOver(){
-  ctx.fillStyle='rgba(0,0,0,0.7)';
-  ctx.fillRect(0,0,W,H);
-  ctx.fillStyle=palette.uiLight;
-  panel(W/2-200, 24, 400, 56, palette.uiLight, palette.outline, 14);
-  ctx.fillStyle=palette.text;
-  ctx.font=uiFont(22,'bold');
-  ctx.textAlign='center';
-  ctx.fillText('RUN OVER', W/2, 58);
-  ctx.textAlign='start';
-
-  const cols = players.length;
-  const panelW = Math.min(420, (W - 40 - 20*(cols-1)) / cols);
-  const panelH = Math.max(200, Math.min(420, H - 100 - 90));   // leave room for the Restart button
-  const startX = (W - (cols * panelW + (cols-1) * 20)) / 2;
-  for(let i=0;i<players.length;i++){
-    const p = players[i];
-    const px = startX + i * (panelW + 20);
-    const py = 100;
-    panel(px, py, panelW, panelH, palette.uiLight, palette.outline, 12);
-    ctx.fillStyle = palette.text;
-    ctx.font = uiFont(14,'bold');
-    ctx.fillText(`Player ${i+1}`, px+16, py+24);
-    ctx.font = uiFont(12);
-    const stats = [
-      `Class: ${p.className}`,
-      `Wave: ${state.wave} / ${state.maxWave}`,
-      `HP: ${p.baseMaxHp}`,
-      `Speed: ${p.baseSpeed}`,
-      `Armor: ${p.armor}`,
-      `Life Steal: ${(p.lifesteal*100).toFixed(1)}%`,
-      `Damage Bonus: ${p.damageBonus}`,
-      `Luck: ${p.luck}`,
-    ];
-    for(let s=0;s<stats.length;s++){
-      ctx.fillText(stats[s], px+16, py+46 + s*16);
-    }
-    ctx.fillText('Weapons:', px+16, py+190);
-    let wy = py+208;
-    for(const w of p.ownedWeapons){
-      if(!w) continue;
-      const r = rarities.find(x=>x.id===w.rarity);
-      ctx.fillStyle = (r && r.color) || w.color;
-      ctx.fillRect(px+16, wy-10, 10, 10);
-      ctx.fillStyle = palette.text;
-      ctx.fillText(`${w.name} (${(r && r.name) || w.rarity})`, px+32, wy);
-      wy += 16;
-    }
-    ctx.fillText('Items:', px+16, wy+6);
-    let iy = wy+24;
-    for(const it of p.items){
-      const d = items.find(x=>x.id===it.id);
-      const r = rarities.find(x=>x.id===it.rarity);
-      ctx.fillStyle = (r && r.color) || palette.uiMid;
-      ctx.fillRect(px+16, iy-10, 10, 10);
-      ctx.fillStyle = palette.text;
-      ctx.fillText(d ? d.name : it.id, px+32, iy);
-      iy += 16;
-    }
-  }
-}
 
 function draw(){
   if(window.FX) FX.frame();   // [brad-fx] effects bookkeeping (draw-side only)
@@ -2599,21 +2837,6 @@ function draw(){
   if(state.phase === 'victory') drawVictory();
   drawUpgradeSelector();
   drawShop();
-  if(state.paused){
-    ctx.fillStyle = 'rgba(0,0,0,0.45)';
-    ctx.fillRect(0,0,W,H);
-    // [brad-ui] (e) during level-up the PAUSED box goes above the level-up panel, not over it
-    let pcy = H/2;
-    if(state.phase === 'upgrade'){ const Lu = getUpgradeLayout(); if(Lu.py - 100 >= 8) pcy = Lu.py - 50; }
-    panel(W/2-120, pcy-40, 240, 80, palette.uiLight, palette.outline, 14);
-    ctx.fillStyle = palette.text;
-    ctx.font = uiFont(18,'bold');
-    ctx.textAlign = 'center';
-    ctx.fillText('PAUSED', W/2, pcy);
-    ctx.font = uiFont(12);
-    ctx.fillText('Press P to resume', W/2, pcy + 18);
-    ctx.textAlign = 'start';
-  }
   const anchor = players[0];
   if(anchor && anchor.hp > 0 && anchor.hp / anchor.baseMaxHp < 0.35 && state.phase === 'wave'){
     const hpRatio = anchor.hp / anchor.baseMaxHp;
@@ -2627,10 +2850,9 @@ function draw(){
     ctx.fillStyle = `rgba(255,70,70,${m})`;
     ctx.fillRect(0,0,W,H);
   }
-  if(state.phase==='gameover'){
-    setDisplay(restartBtn, 'block');
+  if(state.phase==='gameover' || state.phase==='runwon'){
+    setDisplay(restartBtn, 'none');
     setDisplay(pauseBtn, 'none');
-    drawGameOver();
   } else {
     setDisplay(restartBtn, 'none');
     // [brad-ui] no Pause button over the shop (nothing runs there and it covered the Stats panel)
@@ -2642,7 +2864,7 @@ let last = performance.now()/1000;
 function loop(now){ const t = now/1000; let dt = t - last; if(dt>0.05) dt=0.05; last = t; if(state.phase !== 'menu') update(dt,t); draw(); requestAnimationFrame(loop); }
 
 // init: render menu, prepare shop
-function showMenu(){ menuEl.style.display = 'block'; if(pauseBtn) pauseBtn.style.display = 'none'; if(settingsPanel) settingsPanel.style.display='none'; renderDangerButtons(); renderClassButtons(); }
+function showMenu(){ menuEl.style.display = 'block'; if(pauseBtn) pauseBtn.style.display = 'none'; if(settingsPanel) settingsPanel.style.display='none'; hideSummaryOverlays(); setMenuStep('class'); }
 showMenu();
 requestAnimationFrame(loop);
 
@@ -2664,6 +2886,6 @@ function resetRun(){
   shop.rerollCost = 6;
   menuEl.style.display = 'block';
   restartBtn.style.display = 'none';
-  renderDangerButtons();
-  renderClassButtons();
+  hideSummaryOverlays();
+  setMenuStep('class');
 }

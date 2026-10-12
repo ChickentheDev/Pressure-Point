@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — menu revamp
+- Menu flow is now Class → Weapon → Danger → Start (Brotato-style): class grid with detail panel (starting weapon, green/red stat lines vs Ironheart baseline, tagline); NEW weapon-select step with all 15 weapons (icon grid + detail panel: damage, fire delay, magazine/reload, spread, traits) — the pick becomes the run's starting weapon; danger select with numbered buttons and a detail panel showing each danger's full modifier list.
+- Difficulty buffs (`DANGER_MODS`, displayed and applied): D1 baseline; D2 +8% enemy speed; D3 +15% horde size; D4 +15% enemy damage; D5 +30% horde size and TWO Overlords on wave 20. Elite gating unchanged (12 on D2-5, 16 on D4-5, 20 on D1-5).
+- Run Won screen replaces the bare victory banner: Stats / Weapons / Items / Progress panels, gold "DANGER N UNLOCKED!" banner when earned, Retry / New Run / Main Menu buttons. Confetti + fanfare retained; never traps the player.
+- Run Over screen on death: same panel layout with Retry / New Run / Main Menu. Fixed: death from non-contact sources now reliably ends the run (safety net in the wave update).
+- Pause menu revamped: panel with class (name, trait, starting weapon), owned weapons, and full stats; Resume / Quit to Menu. Replaces the old "PAUSED" box.
+
 ## Unreleased — class rebalance
 - All 10 classes rebalanced with distinct identities (kept the roster, retuned the stats)
 - **Bug fix**: class HP was dead data — every class started with identical HP regardless of its `hp` value. Now a real `hpMult` applies (Bulwark 1.4x/21 HP/10 armor is finally a tank; Skylark 0.9x/13 HP is the fragile speedster)
