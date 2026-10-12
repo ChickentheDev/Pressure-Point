@@ -438,8 +438,11 @@ function drawHUD(){
   const arsenal = p.ownedWeapons.slice(0, 6);
   arsenal.forEach((w, i) => {
     const ix = 20 + i * 38;
+    const rc = (typeof RARITY_COLORS !== 'undefined' && RARITY_COLORS[w.rarity]) || '#a7b3c4';
     ctx.fillStyle = 'rgba(190,215,255,0.10)';
     roundRect(ix, by + 22, 34, 34, 6); ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = rc;
+    roundRect(ix + 1, by + 23, 32, 32, 5); ctx.stroke();
     drawWeaponIcon(w, ix + 2, by + 24, 30, 18);
     if(!w.melee){
       // per-weapon ammo: yellow fill while reloading, teal/green otherwise

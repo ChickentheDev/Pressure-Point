@@ -1,17 +1,15 @@
-# Pressure Point — v0.7
+# Pressure Point — v0.7.0.1
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.7 — Graphics update 2)
-- **Bloom** — bright pixels bleed light: muzzle flashes, explosions, and elite glows now bloom through a quarter-res separable blur.
-- **Animated fog** — slow-drifting mist rolls over the arena, lit by nearby lights.
-- **Film grain** — subtle grain for a richer, less flat image.
+## Latest Changes (v0.7.0.1 — Rarity borders)
+- **Rarity-colored weapon borders** — the HUD arsenal and the menu weapon grid now show borders in the weapon's rarity color (grey/blue/purple/red).
+
+## Previous Update (v0.7 — Graphics update 2)
+- Bloom, animated fog, film grain in the WebGL shader.
 
 ## Previous Update (v0.6.9 — WebGL lighting)
 - Dynamic 2D lighting: players glow, elites/bosses pulse; vignette + color grade; Lighting FX toggle.
-
-## Previous Update (v0.6.8.1 — Map fix + Glassjaw 1-HP lock)
-- Hidpi map off-center fixed; Glassjaw locked to 1 HP; Vitality gives it move speed.
 
 ## What's Included
 - **11 classes**: 9 unlock via achievements, Glassjaw (1 HP) unlocks by beating Nightmare.

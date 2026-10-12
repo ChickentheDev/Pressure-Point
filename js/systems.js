@@ -3,6 +3,8 @@
 const rarityOrder = ['common','rare','epic','legendary'];
 const RARITY_MULTS = {common:1, rare:1.25, epic:1.5, legendary:2.0};
 function rarityMult(r){ return RARITY_MULTS[r] || 1; }
+// rarity border colors (shared by HUD weapon slots, menu weapon grid; shop uses its own copy in ui.js)
+const RARITY_COLORS = {common:'#a7b3c4', rare:'#4cc3ff', epic:'#b67bff', legendary:'#ff5d5d'};
 
 // Item categories. Unique: at most one per player, never combines. Exclusive: epic/legendary only, 1.5x shop price.
 const CATEGORIES = {

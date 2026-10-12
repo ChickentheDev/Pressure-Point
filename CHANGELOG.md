@@ -1,3 +1,6 @@
+## v0.7.0.1 — Rarity borders
+- **Rarity-colored weapon borders**: the in-wave HUD arsenal slots and the menu weapon-select grid now draw borders in the weapon's rarity color (common grey / rare blue / epic purple / legendary red), matching the shop cards. Shared `RARITY_COLORS` map added.
+
 ## v0.7 — Graphics update 2
 - **Bloom**: bright pixels now bleed light — muzzle flashes, explosions and elite glows bloom through a quarter-res separable gaussian blur (bright extract + 4 blur passes), added back over the lit frame.
 - **Animated fog**: two octaves of scrolling value noise drift over the arena, tinted by local light — subtle depth and atmosphere.

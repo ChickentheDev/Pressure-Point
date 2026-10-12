@@ -152,6 +152,9 @@ function renderWeaponButtons(){
   for(const w of weapons){
     const b = document.createElement('div');
     b.className = 'weapon-btn' + (w.id === cur ? ' active' : '');
+    const rc = (typeof RARITY_COLORS !== 'undefined' && RARITY_COLORS[w.rarity]) || '#a7b3c4';
+    b.style.borderColor = rc;
+    b.style.boxShadow = `0 3px 0 var(--edge), inset 0 2px 0 rgba(255,255,255,0.08), 0 0 10px ${rc}55`;
     b.title = w.name;
     b.innerHTML = weaponIconHTML(w);
     b.addEventListener('click', ()=>{
