@@ -314,4 +314,23 @@ const upgradeTiers = [
   {id:'red', name:'Red', mult:1.5, color:'#ff6b6b'},
 ];
 
+// Achievements: id, name, desc. Checked via checkAchievements() at key events.
+const ACHIEVEMENTS = [
+  {id:'first_blood', name:'First Blood', desc:'Kill your first enemy'},
+  {id:'exterminator', name:'Exterminator', desc:'Kill 500 enemies in one run'},
+  {id:'genocide', name:'Genocide', desc:'Kill 2,000 enemies in one run'},
+  {id:'survivor', name:'Survivor', desc:'Reach wave 10'},
+  {id:'veteran', name:'Veteran', desc:'Clear wave 20'},
+  {id:'unstoppable', name:'Unstoppable', desc:'Reach wave 30 in endless mode'},
+  {id:'danger_zone', name:'Danger Zone', desc:'Clear wave 20 on Danger 5'},
+  {id:'arsenal', name:'Gun Collector', desc:'Own 6 weapons at once'},
+  {id:'legendary_arsenal', name:'Legendary Arsenal', desc:'Own 3 legendary weapons at once'},
+  {id:'shopaholic', name:'Shopaholic', desc:'Spend 500 currency in one run'},
+  {id:'unique_find', name:'One of a Kind', desc:'Own a Unique item'},
+  {id:'big_spender', name:'Big Spender', desc:'Buy an Exclusive item'},
+  {id:'medic', name:'Medic', desc:'Revive a downed partner'},
+  {id:'lifesaver', name:'Lifesaver', desc:'Revive partners 3 times in one run'},
+  {id:'untouchable', name:'Untouchable', desc:'Clear a wave without taking damage'},
+];
+
 // runtime containers
