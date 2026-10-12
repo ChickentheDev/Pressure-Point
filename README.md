@@ -44,14 +44,14 @@ Recommended: modern Chromium-based browser for best audio/visual support.
 
 ### Player 1
 - Move: `WASD`
-- Dash: `Shift`
+- Dash: `Left Shift`
 - Aim and fire: see **Auto Shoot / Mouse Aim** below
 - Fire (when Auto Shoot is off): hold the left mouse button or `Space`
 - The last weapon you bought is the one you use
 
 ### Player 2 (co-op)
 - Move: Arrow keys
-- Dash: `U`
+- Dash: `Right Shift` (`U` also works)
 - Always auto-aims at the nearest enemy and auto-fires
 
 ### Auto Shoot / Mouse Aim (Settings)
