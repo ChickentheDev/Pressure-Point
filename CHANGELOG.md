@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — web performance pass (no visual changes)
+- Bullets now use cached glow sprites instead of per-bullet `shadowBlur`: same glowing-disc look, same per-weapon colours and crit gold, far cheaper to draw.
+- HUD panels and bars cache their gradients, shadows and highlights to offscreen bitmaps instead of rebuilding them every frame; `shade()` results are memoized.
+- Removed per-frame garbage from the hot loop: no array allocations inside the enemy update loop, no per-frame `Set` in the FX system, no regex tested on every bullet's colour every frame.
+- Fixed forced layout every frame: the HUD no longer measures DOM rectangles per frame, and cursor/button-visibility writes are skipped when unchanged.
+- The ground layer is now blitted 1:1 instead of being resampled every frame.
+
 ## v0.56 ALPHA — 2026-10-07 (graphics division)
 - New animated pixel-art player: a blue armored suit (red for Player 2) with a 4-frame walk cycle facing up, down and sideways (mirrored for left). The body is 28 px wide, the same as the player hitbox.
 - New original enemy art in a chunky, thick-outlined, earthy style, each sprite sized to its hitbox with a drop shadow so it reads on the ground: Runner is a mauve raptor with a spiky back and a 4-frame run, Bruiser is a spiky dino head with yellow bumps that hops and chomps, Spitter is a teal-headed mosquito with flapping wings and a curled body that drips green spit, and the wave 20 Overlord boss is now a spiked sandworm swaying out of a dirt mound, bursting up from the ground when it spawns. Frozen enemies animate at half speed.
