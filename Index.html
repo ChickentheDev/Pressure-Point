@@ -29,6 +29,9 @@
     <div id="menu" class="overlay">
       <h1>Pressure Point</h1>
       <div class="subtitle">Survive 20 waves. Beat the Overlord.</div>
+      <div class="menu-actions" style="margin-bottom:12px">
+        <button id="achievementsBtn" class="btn btn-secondary" type="button">Achievements</button>
+      </div>
 
       <!-- Step 1: class select -->
       <div id="menuStepClass" class="menu-step">
@@ -115,6 +118,15 @@
         <button id="overRetryBtn" class="btn btn-secondary" type="button">Retry</button>
         <button id="overNewRunBtn" class="btn btn-secondary" type="button">New Run</button>
         <button id="overMenuBtn" class="btn btn-primary" type="button">Main Menu</button>
+      </div>
+    </div>
+
+    <!-- Achievements screen -->
+    <div id="achievementsScreen" class="overlay summary" style="display:none">
+      <h2>Achievements</h2>
+      <div id="achievementsList" class="achievements-list"></div>
+      <div class="menu-actions">
+        <button id="achievementsCloseBtn" class="btn btn-secondary" type="button">Back</button>
       </div>
     </div>
 
