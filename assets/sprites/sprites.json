@@ -56,6 +56,24 @@
    "fh": 22,
    "frames": 4
   },
+  "bulwark": {
+   "src": "assets/sprites/enemy_bulwark.png",
+   "fw": 32,
+   "fh": 32,
+   "frames": 4
+  },
+  "burster": {
+   "src": "assets/sprites/enemy_burster.png",
+   "fw": 20,
+   "fh": 20,
+   "frames": 4
+  },
+  "splitter": {
+   "src": "assets/sprites/enemy_splitter.png",
+   "fw": 24,
+   "fh": 24,
+   "frames": 4
+  },
   "boss": {
    "src": "assets/sprites/enemy_sandworm.png",
    "fw": 52,

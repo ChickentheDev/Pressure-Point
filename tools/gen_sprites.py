@@ -210,6 +210,40 @@ def mosquito(f):                     # spitter, r=12: teal head, pale wings, lon
     for lx in (12, 14): g.line(lx, 10 - b, lx - 1, 13 - b, 'dark')            # dangly legs
     if f == 3: g.d(20, 14 - b, '#9cff6b'); g.d(20, 15 - b, '#9cff6b'); g.d(21, 15 - b, '#d4ffb8')
     return g
+def bulwark(f):                     # tank, r=20: armored beetle, slow stomp
+    g = Grid(32, 32); b = [0, 1, 0, 1][f]
+    for lx, lift in ((7, f == 1), (12, f == 3), (18, f == 1), (23, f == 3)):
+        g.rect(lx, 24, lx + 2, 27 - (1 if lift else 0), 'dark')
+    g.ell(16, 15 - b, 13, 10, 'shell')                                      # shell
+    g.ell(16, 12 - b, 9, 6, 'plate')                                        # raised plate
+    for x in (10, 16, 22): g.dline(x, 7 - b, x, 19 - b, '#3a2c20')         # plate seams
+    g.line(25, 12 - b, 30, 8 - b, 'horn'); g.line(25, 13 - b, 30, 10 - b, 'horn')
+    g.ell(26, 16 - b, 4.5, 4, 'head')
+    g.d(27, 15 - b, '#ffffff'); g.d(28, 15 - b, '#120c08')
+    g.drect(8, 8 - b, 14, 8 - b, '#c9a06a')                                  # rim light
+    return g
+def burster(f):                      # burster, r=9: volatile spiky blob, pulses before popping
+    g = Grid(20, 20)
+    pulse = [0, 1, 2, 1][f]
+    g.ell(10, 11, 7 + pulse * 0.5, 6.5 + pulse * 0.5, 'body')
+    for k in range(8):
+        a = k / 8 * math.pi * 2 + f * 0.2
+        r0 = 7 + pulse * 0.5
+        g.line(10 + math.cos(a) * r0, 11 + math.sin(a) * r0,
+               10 + math.cos(a) * (r0 + 3.5), 11 + math.sin(a) * (r0 + 3.5), 'spike')
+    g.d(8, 10, '#ffd166'); g.d(11, 12, '#ff8c42'); g.d(9, 13, '#ffd166')   # glowing cracks
+    if pulse == 2: g.drect(7, 9, 12, 9, '#ff5d2a')
+    g.d(7, 7, '#ffffff'); g.d(8, 7, '#120c08'); g.d(11, 7, '#ffffff'); g.d(12, 7, '#120c08')
+    return g
+def splitter(f):                     # splitter, r=13: jelly with two inner cores, wobbles
+    g = Grid(24, 24)
+    wob = [0, 1, 0, -1][f]
+    g.ell(12 + wob, 13, 10, 9, 'jelly')
+    g.ell(12 + wob, 13, 7, 6, 'inner')
+    g.ell(9 + wob, 12, 2.6, 2.6, 'core'); g.ell(15 + wob, 14, 2.6, 2.6, 'core')
+    g.d(8 + wob, 11, '#ffffff'); g.d(14 + wob, 13, '#ffffff')
+    g.ell(5 + wob, 16, 2, 2, 'jelly'); g.ell(19 + wob, 16, 2, 2, 'jelly')
+    return g
 def sandworm(f):                     # boss, r=36: worm rearing out of a dirt mound, bone spikes, green eyes, round maw
     W_, H_ = 52, 56
     g = Grid(W_, H_)
@@ -269,6 +303,9 @@ def gen_enemies():
     meta['runner'] = sheet([raptor(f) for f in range(4)], {'body': ('#5e4048', '#8a6670', '#b08f96'), 'dark': ('#3e2a30', '#5e4048', '#7a5a62'), 'spike': ('#3e2a30', '#4e343c', '#6a4a52')}, 'enemy_runner.png', outline_col=INK)
     meta['bruiser'] = sheet([dinohead(f) for f in range(4)], {'body': ('#4e3a2c', '#6f5442', '#8f725c'), 'dark': ('#33251c', '#4e3a2c', '#6f5442'), 'bump': ('#a8862e', '#d9b54a', '#f2d77a'), 'eye': ('#c46a1c', '#f0962e', '#ffc06a')}, 'enemy_bruiser.png', outline_col=INK)
     meta['spitter'] = sheet([mosquito(f) for f in range(4)], {'head': ('#1f5a4c', '#2e8a72', '#5fc0a2'), 'abdo': ('#5a4232', '#7f6048', '#a08066'), 'wing': ('#a8b4b6', '#d4dcdd', '#f2f6f6'), 'dark': ('#33251c', '#4e3a2c', '#6f5442')}, 'enemy_spitter.png', outline_col=INK)
+    meta['bulwark'] = sheet([bulwark(f) for f in range(4)], {'shell': ('#4a3a28', '#6b5638', '#8f7654'), 'plate': ('#5e4a30', '#82683f', '#a88f60'), 'dark': ('#2e2418', '#4a3a28', '#6b5638'), 'horn': ('#b8ad96', '#e8e0cc', '#ffffff'), 'head': ('#3e2e1e', '#5e4a34', '#7f6547')}, 'enemy_bulwark.png', outline_col=INK)
+    meta['burster'] = sheet([burster(f) for f in range(4)], {'body': ('#7a2a3a', '#b04a5a', '#e07a8a'), 'spike': ('#3e1a22', '#5e2a34', '#7a3a46')}, 'enemy_burster.png', outline_col=INK)
+    meta['splitter'] = sheet([splitter(f) for f in range(4)], {'jelly': ('#3a6e8a', '#5fa8c8', '#8fd4e8'), 'inner': ('#2c5a74', '#4a8aa8', '#6fb8d8'), 'core': ('#1c4f9a', '#5fb0ff', '#c8e4ff')}, 'enemy_splitter.png', outline_col=INK)
     meta['boss'] = sheet([sandworm(f) for f in range(6)], {'body': ('#5e4130', '#86604a', '#a8806a'), 'dirt': ('#3e2e22', '#5a4636', '#76604c'), 'spike': ('#b8ad96', '#e8e0cc', '#ffffff'), 'maw': ('#2a0c0c', '#4a1614', '#6a2420'), 'eye': ('#2c7a32', '#5fd068', '#b8ffb0')}, 'enemy_sandworm.png', outline_col=INK)
     return meta
 

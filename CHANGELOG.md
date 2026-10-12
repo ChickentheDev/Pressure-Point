@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — feature-complete batch
+- Final wave: clearing wave 20 no longer loops it forever. It unlocks the next danger level (if earned), shows a "DANGER N UNLOCKED!" celebration banner with confetti, then returns to the menu where the new danger is selectable. No victory screen, per design.
+- All weapons equipped at once: every owned weapon (up to 6) fires simultaneously, each on its own cooldown/ammo/reload/overheat. Removed the dead `switchWeaponFor()` and the weapon-switch concept; the HUD weapon card now shows the whole arsenal with per-weapon ammo bars, the in-hand art fans all owned weapons around the aim direction, and shop weapon cards show raw stats instead of comparing against a "current" weapon. Note: total DPS now scales with arsenal size; enemy balance unchanged.
+- Co-op shop locks verified shared: `shop.locked` is a single array across both P1/P2 tabs, so locking an item locks it for both players. No change needed.
+- Removed `game-improvements.js` (v0.51 patch file, never loaded by Index.html): its balance tweaks conflicted with tuned values, its pooling was superseded by the perf pass, its bug fixes were already applied, and its F/H help content was outdated. README references updated.
+- New enemies (sprites generated via `tools/gen_sprites.py`, same chunky pixel-art pipeline): Bulwark (slow armored tank), Burster (fast, explodes near the player for AoE damage — no reward if it detonates), Splitter (bursts into two runners on death). Wired into the wave-tier spawn table (waves 1–3 runners … 16–19 bulwarks, boss at 20); separation, knockback and hit-flash handle them like existing types.
+- Docs: fixed the triple `# Changelog` header; README controls updated (all-weapons-fire, no weapon switching).
+
 ## Unreleased — web performance pass (no visual changes)
 - Bullets now use cached glow sprites instead of per-bullet `shadowBlur`: same glowing-disc look, same per-weapon colours and crit gold, far cheaper to draw.
 - HUD panels and bars cache their gradients, shadows and highlights to offscreen bitmaps instead of rebuilding them every frame; `shade()` results are memoized.
@@ -133,10 +141,6 @@
 - Fixed shop lock/reroll glitches and reduced shop card text overlap.
 - Added Harpoon weapon with pierce and a Piercing Bullet item.
 - Added main menu settings for screen shake toggle and low-graphics mode.
-
-# Changelog
-
-# Changelog
 
 ## v0.31 ALPHA — 2026-02-07
 - Compiled `Extra.cs` to WebAssembly with .NET 8; outputs placed in `wasm/dist/_framework`.

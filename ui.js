@@ -148,13 +148,13 @@
   // ---- card content ------------------------------------------------------------------------------------
   function weaponLines(it, p){
     const w = it.preview || (it.preview = createWeaponInstance(it.data, it.rarity || it.data.rarity));
-    const cur = getWeaponFor(p);
-    const cmp = (a, b, lowerBetter) => (a === b || b == null) ? C.text : ((a > b) !== !!lowerBetter ? C.good : C.bad);
+    // All owned weapons fire at once, so there is no "current" weapon to compare against:
+    // show raw stats in neutral colour.
     const L = [
-      ['Damage', `${w.damage}${w.pellets ? '×' + w.pellets : ''}`, cmp(w.damage * (w.pellets || 1), cur.damage * (cur.pellets || 1))],
-      ['Fire delay', `${w.fireRate.toFixed(2)}s`, cmp(w.fireRate, cur.fireRate, true)],
-      ['Magazine', `${w.mag >= 999 ? '∞' : w.mag}`, cmp(Math.min(w.mag, 999), Math.min(cur.mag, 999))],
-      ['Reload', `${w.reload.toFixed(1)}s`, cmp(w.reload, cur.reload, true)],
+      ['Damage', `${w.damage}${w.pellets ? '×' + w.pellets : ''}`, C.text],
+      ['Fire delay', `${w.fireRate.toFixed(2)}s`, C.text],
+      ['Magazine', `${w.mag >= 999 ? '∞' : w.mag}`, C.text],
+      ['Reload', `${w.reload.toFixed(1)}s`, C.text],
     ];
     if(w.elemental) L.push([{fire: 'Burns', ice: 'Slows', shock: 'Chains shock'}[w.elemental] || w.elemental, '', {fire: '#ff8c42', ice: '#6cd6ff', shock: '#b27bff'}[w.elemental]]);
     if(w.explosive) L.push(['Explosive', '', '#ffb44c']);
@@ -400,7 +400,7 @@
     for(let k = 0; k < 6; k++){
       const x = gx + (k % 3) * (T + 6), y = b.y + 30 + Math.floor(k / 3) * (T + 6);
       const w = p.ownedWeapons[k];
-      tile(x, y, T, w ? RARITY[w.rarity] + 'aa' : null, w && k === p.weaponIndex);
+      tile(x, y, T, w ? RARITY[w.rarity] + 'aa' : null, !!w);
       if(w) drawWeaponIcon(w, x + 4, y + T * 0.22, T - 8, T * 0.56);
     }
     if(p.ownedWeapons.length > 6){ ctx.font = font(11); ctx.fillStyle = C.dim; ctx.fillText(`+${p.ownedWeapons.length - 6} more`, gx + 3 * (T + 6) + 2, b.y + 30 + T); }
