@@ -31,8 +31,8 @@
   // ---- colours / helpers ------------------------------------------------------------------------------
   const C = { overlay: 'rgba(5,8,14,0.84)', card: '#121a26', cardHi: '#18243a', tile: '#0b111b', edge: '#04070d', text: '#eef4ff', dim: '#93a6c2',
     good: '#6ef27a', bad: '#ff5d5d', gold: '#ffd166', accent: '#48e0c2' };
-  const RARITY = { common: '#a7b3c4', rare: '#4cc3ff', epic: '#b67bff', red: '#ff5d5d' };
-  const RNAME = { common: 'Common', rare: 'Rare', epic: 'Epic', red: 'Legendary' };
+  const RARITY = { common: '#a7b3c4', rare: '#4cc3ff', epic: '#b67bff', legendary: '#ff5d5d' };
+  const RNAME = { common: 'Common', rare: 'Rare', epic: 'Epic', legendary: 'Legendary' };
   const TYPE = { sidearm: 'Gun', rifle: 'Gun', shotgun: 'Gun', heavy: 'Heavy Gun', melee: 'Melee', special: 'Special Gun' };
   const font = (s, w) => uiFont(s, w || 'bold');
   const signCol = (v, inv) => { if(Math.abs(v) < 1e-9) return C.text; return (v > 0) !== !!inv ? C.good : C.bad; };
