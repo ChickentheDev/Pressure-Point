@@ -41,8 +41,8 @@ resize();
 const input = {keys:{}, mx: W/2, my: H/2, mouseDown:false, lastMove:0};
 // Space is the fire key in game: stop it from scrolling or activating a focused button (e.g. Pause)
 const inGame = () => typeof state !== 'undefined' && state.phase !== 'menu' && (!menuEl || menuEl.style.display === 'none');
-window.addEventListener('keydown', e=>{ if(e.key === 'Tab' || (e.key === ' ' && inGame())) e.preventDefault(); input.keys[e.key.toLowerCase()] = true; });
-window.addEventListener('keyup', e=>{ if(e.key === ' ' && inGame()) e.preventDefault(); input.keys[e.key.toLowerCase()] = false; });
+window.addEventListener('keydown', e=>{ if(e.key === 'Tab' || (e.key === ' ' && inGame())) e.preventDefault(); input.keys[e.key.toLowerCase()] = true; if(e.code==='ShiftLeft') input.shiftL = true; if(e.code==='ShiftRight') input.shiftR = true; });
+window.addEventListener('keyup', e=>{ if(e.key === ' ' && inGame()) e.preventDefault(); input.keys[e.key.toLowerCase()] = false; if(e.code==='ShiftLeft') input.shiftL = false; if(e.code==='ShiftRight') input.shiftR = false; });
 canvas.addEventListener('mousemove', e=>{ const r = canvas.getBoundingClientRect(); input.mx = e.clientX - r.left; input.my = e.clientY - r.top; input.lastMove = performance.now()/1000; });
 canvas.addEventListener('mousedown', e=>{ input.mouseDown = true; });
 window.addEventListener('mouseup', e=>{ input.mouseDown = false; });
@@ -1306,7 +1306,8 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
     if(dx||dy){ const len = Math.hypot(dx,dy); dx/=len; dy/=len; }
     if(p.dashCooldown > 0) p.dashCooldown -= dt;
     if(p.iFrames > 0) p.iFrames -= dt;
-    const dashInput = (idx===0 && input.keys['shift']) || (idx===1 && input.keys['u']);
+    // Co-op dash: P1 uses Left Shift, P2 uses Right Shift (U kept as a P2 alternate).
+    const dashInput = (idx===0 && input.shiftL) || (idx===1 && (input.shiftR || input.keys['u']));
     if(dashInput && p.dashCooldown <= 0){
       const dir = (dx||dy) ? Math.atan2(dy, dx) : p.angle;
       p.dashDir = dir;
@@ -1315,7 +1316,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
       p.iFrames = 0.28;
       addShake(4);
       audio.dash();
-      input.keys[idx===0 ? 'shift' : 'u'] = false;
+      if(idx===0){ input.shiftL = false; } else { input.shiftR = false; input.keys['u'] = false; }
       for(let k=0;k<6;k++){
       addParticle({x:p.x + rand(-6,6), y:p.y + rand(-6,6), life:0.25, r:8 - k*0.6, color: palette.uiBlue});
       }
