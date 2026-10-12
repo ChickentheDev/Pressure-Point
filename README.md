@@ -3,6 +3,11 @@
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
 ## Latest Changes (Unreleased)
+- **Hordes**: Waves are bigger — `16 + (wave-1)*8` enemies (wave 1: 16, wave 19: 160; was 10 + (wave-1)*5), and the spawn interval ramps up faster so late waves keep real pressure. Danger and co-op still multiply the total.
+- **Enemy HP**: +20% across the board, including the Overlord boss.
+- **Weapon rebalance**: Base damage reduced ~30% across the table (fire rates slightly lengthened) now that all owned weapons fire at once — each weapon keeps its role, and a full 6-weapon arsenal clears a wave-19 horde in ~30-40s instead of melting it. Minigun base price fixed (was 1000).
+- **Rarity fixed**: The top tier is now `Legendary` everywhere (it was inconsistently called `red` in code while the UI said Legendary). Tiers: Common → Rare → Epic → Legendary, scaling power and price 1x / 1.25x / 1.5x / 2x, with shop roll weights 50 / 35 / 10 / 5 (Luck improves the odds).
+- **Elites**: On wave 12 (Danger 2-5), wave 16 (Danger 4-5) and wave 20 (Danger 1-5), 2-3 elites spawn with the wave — 3x HP, 1.4x damage, bigger bodies, pulsing gold rings, triple XP/money, and an "ELITES INBOUND" banner. They count toward wave completion.
 - **Performance**: The web build runs faster with identical visuals. Bullets use cached glow sprites instead of per-bullet `shadowBlur`; HUD panels and bars cache their gradients and shadows; the hot loop no longer allocates arrays or objects per frame; the HUD no longer forces a layout every frame; the ground layer is blitted 1:1 instead of resampled.
 - **Controls**: In co-op, Player 1 dashes with `Left Shift` and Player 2 dashes with `Right Shift`, so each player dashes independently (`U` still works for P2).
 - **Victory**: Clearing wave 20 unlocks the next danger level with a celebration banner, then returns to the menu — no more replaying wave 20 forever.
@@ -30,8 +35,8 @@ A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canva
 - **WASM shop**: Start no longer freezes when the game is served over http. The C# shop is only used once it has loaded the game data; otherwise the JS shop takes over. Opening the game from a file no longer logs a CORS error.
 
 ## What’s Included
-- **Wave system**: Wave 1 → Wave 20 with scaling enemy counts and difficulty.
-- **Boss at Wave 20**: A large Overlord boss (a spiked sandworm) bursts out of the ground on the final wave.
+- **Wave system**: Wave 1 → Wave 20 with horde-scaled enemy counts and difficulty; elites on danger-gated waves.
+- **Boss at Wave 20**: A large Overlord boss (a spiked sandworm) bursts out of the ground on the final wave, alongside elites.
 - **Danger levels (1–5)** with unlocks stored in `localStorage`.
 - **Co-op**: Two local players with independent weapons, XP, money, and HUD.
 - **Shop + Reroll + Lock**: Reroll for increasing cost, lock cards to keep them for the next wave.
@@ -81,10 +86,11 @@ Recommended: modern Chromium-based browser for best audio/visual support.
 - `P` — Pause/Resume
 
 ## Wave System
-- Wave 1 starts at **10 enemies**.
-- Each wave adds **+5 enemies**.
-- Difficulty scales per wave and per Danger level.
-- **Wave 20 = Boss Wave** (Overlord).
+- Wave 1 starts at **16 enemies**; each wave adds **+8** (`16 + (wave-1)*8`, so wave 19 = 160).
+- The spawn interval gets shorter every wave, so late waves keep real pressure (capped for performance).
+- Enemy HP (+20% base) and damage scale per wave and per Danger level.
+- **Elites**: tougher variants spawn on wave **12** (Danger 2–5), wave **16** (Danger 4–5) and wave **20** (Danger 1–5). Elites have 3x HP, 1.4x damage, bigger bodies, a pulsing gold ring, and drop triple XP/money. They count toward wave completion.
+- **Wave 20 = Boss Wave** (Overlord) — plus elites on every danger level.
 
 ## Danger Levels
 - 1 → 5 (only 1 unlocked initially)
@@ -93,7 +99,8 @@ Recommended: modern Chromium-based browser for best audio/visual support.
 
 ## Items, Rarity & Combining
 - Rarity: **Common → Rare → Epic → Legendary**
-- Items scale in power by rarity
+- Higher rarity means better stats: weapon and item power scale **1x / 1.25x / 1.5x / 2x**, and shop prices scale the same way
+- Shop rarity roll weights: **50 / 35 / 10 / 5** (Luck improves the odds of higher tiers); shop cards show a rarity-coloured border and glow
 - **2 identical items of the same rarity combine** into the next tier
 - **Max 6 items** per player
 
@@ -114,7 +121,7 @@ Shows:
 - `game.js` — all gameplay logic
 - `fx.js` — v0.56 animated sprites and effects (draw-side only; game.js calls it from a few lines marked `[brad-fx]`)
 - `ui.js` — v0.56 shop screen layout and drawing (game.js delegates to it from lines marked `[brad-ui]`)
-- `assets/sprites/` — v0.56 pixel-art sprite sheets (player, enemies, weapons, UI icons); the original PNGs in the root are unchanged
+- `assets/sprites/` — pixel-art sprite sheets (player, enemies, weapons, UI icons)
 - `tools/gen_sprites.py` — regenerates everything in `assets/sprites/` (`python3 tools/gen_sprites.py`, needs Pillow)
 - `style.css` — UI styling
 - `IMPROVEMENTS.md` — detailed documentation of v0.51 improvements
