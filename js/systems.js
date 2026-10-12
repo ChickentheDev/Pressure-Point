@@ -275,13 +275,14 @@ function computeWaveTotal(wave){ return 16 + (Math.max(1, wave) - 1) * 8; }
 // Wave 12 → danger 2-5, wave 16 → danger 4-5, wave 20 (boss) → danger 1-5.
 // Endless: elites every 4th wave past 20, boss every 5th wave past 20.
 function eliteCountFor(wave, danger){
-  if(wave !== 12 && wave !== 16 && wave !== 20){
+  if(wave !== 8 && wave !== 12 && wave !== 16 && wave !== 20){
     if(wave <= 20 || wave % 4 !== 0) return 0;
     return 2 + Math.floor((wave - 20) / 8);
   }
+  if(wave === 8 && danger < 6) return 0;
   if(wave === 12 && danger < 2) return 0;
   if(wave === 16 && danger < 4) return 0;
-  return 2 + (danger >= 4 ? 1 : 0);
+  return 2 + (danger >= 4 ? 1 : 0) + (danger >= 6 ? 1 : 0);
 }
 function isBossWave(wave){
   if(wave === 20) return true;
@@ -379,7 +380,7 @@ function spawnBoss(){
   let x,y; if(edge===0){ x=-40; y=Math.random()*H } else if(edge===1){ x=W+40; y=Math.random()*H } else if(edge===2){ x=Math.random()*W; y=-40 } else { x=Math.random()*W; y=H+40 }
   const dangerHP = 1 + (state.danger-1) * 0.5;
   const dangerDmg = 1 + (state.danger-1) * 0.35;
-  const bt = bossTypes[Math.min(state.danger, 5) - 1] || bossTypes[0];
+  const bt = bossTypes[Math.min(state.danger, 6) - 1] || bossTypes[0];
   enemies.push({
     id: bt.id, x,y, r: bt.r, hp: Math.floor(bt.hp * dangerHP), maxHp: Math.floor(bt.hp * dangerHP),
     speed: bt.speed, dmg: Math.floor(bt.dmg * dangerDmg * (1 + (state.wave-1)*0.12)),
@@ -990,11 +991,15 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     // boss abilities
     if(e.isBoss && e.bossAbility){
       const ab = e.bossAbility;
-      // Hive Tyrant / Voidreaver: spawn minions
-      if((ab === 'spawn' || ab === 'annihilator')){
+      const isNightmare = ab === 'nightmare';
+      const effAb = isNightmare ? 'annihilator' : ab;
+      // Nightmare: enraged below 50% HP — 30% faster
+      const enrage = isNightmare && e.hp < e.maxHp * 0.5 ? 1.3 : 1;
+      // Hive Tyrant / Voidreaver / Nightmare: spawn minions
+      if((effAb === 'spawn' || effAb === 'annihilator')){
         e.spawnTimer -= dt;
         if(e.spawnTimer <= 0 && enemies.length < 110){
-          e.spawnTimer = ab === 'annihilator' ? 4 : 6;
+          e.spawnTimer = (effAb === 'annihilator' ? 4 : 6) / enrage;
           const pool = [enemyTypes[0], enemyTypes[1], enemyTypes[2]];
           const rt = pool[Math.floor(Math.random()*pool.length)];
           for(let k=0;k<2;k++){
@@ -1005,11 +1010,11 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
           addParticle({x:e.x,y:e.y,life:0.4,r:24,color:'#9b59b6'});
         }
       }
-      // Stormcaller / Voidreaver: shockwave slam
-      if((ab === 'shockwave' || ab === 'annihilator')){
+      // Stormcaller / Voidreaver / Nightmare: shockwave slam
+      if((effAb === 'shockwave' || effAb === 'annihilator')){
         e.abilityTimer -= dt;
         if(e.abilityTimer <= 0){
-          e.abilityTimer = ab === 'annihilator' ? 5 : 7;
+          e.abilityTimer = (effAb === 'annihilator' ? 5 : 7) / enrage;
           const R = 120;
           addParticle({x:e.x,y:e.y,life:0.5,r:R,color:'#4cc3ff'});
           addShake(10);
@@ -1028,11 +1033,11 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
           }
         }
       }
-      // Stormcaller / Voidreaver: dashes
-      if((ab === 'shockwave' || ab === 'annihilator')){
+      // Stormcaller / Voidreaver / Nightmare: dashes
+      if((effAb === 'shockwave' || effAb === 'annihilator')){
         e.dashTimer -= dt;
-        if(e.dashTime > 0){ e.dashTime -= dt; dashMult = 2.5; }
-        else if(e.dashTimer <= 0){ e.dashTime = 0.6; e.dashTimer = 3 + Math.random()*2; }
+        if(e.dashTime > 0){ e.dashTime -= dt; dashMult = 2.5 * enrage; }
+        else if(e.dashTimer <= 0){ e.dashTime = 0.6; e.dashTimer = (3 + Math.random()*2) / enrage; }
       }
     }
     // visual only: facing + hit flash timer

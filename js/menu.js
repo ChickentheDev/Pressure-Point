@@ -20,6 +20,8 @@ function setMenuStep(step){
   if(step === 'class') renderClassButtons();
   if(step === 'weapon') renderWeaponButtons();
   if(step === 'danger') renderDangerButtons();
+  const me = document.getElementById('menuEssence');
+  if(me) me.textContent = essence;
 }
 
 // Weapon icon art (PNGs that exist); others fall back to a colored tile.
@@ -42,9 +44,9 @@ function weaponIconHTML(w){
 function renderDangerButtons(){
   if(!dangerListEl) return;
   dangerListEl.innerHTML = '';
-  for(let i=1;i<=5;i++){
+  for(let i=1;i<=6;i++){
     const b = document.createElement('div');
-    b.className = 'danger-btn';
+    b.className = 'danger-btn' + (i === 6 ? ' nightmare' : '');
     b.textContent = i;
     if(i>state.unlockedDanger) b.classList.add('locked');
     if(i===state.danger) b.classList.add('active');

@@ -30,6 +30,7 @@
     storm:    {src:'assets/sprites/enemies/enemy_storm.png',    fw:52, fh:56, n:6, ax:26, ay:28,  fps:6},
     ironclad: {src:'assets/sprites/enemies/enemy_ironclad.png', fw:52, fh:56, n:6, ax:26, ay:28,  fps:4},
     void:     {src:'assets/sprites/enemies/enemy_void.png',     fw:52, fh:56, n:6, ax:26, ay:28,  fps:6},
+    nightmare:{src:'assets/sprites/enemies/enemy_nightmare.png',fw:52, fh:56, n:6, ax:26, ay:28,  fps:6},
     tree:     {src:'assets/sprites/fx/tree.png',           fw:26, fh:32, n:1, ax:13, ay:20},
     decals:   {src:'assets/sprites/fx/ground_decals.png',  fw:16, fh:16, n:8, ax:8,  ay:8},
   };

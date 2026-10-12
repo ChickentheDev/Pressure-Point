@@ -17,7 +17,7 @@ function togglePause(){
 // Game State
 const UNLOCK_KEY = 'brotato_unlocked_danger_v1';
 const saved = localStorage.getItem(UNLOCK_KEY);
-if(saved){ try{ state.unlockedDanger = Math.max(1, Math.min(5, parseInt(saved)||1)); }catch(e){} }
+if(saved){ try{ state.unlockedDanger = Math.max(1, Math.min(6, parseInt(saved)||1)); }catch(e){} }
 
 // ---- Difficulty buffs --------------------------------------------------------------------------
 // Per-danger modifiers: displayed on the danger-select detail panel AND applied for real.
@@ -33,10 +33,12 @@ const DANGER_MODS = {
        lines:['Enemies +70% HP, +56% damage.', 'Hordes +50% larger.', 'Elites hunt on wave 12.', 'Enemies move 8% faster.'] },
   4: { color:'#ff9f43', title:'Brutal', doubleBoss:false, countMult:1.15, speedMult:1.08, dmgMult:1.15,
        lines:['Enemies +105% HP, +84% damage.', 'Hordes +67% larger.', 'Elites hunt on waves 12 and 16.', 'Enemies deal +15% damage, move 8% faster.'] },
-  5: { color:'#ff6b6b', title:'Nightmare', doubleBoss:true, countMult:1.3, speedMult:1.08, dmgMult:1.15,
-       lines:['Enemies +140% HP, +112% damage.', 'Hordes +108% larger.', 'Elites hunt on waves 12, 16 and 20.', 'TWO Overlords on wave 20.'] },
+  5: { color:'#ff6b6b', title:'Inferno', doubleBoss:true, countMult:1.3, speedMult:1.08, dmgMult:1.15,
+       lines:['Enemies +140% HP, +112% damage.', 'Hordes +108% larger.', 'Elites hunt on waves 12, 16 and 20.', 'TWO Voidreavers on wave 20.'] },
+  6: { color:'#c44dff', title:'Nightmare', doubleBoss:true, countMult:1.5, speedMult:1.15, dmgMult:1.3,
+       lines:['Enemies +175% HP, +140% damage.', 'Hordes +140% larger.', 'Elites hunt on waves 8, 12, 16 and 20.', 'TWO Nightmare bosses on wave 20.', 'Enemies move 15% faster, deal +30% damage.'] },
 };
-function dangerMods(d){ return DANGER_MODS[Math.max(1, Math.min(5, d|0))] || DANGER_MODS[1]; }
+function dangerMods(d){ return DANGER_MODS[Math.max(1, Math.min(6, d|0))] || DANGER_MODS[1]; }
 // enemy, weapon, item definitions (kept similar to earlier)
 const enemyTypes = [
   {id:'runner', name:'Runner', color:'#e85', r:10, hp:22, speed:120, dmg:10, xp:6, money:2,
@@ -73,6 +75,8 @@ const bossTypes = [
    ability:'fortress', desc:'Armored + reflects damage'},
   {id:'void', name:'Voidreaver', color:'#1a1a2e', r:36, hp:4200, speed:100, dmg:65, xp:300, money:100,
    ability:'annihilator', desc:'Dashes, spawns, shockwaves'},
+  {id:'nightmare', name:'Nightmare', color:'#c44dff', r:42, hp:6000, speed:110, dmg:80, xp:400, money:150,
+   ability:'nightmare', desc:'All abilities, enraged'},
 ];
 
 const rarities = [
@@ -348,7 +352,7 @@ const ACHIEVEMENTS = [
   {id:'survivor', name:'Survivor', desc:'Reach wave 10'},
   {id:'veteran', name:'Veteran', desc:'Clear wave 20'},
   {id:'unstoppable', name:'Unstoppable', desc:'Reach wave 30 in endless mode'},
-  {id:'danger_zone', name:'Danger Zone', desc:'Clear wave 20 on Danger 5'},
+  {id:'danger_zone', name:'Danger Zone', desc:'Clear wave 20 on Danger 6'},
   {id:'arsenal', name:'Gun Collector', desc:'Own 6 weapons at once'},
   {id:'legendary_arsenal', name:'Legendary Arsenal', desc:'Own 3 legendary weapons at once'},
   {id:'shopaholic', name:'Shopaholic', desc:'Spend 500 currency in one run'},

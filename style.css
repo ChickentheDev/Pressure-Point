@@ -249,3 +249,12 @@ input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:po
 .achievement-card .ach-name{ font-weight:bold; color:#f5c542; margin-bottom:4px; }
 .achievement-card.locked .ach-name{ color:#888; }
 .achievement-card .ach-desc{ font-size:13px; color:#ccc; }
+
+.danger-btn.nightmare{
+  border-color:#c44dff;
+  box-shadow:0 4px 0 #6a1a8a, 0 0 12px rgba(196,77,255,0.4), inset 0 2px 0 rgba(255,255,255,0.08);
+}
+.danger-btn.nightmare.active{
+  background:linear-gradient(180deg,#c44dff 0%,#8a2be2 100%);
+  color:#fff;
+}

@@ -1,3 +1,7 @@
+## v0.6.7 — Nightmare danger + UI polish
+- **Danger 6: Nightmare** (D5 renamed to Inferno): +175% HP, +140% damage, +140% hordes, elites on waves 8/12/16/20, faster/stronger enemies. New **Nightmare boss** — all abilities combined, enrages below 50% HP. Danger Zone achievement now requires D6.
+- **UI**: essence count on the Upgrades menu button; Nightmare danger button has purple glow styling.
+
 ## v0.6.6 — 5 danger bosses
 - **One boss per danger level**: D1 Overlord (burrow), D2 Hive Tyrant (spawns minions), D3 Stormcaller (shockwave slams + dashes), D4 Ironclad (40% damage reduction + reflects 30%), D5 Voidreaver (dashes + spawns + shockwaves). D5 still spawns two at once.
 - Each boss has unique pixel-art sprite, name on the HP bar, and scaled stats.

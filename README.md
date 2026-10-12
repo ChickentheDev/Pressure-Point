@@ -1,21 +1,22 @@
-# Pressure Point — v0.6.6
+# Pressure Point — v0.6.7
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.6.6 — 5 danger bosses)
-- **One boss per danger**: D1 Overlord, D2 Hive Tyrant (spawns minions), D3 Stormcaller (shockwaves + dashes), D4 Ironclad (armored + reflects), D5 Voidreaver (all of the above). Unique sprites, names on the HP bar.
+## Latest Changes (v0.6.7 — Nightmare danger + UI polish)
+- **Danger 6: Nightmare** — the ultimate challenge with a new enraging Nightmare boss. D5 renamed to Inferno.
+- **UI polish**: essence on the Upgrades button, glowing Nightmare danger button.
 
 ## Previous Update (v0.6.4 — New enemies + Meta progression)
 - 3 new enemies (Dasher, Aegis, Nester); Essence + 6 permanent upgrades.
+
+## Previous Update (v0.6.6 — 5 danger bosses)
+- One unique boss per danger level with special abilities.
 
 ## Previous Update (v0.6.5 — Elite mini-bosses)
 - 9 named elites with unique traits, HP bar, bonus loot.
 
-## Previous Update (v0.6.4 — New enemies + Meta progression)
-- 3 new enemies (Dasher, Aegis, Nester); Essence + 6 permanent upgrades.
-
 ## What's Included
-- **5 danger bosses**: Overlord, Hive Tyrant, Stormcaller, Ironclad, Voidreaver — unique abilities per danger.
+- **6 danger levels**: Standard through Nightmare, each with a unique boss.
 - **Achievements**: 15 unlockable, persisted across runs.
 - **9 enemy types**: Runner, Spitter, Bruiser, Burster, Splitter, Bulwark, Dasher, Aegis, Nester.
 - **Wave system**: Wave 1 → 20 with horde-scaled counts, then **endless mode** past 20.

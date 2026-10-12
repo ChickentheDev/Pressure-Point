@@ -75,7 +75,7 @@ function checkAchievements(){
   if(state.wave >= 10) unlockAchievement('survivor');
   if(state.wave > 20 || (state.wave === 20 && state.phase === 'runwon')) unlockAchievement('veteran');
   if(state.endless && state.wave >= 30) unlockAchievement('unstoppable');
-  if(state.wave === 20 && state.danger === 5 && state.phase === 'runwon') unlockAchievement('danger_zone');
+  if(state.wave === 20 && state.danger === 6 && state.phase === 'runwon') unlockAchievement('danger_zone');
   const owned = p.ownedWeapons || [];
   if(owned.length >= 6) unlockAchievement('arsenal');
   if(owned.filter(w=>w.rarity === 'legendary').length >= 3) unlockAchievement('legendary_arsenal');
