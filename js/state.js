@@ -1,5 +1,42 @@
 // Pressure Point — state.js (split from game.js for v0.6.1)
 
+// Achievements: persistent unlocks + per-run tracking
+const ACH_KEY = 'pp_achievements';
+let unlockedAchievements = {};
+try{ unlockedAchievements = JSON.parse(localStorage.getItem(ACH_KEY) || '{}'); }catch(e){ unlockedAchievements = {}; }
+const runStats = { kills: 0, spent: 0, revives: 0, tookDamage: false };
+function unlockAchievement(id){
+  if(unlockedAchievements[id]) return false;
+  const a = ACHIEVEMENTS.find(x=>x.id === id);
+  if(!a) return false;
+  unlockedAchievements[id] = Date.now();
+  try{ localStorage.setItem(ACH_KEY, JSON.stringify(unlockedAchievements)); }catch(e){}
+  achievementToast(a);
+  return true;
+}
+function checkAchievements(){
+  const p = players[0] || {};
+  if(runStats.kills >= 1) unlockAchievement('first_blood');
+  if(runStats.kills >= 500) unlockAchievement('exterminator');
+  if(runStats.kills >= 2000) unlockAchievement('genocide');
+  if(state.wave >= 10) unlockAchievement('survivor');
+  if(state.wave > 20 || (state.wave === 20 && state.phase === 'runwon')) unlockAchievement('veteran');
+  if(state.endless && state.wave >= 30) unlockAchievement('unstoppable');
+  if(state.wave === 20 && state.danger === 5 && state.phase === 'runwon') unlockAchievement('danger_zone');
+  const owned = p.ownedWeapons || [];
+  if(owned.length >= 6) unlockAchievement('arsenal');
+  if(owned.filter(w=>w.rarity === 'legendary').length >= 3) unlockAchievement('legendary_arsenal');
+  if(runStats.spent >= 500) unlockAchievement('shopaholic');
+  const items = p.items || [];
+  if(items.some(it=>it.category === 'unique' || (it.data && it.data.category === 'unique'))) unlockAchievement('unique_find');
+  if(items.some(it=>it.category === 'exclusive' || (it.data && it.data.category === 'exclusive'))) unlockAchievement('big_spender');
+  if(runStats.revives >= 1) unlockAchievement('medic');
+  if(runStats.revives >= 3) unlockAchievement('lifesaver');
+}
+function resetRunStats(){
+  runStats.kills = 0; runStats.spent = 0; runStats.revives = 0; runStats.tookDamage = false;
+}
+
 // Players (support player 1 and optional player 2)
 function createPlayer(x,y){ return {
   x, y, r:14, angle:0, baseSpeed:220, baseMaxHp:120, hp:120,
