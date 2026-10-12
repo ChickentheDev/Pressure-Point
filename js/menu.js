@@ -319,6 +319,7 @@ function wireMenuNav(){
 // Start (or retry) a run with the currently selected class / weapon / danger / co-op
 function startRun(){
   hideSummaryOverlays();
+  resetRunStats();
   state.coop = coopToggle.checked;
   // create or remove second player
   if(state.coop && players.length < 2){ players[1] = createPlayer(W/2+40, H/2+20); players[1].currency = 0; players[1].xp = 0; }
@@ -343,6 +344,30 @@ function startRun(){
 startBtn.addEventListener('click', ()=>{ audio.click(); startRun(); });
 wireMenuNav();
 wireSummaryButtons();
+
+// Achievements screen
+const achievementsBtn = document.getElementById('achievementsBtn');
+const achievementsScreen = document.getElementById('achievementsScreen');
+const achievementsList = document.getElementById('achievementsList');
+const achievementsCloseBtn = document.getElementById('achievementsCloseBtn');
+function renderAchievements(){
+  achievementsList.innerHTML = ACHIEVEMENTS.map(a=>{
+    const unlocked = !!unlockedAchievements[a.id];
+    return `<div class="achievement-card ${unlocked ? 'unlocked' : 'locked'}">
+      <div class="ach-name">${unlocked ? a.name : '???'}</div>
+      <div class="ach-desc">${unlocked ? a.desc : 'Locked'}</div>
+    </div>`;
+  }).join('');
+}
+if(achievementsBtn && achievementsScreen){
+  achievementsBtn.addEventListener('click', ()=>{
+    audio.click(); renderAchievements();
+    achievementsScreen.style.display = 'flex';
+  });
+  achievementsCloseBtn.addEventListener('click', ()=>{
+    audio.click(); achievementsScreen.style.display = 'none';
+  });
+}
 
 if(settingsBtn && settingsPanel){
   settingsBtn.addEventListener('click', ()=>{
