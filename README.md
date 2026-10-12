@@ -1,22 +1,22 @@
-# Pressure Point — v0.6.7
+# Pressure Point — v0.6.8
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.6.7 — Nightmare danger + UI polish)
-- **Danger 6: Nightmare** — the ultimate challenge with a new enraging Nightmare boss. D5 renamed to Inferno.
-- **UI polish**: essence on the Upgrades button, glowing Nightmare danger button.
+## Latest Changes (v0.6.8 — Class unlocks + Glassjaw)
+- **New class: Glassjaw** — 1 HP glass cannon, unlocks by beating Nightmare.
+- **Class unlocks**: 9 classes now unlock via achievements. Ironheart is the starter.
 
 ## Previous Update (v0.6.4 — New enemies + Meta progression)
 - 3 new enemies (Dasher, Aegis, Nester); Essence + 6 permanent upgrades.
 
+## Previous Update (v0.6.7 — Nightmare danger + UI polish)
+- Danger 6 Nightmare with enraging boss; UI polish.
+
 ## Previous Update (v0.6.6 — 5 danger bosses)
 - One unique boss per danger level with special abilities.
 
-## Previous Update (v0.6.5 — Elite mini-bosses)
-- 9 named elites with unique traits, HP bar, bonus loot.
-
 ## What's Included
-- **6 danger levels**: Standard through Nightmare, each with a unique boss.
+- **11 classes**: 9 unlock via achievements, Glassjaw (1 HP) unlocks by beating Nightmare.
 - **Achievements**: 15 unlockable, persisted across runs.
 - **9 enemy types**: Runner, Spitter, Bruiser, Burster, Splitter, Bulwark, Dasher, Aegis, Nester.
 - **Wave system**: Wave 1 → 20 with horde-scaled counts, then **endless mode** past 20.

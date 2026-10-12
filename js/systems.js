@@ -138,7 +138,12 @@ function applyClassToPlayer(player, classData, weaponId){
   player.classId = classData.id;
   player.className = `${classData.name} Lv ${classLevel}`;
   // Start very low HP, scale up per class level; class hpMult actually applies now (was dead data)
-  player.baseMaxHp = Math.max(10, Math.floor((15 + (classLevel-1) * 6) * (classData.mods.hpMult || 1)));
+  // Glassjaw: always exactly 1 HP
+  if(classData.id === 'glassjaw'){
+    player.baseMaxHp = 1;
+  } else {
+    player.baseMaxHp = Math.max(10, Math.floor((15 + (classLevel-1) * 6) * (classData.mods.hpMult || 1)));
+  }
   player.hp = player.baseMaxHp;
   player.baseSpeed = Math.floor(classData.mods.speed * (1 + (classLevel-1)*0.02));
   player.armor = (classData.mods.armor || 0) + (classLevel-1);

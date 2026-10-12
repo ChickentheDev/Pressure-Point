@@ -111,16 +111,19 @@ function renderClassButtons(){
   classListEl.innerHTML = '';
   for(const c of classes){
     const btn = document.createElement('div');
-    btn.className = 'class-btn';
+    const unlocked = isClassUnlocked(c.id);
+    btn.className = 'class-btn' + (unlocked ? '' : ' locked');
     if(c.id === state.classId) btn.classList.add('active');
-    btn.innerHTML = `<span>${c.name}</span><span class="tag">${c.weapon}</span>`;
+    btn.innerHTML = `<span>${unlocked ? c.name : '???'}</span><span class="tag">${c.weapon}</span>`;
     btn.addEventListener('click', ()=>{
+      if(!unlocked){ audio.deny(); return; }
       state.classId = c.id;
       audio.click();
       renderClassButtons();
     });
     classListEl.appendChild(btn);
   }
+  if(!isClassUnlocked(state.classId)) state.classId = 'ironheart';
   renderClassDetail();
 }
 
@@ -128,9 +131,11 @@ function renderClassDetail(){
   if(!classDetailEl) return;
   const c = classes.find(x=>x.id === state.classId) || classes[0];
   const w = weapons.find(x=>x.id === c.weapon);
+  const unlockText = classUnlockText(c);
   classDetailEl.innerHTML =
-    `<div class="class-portrait"><img src="assets/sprites/player_${c.id}_down.png" alt="${c.name}" draggable="false"></div>` +
+    `<div class="class-portrait"><img src="assets/sprites/players/player_${c.id}_down.png" alt="${c.name}" draggable="false"></div>` +
     `<h3>${c.name}</h3>` +
+    (unlockText && !isClassUnlocked(c.id) ? `<div class="sub" style="color:#c44dff">${unlockText}</div>` : '') +
     `<div class="sub">Starts with: ${w ? w.name : c.weapon} &bull; Class Lv ${state.danger}</div>` +
     classStatLines(c) +
     `<div class="tagline">${c.desc}</div>`;

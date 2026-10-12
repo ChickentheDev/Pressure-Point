@@ -305,15 +305,16 @@ if(wasmSystems.status === 'loading'){
 // Class definitions (50 variants)
 const classArchetypes = [
   {base:'Ironheart', weapon:'rifle', mods:{hpMult:1.1, speed:230, armor:2, accuracy:1.05, damageBonus:1}, tags:'Balanced rifle'},
-  {base:'Foxglove', weapon:'pistol', mods:{hpMult:0.95, speed:255, accuracy:1.25, luck:2}, tags:'Fast and precise'},
-  {base:'Gravelord', weapon:'heavy', mods:{hpMult:1.3, speed:200, armor:8, damageBonus:4, recoil:1.2}, tags:'Slow heavy hitter'},
-  {base:'Scrapjack', weapon:'shotgun', mods:{hpMult:1.0, speed:235, magBonus:2, damageBonus:2, reloadSpeed:0.95}, tags:'Close range'},
-  {base:'Voltblade', weapon:'blade', mods:{hpMult:1.1, speed:260, armor:4, lifesteal:0.05}, tags:'Melee sustain'},
-  {base:'Circuitry', weapon:'rifle', mods:{hpMult:0.95, speed:235, reloadSpeed:0.85, accuracy:1.1, magBonus:1}, tags:'Fast reload'},
-  {base:'Bulwark', weapon:'pistol', mods:{hpMult:1.4, speed:210, armor:10, accuracy:0.95}, tags:'Tank'},
-  {base:'Redline', weapon:'rifle', mods:{hpMult:0.95, speed:240, damageBonus:3, recoil:1.1}, tags:'High damage'},
-  {base:'Skylark', weapon:'pistol', mods:{hpMult:0.9, speed:285, accuracy:1.1, reloadSpeed:0.95}, tags:'Very fast'},
-  {base:'Nightreap', weapon:'shotgun', mods:{hpMult:1.05, speed:225, lifesteal:0.07, damageBonus:1}, tags:'Life steal'},
+  {base:'Foxglove', weapon:'pistol', mods:{hpMult:0.95, speed:255, accuracy:1.25, luck:2}, tags:'Fast and precise', unlock:{achievement:'first_blood'}},
+  {base:'Gravelord', weapon:'heavy', mods:{hpMult:1.3, speed:200, armor:8, damageBonus:4, recoil:1.2}, tags:'Slow heavy hitter', unlock:{achievement:'exterminator'}},
+  {base:'Scrapjack', weapon:'shotgun', mods:{hpMult:1.0, speed:235, magBonus:2, damageBonus:2, reloadSpeed:0.95}, tags:'Close range', unlock:{achievement:'survivor'}},
+  {base:'Voltblade', weapon:'blade', mods:{hpMult:1.1, speed:260, armor:4, lifesteal:0.05}, tags:'Melee sustain', unlock:{achievement:'veteran'}},
+  {base:'Circuitry', weapon:'rifle', mods:{hpMult:0.95, speed:235, reloadSpeed:0.85, accuracy:1.1, magBonus:1}, tags:'Fast reload', unlock:{achievement:'shopaholic'}},
+  {base:'Bulwark', weapon:'pistol', mods:{hpMult:1.4, speed:210, armor:10, accuracy:0.95}, tags:'Tank', unlock:{achievement:'untouchable'}},
+  {base:'Redline', weapon:'rifle', mods:{hpMult:0.95, speed:240, damageBonus:3, recoil:1.1}, tags:'High damage', unlock:{achievement:'genocide'}},
+  {base:'Skylark', weapon:'pistol', mods:{hpMult:0.9, speed:285, accuracy:1.1, reloadSpeed:0.95}, tags:'Very fast', unlock:{achievement:'medic'}},
+  {base:'Nightreap', weapon:'shotgun', mods:{hpMult:1.05, speed:225, lifesteal:0.07, damageBonus:1}, tags:'Life steal', unlock:{achievement:'unique_find'}},
+  {base:'Glassjaw', weapon:'rifle', mods:{hpMult:0.01, speed:300, accuracy:1.3, reloadSpeed:0.8, damageBonus:15, luck:3}, tags:'1 HP. Glass cannon.', unlock:{nightmare:true}},
 ];
 
 const classes = classArchetypes.map(a=>({
@@ -322,7 +323,22 @@ const classes = classArchetypes.map(a=>({
   weapon: a.weapon,
   desc: a.tags,
   mods: { ...a.mods },
+  unlock: a.unlock || null,
 }));
+
+function isClassUnlocked(classId){
+  const c = classes.find(x=>x.id === classId);
+  if(!c || !c.unlock) return true;
+  if(c.unlock.nightmare) return !!unlockedAchievements['nightmare_slain'];
+  if(c.unlock.achievement) return !!unlockedAchievements[c.unlock.achievement];
+  return true;
+}
+function classUnlockText(c){
+  if(!c.unlock) return null;
+  if(c.unlock.nightmare) return 'Beat Nightmare (D6)';
+  const a = ACHIEVEMENTS.find(x=>x.id === c.unlock.achievement);
+  return a ? `Achievement: ${a.name}` : 'Locked';
+}
 
 // End-of-wave stat upgrades
 const upgradeStats = [
@@ -361,6 +377,7 @@ const ACHIEVEMENTS = [
   {id:'medic', name:'Medic', desc:'Revive a downed partner'},
   {id:'lifesaver', name:'Lifesaver', desc:'Revive partners 3 times in one run'},
   {id:'untouchable', name:'Untouchable', desc:'Clear a wave without taking damage'},
+  {id:'nightmare_slain', name:'Nightmare Slain', desc:'Beat the Nightmare boss on Danger 6'},
 ];
 
 // runtime containers

@@ -1,3 +1,8 @@
+## v0.6.8 — Class unlocks + Glassjaw
+- **New class: Glassjaw** — unlocks by beating Nightmare (D6). Has exactly 1 HP but massive damage (+15), speed (300), and accuracy. Crystal sprite.
+- **Classes now unlock via achievements**: 9 of 11 classes locked behind achievements (First Blood, Exterminator, Survivor, Veteran, Shopaholic, Untouchable, Genocide, Medic, One of a Kind). Ironheart stays as starter. Locked classes show as ??? with unlock requirement.
+- Fixed class portrait path (was missing 's' in players/).
+
 ## v0.6.7 — Nightmare danger + UI polish
 - **Danger 6: Nightmare** (D5 renamed to Inferno): +175% HP, +140% damage, +140% hordes, elites on waves 8/12/16/20, faster/stronger enemies. New **Nightmare boss** — all abilities combined, enrages below 50% HP. Danger Zone achievement now requires D6.
 - **UI**: essence count on the Upgrades menu button; Nightmare danger button has purple glow styling.

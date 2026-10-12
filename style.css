@@ -258,3 +258,6 @@ input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:po
   background:linear-gradient(180deg,#c44dff 0%,#8a2be2 100%);
   color:#fff;
 }
+
+.class-btn.locked{opacity:0.45;cursor:not-allowed;filter:grayscale(0.7)}
+.class-btn.locked:hover{transform:none;filter:grayscale(0.7)}
