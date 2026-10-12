@@ -4,6 +4,59 @@
 const ACH_KEY = 'pp_achievements';
 let unlockedAchievements = {};
 try{ unlockedAchievements = JSON.parse(localStorage.getItem(ACH_KEY) || '{}'); }catch(e){ unlockedAchievements = {}; }
+
+// Meta progression: essence earned from runs, spent on permanent upgrades
+const ESSENCE_KEY = 'pp_essence';
+const META_KEY = 'pp_meta';
+let essence = 0;
+let metaLevels = {};
+try{ essence = parseInt(localStorage.getItem(ESSENCE_KEY) || '0', 10) || 0; }catch(e){}
+try{ metaLevels = JSON.parse(localStorage.getItem(META_KEY) || '{}'); }catch(e){ metaLevels = {}; }
+
+const META_UPGRADES = [
+  {id:'vitality', name:'Vitality', desc:'+10 Max HP per level', max:5, costs:[20,40,80,160,320],
+   apply:(p,l)=>{ p.baseMaxHp += 10*l; p.hp = p.baseMaxHp; }},
+  {id:'power', name:'Power', desc:'+4% Damage per level', max:5, costs:[30,60,120,240,480],
+   apply:(p,l)=>{ p.damageMult *= (1 + 0.04*l); }},
+  {id:'swiftness', name:'Swiftness', desc:'+3% Move Speed per level', max:5, costs:[20,40,80,160,320],
+   apply:(p,l)=>{ p.baseSpeed = Math.floor(p.baseSpeed * (1 + 0.03*l)); }},
+  {id:'fortune', name:'Fortune', desc:'+1 Luck per level', max:3, costs:[50,100,200],
+   apply:(p,l)=>{ p.luck += l; }},
+  {id:'wealth', name:'Wealth', desc:'+25 starting currency per level', max:5, costs:[20,40,80,160,320],
+   apply:(p,l)=>{ p.currency += 25*l; }},
+  {id:'haste', name:'Haste', desc:'+3% Fire Rate per level', max:5, costs:[30,60,120,240,480],
+   apply:(p,l)=>{ p.reloadSpeed *= (1 - 0.03*l); }},
+];
+function getMetaLevel(id){ return metaLevels[id] || 0; }
+function buyMetaUpgrade(id){
+  const u = META_UPGRADES.find(x=>x.id === id);
+  if(!u) return false;
+  const lvl = getMetaLevel(id);
+  if(lvl >= u.max) return false;
+  const cost = u.costs[lvl];
+  if(essence < cost) return false;
+  essence -= cost;
+  metaLevels[id] = lvl + 1;
+  try{
+    localStorage.setItem(ESSENCE_KEY, String(essence));
+    localStorage.setItem(META_KEY, JSON.stringify(metaLevels));
+  }catch(e){}
+  return true;
+}
+function applyMetaUpgrades(p){
+  for(const u of META_UPGRADES){
+    const lvl = getMetaLevel(u.id);
+    if(lvl > 0) u.apply(p, lvl);
+  }
+}
+function awardEssence(){
+  const gained = Math.floor(state.wave * 2 + state.runKills * 0.1);
+  if(gained > 0){
+    essence += gained;
+    try{ localStorage.setItem(ESSENCE_KEY, String(essence)); }catch(e){}
+  }
+  return gained;
+}
 const runStats = { kills: 0, spent: 0, revives: 0, tookDamage: false };
 function unlockAchievement(id){
   if(unlockedAchievements[id]) return false;
