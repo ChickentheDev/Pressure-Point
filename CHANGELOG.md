@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — class rebalance
+- All 10 classes rebalanced with distinct identities (kept the roster, retuned the stats)
+- **Bug fix**: class HP was dead data — every class started with identical HP regardless of its `hp` value. Now a real `hpMult` applies (Bulwark 1.4x/21 HP/10 armor is finally a tank; Skylark 0.9x/13 HP is the fragile speedster)
+- Foxglove's `damageBonus: 0` (literally nothing) replaced with +2 Luck and 1.25x accuracy — the precise hunter finds better loot
+- Duplicates differentiated: the three rifles are now balanced (Ironheart) / fast-reload (Circuitry) / high-damage (Redline); the three pistols are precision (Foxglove) / tank (Bulwark) / speed (Skylark)
+
 ## Unreleased — weapon buffs
 - Railgun: mag 2→4, reload 2.2→1.8 (sustained ~36→~57 DPS — properly legendary now)
 - RPG-7: damage 45→55, mag 1→2, reload 2.6→2.2 (sustained ~12→~23 DPS before AoE)
