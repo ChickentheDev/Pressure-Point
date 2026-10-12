@@ -1,5 +1,3 @@
-# Changelog
-
 ## Unreleased — asset organization
 - Moved all 12 root image assets (11 weapon PNGs + Map.png) into `assets/`; updated all code references. No visual changes.
 
@@ -11,6 +9,7 @@
 - **Unique rule**: at most ONE Unique item per player — no duplicates, exempt from combining; shop stops offering Uniques once owned.
 - **Exclusive rule**: only rolls at epic/legendary; 1.5x shop price multiplier.
 - New items use category-glyph icons until dedicated art exists. Buying can no longer charge when the add is refused.
+- **UI polish**: wave progress HUD shows kill progress as `killed/total` (including elites and the wave-20 double boss); elites wear a gold crown with a thicker gold HP bar; the wave-1 shop guarantees one 10-currency starter deal.
 
 ## Unreleased — menu revamp
 - Menu flow is now Class → Weapon → Danger → Start (Brotato-style): class grid with detail panel (starting weapon, green/red stat lines vs Ironheart baseline, tagline); NEW weapon-select step with all 15 weapons (icon grid + detail panel: damage, fire delay, magazine/reload, spread, traits) — the pick becomes the run's starting weapon; danger select with numbered buttons and a detail panel showing each danger's full modifier list.
