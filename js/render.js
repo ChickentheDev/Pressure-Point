@@ -395,15 +395,17 @@ function drawHUD(){
   const isBoss = state.wave >= state.maxWave;
   ctx.fillText(isBoss ? `WAVE ${state.wave} — BOSS` : `WAVE ${state.wave} / ${state.maxWave}`, VW/2, 33);
   ctx.textAlign = 'start';
-  // elite mini-boss HP bar: show the toughest living elite's name + HP
+  // elite mini-boss / boss HP bar: show the toughest living elite or boss
+  const boss = enemies.find(e=>e.isBoss);
   const elite = enemies.filter(e=>e.elite).sort((a,b)=>(b.maxHp - b.hp) - (a.maxHp - a.hp))[0];
-  if(elite && state.phase === 'wave'){
+  const threat = boss || elite;
+  if(threat && state.phase === 'wave'){
     const ew = 200, ex = VW/2 - ew/2, ey = 70;
     ctx.font = uiFont(12, 'bold');
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#ffd166';
-    ctx.fillText(elite.eliteName || 'Elite', VW/2, ey + 10);
-    drawBar(ex, ey + 16, ew, 8, Math.max(0, elite.hp / elite.maxHp), '#ffd166', '#8a6a1c');
+    ctx.fillStyle = boss ? '#ff6b6b' : '#ffd166';
+    ctx.fillText(threat.bossName || threat.eliteName || 'Elite', VW/2, ey + 10);
+    drawBar(ex, ey + 16, ew, 8, Math.max(0, threat.hp / threat.maxHp), boss ? '#ff6b6b' : '#ffd166', '#8a6a1c');
     ctx.textAlign = 'start';
   }
   if(state.phase === 'wave'){
