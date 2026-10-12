@@ -1,19 +1,18 @@
-# Pressure Point — v0.6.4
+# Pressure Point — v0.6.5
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.6.4 — New enemies + Meta progression)
-- **3 new enemies**: Dasher (burst-dashes at you), Aegis (shield aura — nearby enemies take 30% less damage), Nester (spawns runners). Unlock at waves 19/22/25.
-- **Meta progression**: earn Essence from every run, spend it on 6 permanent upgrades (Vitality, Power, Swiftness, Fortune, Wealth, Haste). New Upgrades screen on the main menu; everything persists.
+## Latest Changes (v0.6.5 — Elite mini-bosses)
+- **Elites are now mini-bosses**: 9 unique elite names (Swiftclaw, Plaguewing, Skullcrusher, Detonator, Fracture, Ironwall, Ravager, Warden, Broodmother), each with its own enhanced trait. Elite HP bar under the wave counter, bonus loot on kills.
+
+## Previous Update (v0.6.4 — New enemies + Meta progression)
+- 3 new enemies (Dasher, Aegis, Nester); Essence + 6 permanent upgrades.
 
 ## Previous Update (v0.6.3 — Achievements)
 - 15 achievements with unlock toasts, menu achievements screen, localStorage persistence.
 
-## Previous Update (v0.6.2 — Balance, Endless, Co-op, Weapons)
-- Rarity/DPS rebalance; endless mode past wave 20; co-op revive + synergy; 10 new weapons (25 total).
-
 ## What's Included
-- **Meta progression**: 6 permanent upgrades bought with Essence earned from runs.
+- **Elite mini-bosses**: 9 named elites with unique traits, HP bar, bonus loot.
 - **Achievements**: 15 unlockable, persisted across runs.
 - **9 enemy types**: Runner, Spitter, Bruiser, Burster, Splitter, Bulwark, Dasher, Aegis, Nester.
 - **Wave system**: Wave 1 → 20 with horde-scaled counts, then **endless mode** past 20.
