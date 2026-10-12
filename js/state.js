@@ -14,8 +14,8 @@ try{ essence = parseInt(localStorage.getItem(ESSENCE_KEY) || '0', 10) || 0; }cat
 try{ metaLevels = JSON.parse(localStorage.getItem(META_KEY) || '{}'); }catch(e){ metaLevels = {}; }
 
 const META_UPGRADES = [
-  {id:'vitality', name:'Vitality', desc:'+10 Max HP per level', max:5, costs:[20,40,80,160,320],
-   apply:(p,l)=>{ p.baseMaxHp += 10*l; p.hp = p.baseMaxHp; }},
+  {id:'vitality', name:'Vitality', desc:'+10 Max HP per level', glassjawDesc:'+4% Move Speed per level (Glassjaw: no HP to gain)', max:5, costs:[20,40,80,160,320],
+   apply:(p,l)=>{ if(isGlassjaw(p)){ p.baseSpeed = Math.floor(p.baseSpeed * (1 + 0.04*l)); return; } p.baseMaxHp += 10*l; p.hp = p.baseMaxHp; }},
   {id:'power', name:'Power', desc:'+4% Damage per level', max:5, costs:[30,60,120,240,480],
    apply:(p,l)=>{ p.damageMult *= (1 + 0.04*l); }},
   {id:'swiftness', name:'Swiftness', desc:'+3% Move Speed per level', max:5, costs:[20,40,80,160,320],
@@ -49,6 +49,10 @@ function applyMetaUpgrades(p){
     if(lvl > 0) u.apply(p, lvl);
   }
 }
+// Glassjaw's defining trait: exactly 1 HP, always. Every max-HP increase path
+// (Vitality, in-wave HP upgrade, shop maxHpAdd items, level-up +6) must skip it;
+// the co-op revive's floor(baseMaxHp*0.5) would otherwise revive it at 0 HP.
+function isGlassjaw(p){ return !!p && p.classId === 'glassjaw'; }
 function awardEssence(){
   const gained = Math.floor(state.wave * 2 + state.runKills * 0.1);
   if(gained > 0){
