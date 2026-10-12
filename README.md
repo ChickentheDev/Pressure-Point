@@ -1,8 +1,11 @@
-# Pressure Point — v0.5.7 expansion update
+# Pressure Point — v0.5.8A
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.5.7)
+## Latest Changes (v0.5.8A)
+- **Menu revamp** (in progress): Brotato-style class selection (grid + stat detail panel), new weapon selection step (pick your starting weapon freely), difficulty selection with per-danger modifiers shown, and proper Run Won / Run Over summary screens with stats, weapons, items, Retry / New Run / Main Menu.
+
+## Previous Update (v0.5.7)
 - **Hordes**: Waves are bigger — `16 + (wave-1)*8` enemies (wave 1: 16, wave 19: 160; was 10 + (wave-1)*5), and the spawn interval ramps up faster so late waves keep real pressure. Danger and co-op still multiply the total.
 - **Enemy HP**: +20% across the board, including the Overlord boss.
 - **Weapon rebalance**: Base damage reduced ~30% across the table (fire rates slightly lengthened) now that all owned weapons fire at once — each weapon keeps its role, and a full 6-weapon arsenal clears a wave-19 horde in ~30-40s instead of melting it. Minigun base price fixed (was 1000).
@@ -142,6 +145,7 @@ Shows:
 - See `IMPROVEMENTS.md` for the v0.51 improvement notes (historical; `game-improvements.js` was removed in v0.56A — its balance tweaks conflicted with tuned values, its pooling was superseded by the perf pass, and its bug fixes were already applied)
 
 ## Changelog
+- **v0.5.8A** (2026-10-12): Menu/UI revamp — Brotato-style class select, weapon select step, danger selection with per-danger modifiers, Run Won / Run Over summary screens
 - **v0.5.7** (2026-10-12): Hordes (16 + (wave-1)*8 enemies), enemy HP +20%, weapon rebalance for all-weapons-fire, rarity tiers fixed (common/rare/epic/legendary), elites on waves 12/16/20 by danger
 - **v0.5.6** (2026-10-12): Wave-20 danger unlock (no victory screen), all owned weapons fire at once, 3 new enemies (Bulwark/Burster/Splitter), R rerolls shop, shared co-op locks, removed game-improvements.js and 5 old PNGs
 - **v0.56A** (2026-10-12): Web performance pass (identical visuals), co-op dash split to Left Shift (P1) / Right Shift (P2)
