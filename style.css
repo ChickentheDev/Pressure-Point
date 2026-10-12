@@ -236,3 +236,16 @@ input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:po
   0%{opacity:0;transform:translate(-50%,10px);}
   100%{opacity:1;transform:translate(-50%,0);}
 }
+
+.achievements-list{
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+  gap:10px; max-height:60vh; overflow-y:auto; margin:16px 0;
+}
+.achievement-card{
+  background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.12);
+  border-radius:8px; padding:10px 12px;
+}
+.achievement-card.unlocked{ border-color:#f5c542; background:rgba(245,197,66,0.08); }
+.achievement-card .ach-name{ font-weight:bold; color:#f5c542; margin-bottom:4px; }
+.achievement-card.locked .ach-name{ color:#888; }
+.achievement-card .ach-desc{ font-size:13px; color:#ccc; }
