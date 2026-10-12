@@ -1,2 +1,0 @@
-/home/sam/Desktop/test/wasm/BrotatoSystems/bin/Release/net8.0/publish/BrotatoSystems.runtimeconfig.json
-/home/sam/Desktop/test/wasm/BrotatoSystems/bin/Release/net8.0/publish/web.config
