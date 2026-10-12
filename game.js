@@ -933,6 +933,15 @@ function buildShop(){
   shop.items = picks;
   shop.selection = 0;
   shop.locked = shop.items.map((it, i)=>locked[i] ? it : null);
+
+  // wave-1 starter deal: the first shop is a dead visit otherwise (~13-17 currency,
+  // cheapest offer ~30). Guarantee one affordable common item at a deal price.
+  // Only wave 1 — no effect on the late-game economy.
+  if(state.wave === 1 && !shop.locked[0]){
+    const dealPool = poolItems.filter(it=>it.rarity === 'common');
+    const dealItem = dealPool[(Math.random()*dealPool.length)|0] || poolItems[0];
+    if(dealItem) shop.items[0] = {type:'item', data:dealItem, rarity:'common', price:10, deal:true};
+  }
   normalizeShopSelection();
 }
 
@@ -2410,11 +2419,12 @@ function drawHUD(){
   ctx.textAlign = 'start';
   if(state.phase === 'wave'){
     const remaining = Math.max(0, state.waveTotal - state.waveSpawned) + enemies.length;
+    const killed = Math.max(0, state.waveTotal - remaining);
     drawBar(wx + 14, 42, ww - 28, 10, state.waveTotal ? 1 - remaining / state.waveTotal : 0, '#48e0c2', '#5fb0ff');
     ctx.font = uiFont(10);
     ctx.fillStyle = palette.textLight;
     ctx.textAlign = 'center';
-    ctx.fillText(`${remaining} enemies left`, VW/2, 76);
+    ctx.fillText(`${killed}/${state.waveTotal}`, VW/2, 76);
     ctx.textAlign = 'start';
   } else {
     ctx.font = uiFont(11);
@@ -2740,17 +2750,29 @@ function drawEffects(){
       ctx.restore();
     }
 
-    // hp bar (only once damaged, keeps crowds readable)
+    // hp bar (only once damaged, keeps crowds readable) — elites get a thicker gold bar
     const barTop = fxTop > 0 ? -fxTop - 6 : useSprite ? -22 : -e.r-10;
     if(e.hp < e.maxHp || e.isBoss || e.elite){
+      const barH = e.elite ? 8 : 6, fillH = e.elite ? 6 : 4;
       ctx.fillStyle = palette.outline;
-      roundRect(-e.r-2, barTop, e.r*2+4, 6, 3); ctx.fill();
+      roundRect(-e.r-2, barTop, e.r*2+4, barH, 3); ctx.fill();
       ctx.fillStyle = e.isBoss ? '#ff6b6b' : e.elite ? '#ffd166' : '#ff8a5c';
-      roundRect(-e.r, barTop+1, (e.r*2) * Math.max(0, e.hp/e.maxHp), 4, 2); ctx.fill();
+      roundRect(-e.r, barTop+1, (e.r*2) * Math.max(0, e.hp/e.maxHp), fillH, 2); ctx.fill();
     }
     if(e.isBoss){
       ctx.fillStyle = '#ffb44c';
       ctx.beginPath(); ctx.moveTo(-6,barTop-8); ctx.lineTo(0,barTop-18); ctx.lineTo(6,barTop-8); ctx.closePath(); ctx.fill();
+    }
+    if(e.elite){
+      // gold crown above the bar — unmissable in a horde
+      const cy = barTop - 10;
+      ctx.fillStyle = '#ffd166';
+      ctx.beginPath();
+      ctx.moveTo(-9, cy); ctx.lineTo(-9, cy-7); ctx.lineTo(-4.5, cy-2.5); ctx.lineTo(0, cy-8);
+      ctx.lineTo(4.5, cy-2.5); ctx.lineTo(9, cy-7); ctx.lineTo(9, cy);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#8a6d1f';
+      ctx.fillRect(-9, cy-1.5, 18, 3);
     }
     ctx.restore();
   }
