@@ -199,7 +199,24 @@ const COSMETIC_ANCHOR = { crown:[0,-23], armor:[0,-2], belt:[0,7] };
 function drawPlayers(){
   for(let i=0;i<players.length;i++){
     const p = players[i];
-    if(p.dead) continue;
+    if(p.dead){
+      // downed marker with revive progress ring (co-op)
+      if(state.coop && state.phase === 'wave'){
+        ctx.save();
+        ctx.globalAlpha = 0.7;
+        ctx.fillStyle = '#ff6b6b';
+        ctx.beginPath(); ctx.arc(p.x, p.y, 12, 0, Math.PI*2); ctx.fill();
+        ctx.globalAlpha = 1;
+        const prog = Math.min(1, (p.reviveProgress || 0) / 3);
+        ctx.strokeStyle = '#6ef2b1'; ctx.lineWidth = 4;
+        ctx.beginPath(); ctx.arc(p.x, p.y, 18, -Math.PI/2, -Math.PI/2 + prog * Math.PI*2); ctx.stroke();
+        ctx.fillStyle = '#fff'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('DOWN', p.x, p.y - 26);
+        if(prog > 0 && prog < 1) ctx.fillText('REVIVING', p.x, p.y + 32);
+        ctx.restore();
+      }
+      continue;
+    }
     const body = i===0 ? '#4a9eff' : '#ff6b6b';
     const moving = p.dashTimer > 0 || (state.phase === 'wave' && (p._lastX !== undefined) && (Math.abs(p.x - p._lastX) + Math.abs(p.y - p._lastY) > 0.2));
     p._lastX = p.x; p._lastY = p.y;

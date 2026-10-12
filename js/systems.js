@@ -544,7 +544,7 @@ function fireWeaponFor(player, time, target){
       const spread = (w.spread || 0) / player.accuracy;
       const a = angle + ((Math.random()-0.5) * spread);
       const speed = w.bulletSpeed * (0.9 + Math.random()*0.2);
-      let dmg = (w.damage + (player.damageBonus||0)) * (player.damageMult || 1);
+      let dmg = (w.damage + (player.damageBonus||0)) * (player.damageMult || 1) * (player.synergy ? 1.15 : 1);
       const isCrit = Math.random() < (player.critChance || 0);
       if(isCrit) dmg *= (player.critMult || 1.5);
       const elementalBonus = (w.elemental || w.explosive) ? (player.elementalBonus || 0) : 0;
@@ -593,7 +593,7 @@ function explodeEnemy(e, index){
       p.hitFlash = 0.12;
       addShake(6);
       if(p.hp <= 0){
-        p.hp = 0; p.dead = true; addShake(10);
+        p.hp = 0; p.dead = true; p.reviveProgress = 0; addShake(10);
         if(players.every(pl=>pl.dead)){ state.phase = 'gameover'; showRunOver(); }
       }
     }
@@ -713,6 +713,40 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
   updateCamera(dt);
   if(state.waveBanner > 0) state.waveBanner = Math.max(0, state.waveBanner - dt);
   if(state.eliteBanner > 0) state.eliteBanner = Math.max(0, state.eliteBanner - dt);
+  // co-op revive: stand near a downed partner for 3s to bring them back at 50% HP
+  // plus proximity synergy: +15% damage when within 150px of your partner
+  if(state.coop){
+    const alive = players.filter(p=>!p.dead);
+    for(const p of alive){
+      p.synergy = false;
+      for(const q of alive){
+        if(p === q) continue;
+        if(Math.hypot(p.x - q.x, p.y - q.y) < 150){ p.synergy = true; break; }
+      }
+    }
+    for(const downed of players){
+      if(!downed.dead) continue;
+      downed.reviveProgress = downed.reviveProgress || 0;
+      let reviverNear = false;
+      for(const p of players){
+        if(p === downed || p.dead) continue;
+        if(Math.hypot(p.x - downed.x, p.y - downed.y) < 70){ reviverNear = true; break; }
+      }
+      if(reviverNear){
+        downed.reviveProgress += dt;
+        if(downed.reviveProgress >= 3){
+          downed.dead = false;
+          downed.hp = Math.floor(downed.baseMaxHp * 0.5);
+          downed.reviveProgress = 0;
+          addParticle({x: downed.x, y: downed.y, life: 0.8, r: 24, color: '#6ef2b1'});
+          flashMsg('REVIVED!', '#6ef2b1');
+          audio.pickup();
+        }
+      } else {
+        downed.reviveProgress = Math.max(0, downed.reviveProgress - dt * 2);
+      }
+    }
+  }
   // players movement
   for(let idx=0; idx<players.length; idx++){
     const p = players[idx]; if(p.dead) continue; let dx=0, dy=0;
