@@ -1,3 +1,7 @@
+## v0.6.6 — 5 danger bosses
+- **One boss per danger level**: D1 Overlord (burrow), D2 Hive Tyrant (spawns minions), D3 Stormcaller (shockwave slams + dashes), D4 Ironclad (40% damage reduction + reflects 30%), D5 Voidreaver (dashes + spawns + shockwaves). D5 still spawns two at once.
+- Each boss has unique pixel-art sprite, name on the HP bar, and scaled stats.
+
 ## v0.6.5 — Elite mini-bosses
 - **Elites are now mini-bosses**: each of the 9 enemy types has a unique elite name (Swiftclaw, Plaguewing, Skullcrusher, Detonator, Fracture, Ironwall, Ravager, Warden, Broodmother) with its own enhanced trait — massive explosions, 4-way splits, damage reflect, wider shield auras, rapid spawning, relentless dashes, venomous slow, shockwave slams.
 - **Elite HP bar**: the toughest living elite's name + HP bar shows under the wave counter.

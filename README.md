@@ -1,18 +1,21 @@
-# Pressure Point — v0.6.5
+# Pressure Point — v0.6.6
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.6.5 — Elite mini-bosses)
-- **Elites are now mini-bosses**: 9 unique elite names (Swiftclaw, Plaguewing, Skullcrusher, Detonator, Fracture, Ironwall, Ravager, Warden, Broodmother), each with its own enhanced trait. Elite HP bar under the wave counter, bonus loot on kills.
+## Latest Changes (v0.6.6 — 5 danger bosses)
+- **One boss per danger**: D1 Overlord, D2 Hive Tyrant (spawns minions), D3 Stormcaller (shockwaves + dashes), D4 Ironclad (armored + reflects), D5 Voidreaver (all of the above). Unique sprites, names on the HP bar.
 
 ## Previous Update (v0.6.4 — New enemies + Meta progression)
 - 3 new enemies (Dasher, Aegis, Nester); Essence + 6 permanent upgrades.
 
-## Previous Update (v0.6.3 — Achievements)
-- 15 achievements with unlock toasts, menu achievements screen, localStorage persistence.
+## Previous Update (v0.6.5 — Elite mini-bosses)
+- 9 named elites with unique traits, HP bar, bonus loot.
+
+## Previous Update (v0.6.4 — New enemies + Meta progression)
+- 3 new enemies (Dasher, Aegis, Nester); Essence + 6 permanent upgrades.
 
 ## What's Included
-- **Elite mini-bosses**: 9 named elites with unique traits, HP bar, bonus loot.
+- **5 danger bosses**: Overlord, Hive Tyrant, Stormcaller, Ironclad, Voidreaver — unique abilities per danger.
 - **Achievements**: 15 unlockable, persisted across runs.
 - **9 enemy types**: Runner, Spitter, Bruiser, Burster, Splitter, Bulwark, Dasher, Aegis, Nester.
 - **Wave system**: Wave 1 → 20 with horde-scaled counts, then **endless mode** past 20.
