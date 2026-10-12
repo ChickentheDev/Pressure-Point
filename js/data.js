@@ -45,6 +45,9 @@ const enemyTypes = [
   {id:'burster', name:'Burster', color:'#e07a8a', r:9, hp:19, speed:155, dmg:10, xp:8, money:3, explodes:true},
   {id:'splitter', name:'Splitter', color:'#8fd4e8', r:13, hp:50, speed:85, dmg:12, xp:12, money:4, splits:true},
   {id:'bulwark', name:'Bulwark', color:'#8f7654', r:20, hp:180, speed:42, dmg:26, xp:22, money:6},
+  {id:'dasher', name:'Dasher', color:'#ff9f43', r:11, hp:45, speed:140, dmg:14, xp:12, money:4, dashes:true},
+  {id:'aegis', name:'Aegis', color:'#6c8ebf', r:18, hp:220, speed:50, dmg:20, xp:26, money:7, shields:true},
+  {id:'nester', name:'Nester', color:'#9b59b6', r:22, hp:300, speed:30, dmg:15, xp:30, money:8, spawns:true},
 ];
 
 const bossType = {id:'overlord', name:'Overlord', color:'#ff6b6b', r:36, hp:1440, speed:60, dmg:40, xp:120, money:40};
