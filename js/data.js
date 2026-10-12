@@ -39,15 +39,24 @@ const DANGER_MODS = {
 function dangerMods(d){ return DANGER_MODS[Math.max(1, Math.min(5, d|0))] || DANGER_MODS[1]; }
 // enemy, weapon, item definitions (kept similar to earlier)
 const enemyTypes = [
-  {id:'runner', name:'Runner', color:'#e85', r:10, hp:22, speed:120, dmg:10, xp:6, money:2},
-  {id:'spitter', name:'Spitter', color:'#d94', r:12, hp:36, speed:95, dmg:12, xp:9, money:3},
-  {id:'bruiser', name:'Bruiser', color:'#c43', r:16, hp:60, speed:70, dmg:18, xp:14, money:4},
-  {id:'burster', name:'Burster', color:'#e07a8a', r:9, hp:19, speed:155, dmg:10, xp:8, money:3, explodes:true},
-  {id:'splitter', name:'Splitter', color:'#8fd4e8', r:13, hp:50, speed:85, dmg:12, xp:12, money:4, splits:true},
-  {id:'bulwark', name:'Bulwark', color:'#8f7654', r:20, hp:180, speed:42, dmg:26, xp:22, money:6},
-  {id:'dasher', name:'Dasher', color:'#ff9f43', r:11, hp:45, speed:140, dmg:14, xp:12, money:4, dashes:true},
-  {id:'aegis', name:'Aegis', color:'#6c8ebf', r:18, hp:220, speed:50, dmg:20, xp:26, money:7, shields:true},
-  {id:'nester', name:'Nester', color:'#9b59b6', r:22, hp:300, speed:30, dmg:15, xp:30, money:8, spawns:true},
+  {id:'runner', name:'Runner', color:'#e85', r:10, hp:22, speed:120, dmg:10, xp:6, money:2,
+   eliteName:'Swiftclaw', eliteTrait:'+50% speed'},
+  {id:'spitter', name:'Spitter', color:'#d94', r:12, hp:36, speed:95, dmg:12, xp:9, money:3,
+   eliteName:'Plaguewing', eliteTrait:'venomous touch (slow)'},
+  {id:'bruiser', name:'Bruiser', color:'#c43', r:16, hp:60, speed:70, dmg:18, xp:14, money:4,
+   eliteName:'Skullcrusher', eliteTrait:'shockwave slam'},
+  {id:'burster', name:'Burster', color:'#e07a8a', r:9, hp:19, speed:155, dmg:10, xp:8, money:3, explodes:true,
+   eliteName:'Detonator', eliteTrait:'massive explosion'},
+  {id:'splitter', name:'Splitter', color:'#8fd4e8', r:13, hp:50, speed:85, dmg:12, xp:12, money:4, splits:true,
+   eliteName:'Fracture', eliteTrait:'splits into 4'},
+  {id:'bulwark', name:'Bulwark', color:'#8f7654', r:20, hp:180, speed:42, dmg:26, xp:22, money:6,
+   eliteName:'Ironwall', eliteTrait:'reflects damage'},
+  {id:'dasher', name:'Dasher', color:'#ff9f43', r:11, hp:45, speed:140, dmg:14, xp:12, money:4, dashes:true,
+   eliteName:'Ravager', eliteTrait:'relentless dashes'},
+  {id:'aegis', name:'Aegis', color:'#6c8ebf', r:18, hp:220, speed:50, dmg:20, xp:26, money:7, shields:true,
+   eliteName:'Warden', eliteTrait:'wider shield aura'},
+  {id:'nester', name:'Nester', color:'#9b59b6', r:22, hp:300, speed:30, dmg:15, xp:30, money:8, spawns:true,
+   eliteName:'Broodmother', eliteTrait:'rapid spawning'},
 ];
 
 const bossType = {id:'overlord', name:'Overlord', color:'#ff6b6b', r:36, hp:1440, speed:60, dmg:40, xp:120, money:40};
