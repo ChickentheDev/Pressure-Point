@@ -613,16 +613,16 @@ if(wasmSystems.status === 'loading'){
 
 // Class definitions (50 variants)
 const classArchetypes = [
-  {base:'Ironheart', weapon:'rifle', mods:{hp:120,speed:230,armor:2,accuracy:1.05,damageBonus:1}, tags:'Balanced rifle'},
-  {base:'Foxglove', weapon:'pistol', mods:{hp:110,speed:250,accuracy:1.2,damageBonus:0}, tags:'Fast and precise'},
-  {base:'Gravelord', weapon:'heavy', mods:{hp:150,speed:200,armor:8,damageBonus:4,recoil:1.2}, tags:'Slow heavy hitter'},
-  {base:'Scrapjack', weapon:'shotgun', mods:{hp:115,speed:235,magBonus:2,damageBonus:1}, tags:'Close range'},
-  {base:'Voltblade', weapon:'blade', mods:{hp:130,speed:260,armor:4,lifesteal:0.04}, tags:'Melee sustain'},
-  {base:'Circuitry', weapon:'rifle', mods:{hp:105,speed:225,reloadSpeed:0.9,accuracy:1.1}, tags:'Fast reload'},
-  {base:'Bulwark', weapon:'pistol', mods:{hp:160,speed:210,armor:10,accuracy:0.95}, tags:'Tank'},
-  {base:'Redline', weapon:'rifle', mods:{hp:120,speed:240,damageBonus:2,recoil:1.1}, tags:'High damage'},
-  {base:'Skylark', weapon:'pistol', mods:{hp:100,speed:280,accuracy:1.1}, tags:'Very fast'},
-  {base:'Nightreap', weapon:'shotgun', mods:{hp:125,speed:225,lifesteal:0.06,damageBonus:1}, tags:'Life steal'},
+  {base:'Ironheart', weapon:'rifle', mods:{hpMult:1.1, speed:230, armor:2, accuracy:1.05, damageBonus:1}, tags:'Balanced rifle'},
+  {base:'Foxglove', weapon:'pistol', mods:{hpMult:0.95, speed:255, accuracy:1.25, luck:2}, tags:'Fast and precise'},
+  {base:'Gravelord', weapon:'heavy', mods:{hpMult:1.3, speed:200, armor:8, damageBonus:4, recoil:1.2}, tags:'Slow heavy hitter'},
+  {base:'Scrapjack', weapon:'shotgun', mods:{hpMult:1.0, speed:235, magBonus:2, damageBonus:2, reloadSpeed:0.95}, tags:'Close range'},
+  {base:'Voltblade', weapon:'blade', mods:{hpMult:1.1, speed:260, armor:4, lifesteal:0.05}, tags:'Melee sustain'},
+  {base:'Circuitry', weapon:'rifle', mods:{hpMult:0.95, speed:235, reloadSpeed:0.85, accuracy:1.1, magBonus:1}, tags:'Fast reload'},
+  {base:'Bulwark', weapon:'pistol', mods:{hpMult:1.4, speed:210, armor:10, accuracy:0.95}, tags:'Tank'},
+  {base:'Redline', weapon:'rifle', mods:{hpMult:0.95, speed:240, damageBonus:3, recoil:1.1}, tags:'High damage'},
+  {base:'Skylark', weapon:'pistol', mods:{hpMult:0.9, speed:285, accuracy:1.1, reloadSpeed:0.95}, tags:'Very fast'},
+  {base:'Nightreap', weapon:'shotgun', mods:{hpMult:1.05, speed:225, lifesteal:0.07, damageBonus:1}, tags:'Life steal'},
 ];
 
 const classes = classArchetypes.map(a=>({
@@ -806,8 +806,8 @@ function applyClassToPlayer(player, classData){
   const classLevel = Math.max(1, Math.min(5, state.danger));
   player.classId = classData.id;
   player.className = `${classData.name} Lv ${classLevel}`;
-  // Start very low HP, scale up per class level
-  player.baseMaxHp = Math.max(15, Math.floor(15 + (classLevel-1) * 6));
+  // Start very low HP, scale up per class level; class hpMult actually applies now (was dead data)
+  player.baseMaxHp = Math.max(10, Math.floor((15 + (classLevel-1) * 6) * (classData.mods.hpMult || 1)));
   player.hp = player.baseMaxHp;
   player.baseSpeed = Math.floor(classData.mods.speed * (1 + (classLevel-1)*0.02));
   player.armor = (classData.mods.armor || 0) + (classLevel-1);
