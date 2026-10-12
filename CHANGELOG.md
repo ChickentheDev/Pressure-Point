@@ -1,5 +1,7 @@
 ## Unreleased
-- **Map off-center fix**: the ground blit in `FX.drawGround()` drew the backing-store-sized ground canvas under the DPR-scaled transform, zooming the map by `devicePixelRatio` and shifting the vignette center off screen-center on hidpi displays (regression from the perf pass in 129367c; invisible at DPR 1, which is why headless tests passed). Now blits under an identity transform — a true 1:1 copy with no resample.
+- **Map off-center fix**: ground blit now runs under identity transform (hidpi regression from perf pass).
+- **Glassjaw 1-HP invariant enforced**: Vitality, in-wave Max HP upgrades, shop +Max HP items, and level-up HP no longer raise Glassjaw above 1 HP (in-wave Max HP choice heals to full instead). Co-op revive can no longer revive at 0 HP.
+- **Vitality substitute for Glassjaw**: grants +4% move speed per level instead (shown in Upgrades screen when Glassjaw is selected).
 
 ## v0.6.8 — Class unlocks + Glassjaw
 - **New class: Glassjaw** — unlocks by beating Nightmare (D6). Has exactly 1 HP but massive damage (+15), speed (300), and accuracy. Crystal sprite.

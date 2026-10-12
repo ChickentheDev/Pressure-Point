@@ -344,7 +344,7 @@ function classUnlockText(c){
 const upgradeStats = [
   {id:'atkspd', name:'Attack Speed', apply:(p, mult)=>{ p.reloadSpeed /= mult; }},   // reloadSpeed scales shot delay and reload time: lower = faster
   {id:'baseDmg', name:'Base Damage', apply:(p, mult)=>{ p.damageBonus += Math.floor((mult-1)*10); }},
-  {id:'hp', name:'Max HP', apply:(p, mult)=>{ p.baseMaxHp += Math.max(4, Math.round((mult-1)*40)); p.hp = p.baseMaxHp; }},
+  {id:'hp', name:'Max HP', apply:(p, mult)=>{ if(isGlassjaw(p)){ p.hp = p.baseMaxHp; return; } p.baseMaxHp += Math.max(4, Math.round((mult-1)*40)); p.hp = p.baseMaxHp; }},
   {id:'lifesteal', name:'Life Steal', apply:(p, mult)=>{ p.lifesteal = Math.min(0.5, p.lifesteal + (mult-1)*0.05); }},
   {id:'armor', name:'Armor', apply:(p, mult)=>{ p.armor += Math.floor((mult-1)*6); }},
   {id:'engineering', name:'Engineering', apply:(p, mult)=>{ p.damageBonus += Math.floor((mult-1)*4); }},
