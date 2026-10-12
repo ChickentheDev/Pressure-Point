@@ -385,6 +385,7 @@ const state = {
   phase: 'menu', // menu | wave | shop | gameover | victory
   wave: 1,
   waveBanner: 0,
+  eliteBanner: 0,
   waveSpawned: 0,
   waveTotal: 10,
   maxWave: 20,
@@ -490,45 +491,45 @@ let player = players[0];
 
 // enemy, weapon, item definitions (kept similar to earlier)
 const enemyTypes = [
-  {id:'runner', name:'Runner', color:'#e85', r:10, hp:18, speed:120, dmg:10, xp:6, money:2},
-  {id:'spitter', name:'Spitter', color:'#d94', r:12, hp:30, speed:95, dmg:12, xp:9, money:3},
-  {id:'bruiser', name:'Bruiser', color:'#c43', r:16, hp:50, speed:70, dmg:18, xp:14, money:4},
-  {id:'burster', name:'Burster', color:'#e07a8a', r:9, hp:16, speed:155, dmg:10, xp:8, money:3, explodes:true},
-  {id:'splitter', name:'Splitter', color:'#8fd4e8', r:13, hp:42, speed:85, dmg:12, xp:12, money:4, splits:true},
-  {id:'bulwark', name:'Bulwark', color:'#8f7654', r:20, hp:150, speed:42, dmg:26, xp:22, money:6},
+  {id:'runner', name:'Runner', color:'#e85', r:10, hp:22, speed:120, dmg:10, xp:6, money:2},
+  {id:'spitter', name:'Spitter', color:'#d94', r:12, hp:36, speed:95, dmg:12, xp:9, money:3},
+  {id:'bruiser', name:'Bruiser', color:'#c43', r:16, hp:60, speed:70, dmg:18, xp:14, money:4},
+  {id:'burster', name:'Burster', color:'#e07a8a', r:9, hp:19, speed:155, dmg:10, xp:8, money:3, explodes:true},
+  {id:'splitter', name:'Splitter', color:'#8fd4e8', r:13, hp:50, speed:85, dmg:12, xp:12, money:4, splits:true},
+  {id:'bulwark', name:'Bulwark', color:'#8f7654', r:20, hp:180, speed:42, dmg:26, xp:22, money:6},
 ];
 
-const bossType = {id:'overlord', name:'Overlord', color:'#ff6b6b', r:36, hp:1200, speed:60, dmg:40, xp:120, money:40};
+const bossType = {id:'overlord', name:'Overlord', color:'#ff6b6b', r:36, hp:1440, speed:60, dmg:40, xp:120, money:40};
 
 const rarities = [
-  {id:'common', color:'#8aa0b8'},
-  {id:'rare', color:'#4cc3ff'},
-  {id:'epic', color:'#b67bff'},
-  {id:'red', color:'#ff6b6b'},
+  {id:'common', name:'Common', color:'#8aa0b8'},
+  {id:'rare', name:'Rare', color:'#4cc3ff'},
+  {id:'epic', name:'Epic', color:'#b67bff'},
+  {id:'legendary', name:'Legendary', color:'#ff6b6b'},
 ];
 
 const weapons = [
-  {id:'pistol', name:'Cobalt Pistol', type:'sidearm', rarity:'common', fireRate:0.22, bulletSpeed:700, spread:0.05, damage:14, mag:12, reload:1.1, recoil:0.8, color:'#8be9ff'},
-  {id:'harpoon', name:'Harpoon Gun', type:'rifle', rarity:'rare', fireRate:0.45, bulletSpeed:900, spread:0.0, damage:28, mag:4, reload:1.6, recoil:1.2, color:'#9be7ff', pierce:2, rehit:true},   // rehit: a harpoon can hit the same enemy again with its pierce (pre-v0.54 behaviour)
-  {id:'rifle', name:'Pulse Rifle', type:'rifle', rarity:'rare', fireRate:0.12, bulletSpeed:860, spread:0.02, damage:12, mag:30, reload:1.4, recoil:1.1, color:'#9bff7b'},
-  {id:'shotgun', name:'Grav Shotgun', type:'shotgun', rarity:'rare', fireRate:0.6, bulletSpeed:520, spread:0.5, damage:10, pellets:7, mag:6, reload:1.8, recoil:1.4, color:'#ffd166'},
-  {id:'heavy', name:'Titan Cannon', type:'heavy', rarity:'red', fireRate:0.9, bulletSpeed:520, spread:0.08, damage:34, mag:4, reload:2.3, recoil:1.8, color:'#ff7b7b', explosive:true, elemental:'fire'},
-  {id:'blade', name:'Arc Blade', type:'melee', rarity:'rare', fireRate:0.5, bulletSpeed:420, spread:0.0, damage:22, mag:999, reload:0.2, recoil:0.6, color:'#7bdff2', melee:true},
-  {id:'smg', name:'Viper SMG', type:'rifle', rarity:'common', fireRate:0.08, bulletSpeed:720, spread:0.06, damage:9, mag:40, reload:1.2, recoil:0.9, color:'#7CFF6B'},
-  {id:'dmr', name:'Longshot DMR', type:'rifle', rarity:'rare', fireRate:0.28, bulletSpeed:980, spread:0.01, damage:26, mag:8, reload:1.6, recoil:1.2, color:'#6aaeff'},
-  {id:'flame', name:'Flamethrower', type:'special', rarity:'epic', fireRate:0.05, bulletSpeed:420, spread:0.25, damage:6, mag:80, reload:2.0, recoil:0.7, color:'#ff8c42', elemental:'fire'},
-  {id:'rpg', name:'RPG-7', type:'heavy', rarity:'epic', fireRate:1.2, bulletSpeed:460, spread:0.08, damage:60, mag:1, reload:2.6, recoil:2.0, color:'#ff5d5d', explosive:true, elemental:'fire'},
-  {id:'arc', name:'Arc Thrower', type:'special', rarity:'epic', fireRate:0.2, bulletSpeed:600, spread:0.15, damage:14, mag:18, reload:1.5, recoil:1.0, color:'#b27bff', elemental:'shock'},
-  {id:'minigun', name:'Minigun', type:'heavy', rarity:'red', fireRate:0.05, bulletSpeed:760, spread:0.12, damage:9, mag:200, reload:2.8, recoil:1.4, color:'#ffb44c', overheatMax:100, overheatPerShot:6, overheatCool:18, overheatLock:1.4},
-  {id:'rail', name:'Railgun', type:'rifle', rarity:'red', fireRate:0.6, bulletSpeed:1200, spread:0.0, damage:90, mag:2, reload:2.2, recoil:1.8, color:'#ff6b6b'},
-  {id:'mine', name:'Mine Layer', type:'special', rarity:'rare', fireRate:0.9, bulletSpeed:300, spread:0.2, damage:24, mag:6, reload:1.9, recoil:1.0, color:'#c9a867', explosive:true, elemental:'fire'},
-  {id:'sprayer', name:'Frost Sprayer', type:'special', rarity:'rare', fireRate:0.07, bulletSpeed:520, spread:0.2, damage:8, mag:60, reload:1.7, recoil:0.8, color:'#6cd6ff', elemental:'ice'},
+  {id:'pistol', name:'Cobalt Pistol', type:'sidearm', rarity:'common', fireRate:0.22, bulletSpeed:700, spread:0.05, damage:10, mag:12, reload:1.1, recoil:0.8, color:'#8be9ff'},
+  {id:'harpoon', name:'Harpoon Gun', type:'rifle', rarity:'rare', fireRate:0.5, bulletSpeed:900, spread:0.0, damage:20, mag:4, reload:1.6, recoil:1.2, color:'#9be7ff', pierce:2, rehit:true},   // rehit: a harpoon can hit the same enemy again with its pierce (pre-v0.54 behaviour)
+  {id:'rifle', name:'Pulse Rifle', type:'rifle', rarity:'rare', fireRate:0.13, bulletSpeed:860, spread:0.02, damage:8, mag:30, reload:1.4, recoil:1.1, color:'#9bff7b'},
+  {id:'shotgun', name:'Grav Shotgun', type:'shotgun', rarity:'rare', fireRate:0.65, bulletSpeed:520, spread:0.5, damage:7, pellets:7, mag:6, reload:1.8, recoil:1.4, color:'#ffd166'},
+  {id:'heavy', name:'Titan Cannon', type:'heavy', rarity:'legendary', fireRate:1.0, bulletSpeed:520, spread:0.08, damage:24, mag:4, reload:2.3, recoil:1.8, color:'#ff7b7b', explosive:true, elemental:'fire'},
+  {id:'blade', name:'Arc Blade', type:'melee', rarity:'rare', fireRate:0.5, bulletSpeed:420, spread:0.0, damage:16, mag:999, reload:0.2, recoil:0.6, color:'#7bdff2', melee:true},
+  {id:'smg', name:'Viper SMG', type:'rifle', rarity:'common', fireRate:0.09, bulletSpeed:720, spread:0.06, damage:6, mag:40, reload:1.2, recoil:0.9, color:'#7CFF6B'},
+  {id:'dmr', name:'Longshot DMR', type:'rifle', rarity:'rare', fireRate:0.3, bulletSpeed:980, spread:0.01, damage:20, mag:8, reload:1.6, recoil:1.2, color:'#6aaeff'},
+  {id:'flame', name:'Flamethrower', type:'special', rarity:'epic', fireRate:0.055, bulletSpeed:420, spread:0.25, damage:4, mag:80, reload:2.0, recoil:0.7, color:'#ff8c42', elemental:'fire'},
+  {id:'rpg', name:'RPG-7', type:'heavy', rarity:'epic', fireRate:1.3, bulletSpeed:460, spread:0.08, damage:45, mag:1, reload:2.6, recoil:2.0, color:'#ff5d5d', explosive:true, elemental:'fire'},
+  {id:'arc', name:'Arc Thrower', type:'special', rarity:'epic', fireRate:0.22, bulletSpeed:600, spread:0.15, damage:10, mag:18, reload:1.5, recoil:1.0, color:'#b27bff', elemental:'shock'},
+  {id:'minigun', name:'Minigun', type:'heavy', rarity:'legendary', fireRate:0.055, bulletSpeed:760, spread:0.12, damage:6, mag:200, reload:2.8, recoil:1.4, color:'#ffb44c', overheatMax:100, overheatPerShot:6, overheatCool:18, overheatLock:1.4},
+  {id:'rail', name:'Railgun', type:'rifle', rarity:'legendary', fireRate:0.7, bulletSpeed:1200, spread:0.0, damage:65, mag:2, reload:2.2, recoil:1.8, color:'#ff6b6b'},
+  {id:'mine', name:'Mine Layer', type:'special', rarity:'rare', fireRate:1.0, bulletSpeed:300, spread:0.2, damage:18, mag:6, reload:1.9, recoil:1.0, color:'#c9a867', explosive:true, elemental:'fire'},
+  {id:'sprayer', name:'Frost Sprayer', type:'special', rarity:'rare', fireRate:0.08, bulletSpeed:520, spread:0.2, damage:5, mag:60, reload:1.7, recoil:0.8, color:'#6cd6ff', elemental:'ice'},
 ];
-const weaponPrices = { pistol:60, harpoon:140, rifle:90, shotgun:110, heavy:140, blade:95, smg:70, dmr:120, flame:150, rpg:160, arc:140, minigun:1000, rail:220, mine:110, sprayer:120 };
+const weaponPrices = { pistol:60, harpoon:135, rifle:95, shotgun:115, heavy:230, blade:100, smg:70, dmr:125, flame:155, rpg:170, arc:150, minigun:240, rail:260, mine:115, sprayer:120 };
 
 const items = [
   {id:'plating', name:'Dense Plating', rarity:'rare', price:55, desc:'+20 Armor, -12% Move Speed', effects:{armor:20, speedMult:-0.12}},
-  {id:'overclock', name:'Overclock Core', rarity:'red', price:115, desc:'+15% Fire Rate, -10 Max HP', effects:{reloadMult:-0.15, maxHpAdd:-10}},
+  {id:'overclock', name:'Overclock Core', rarity:'legendary', price:115, desc:'+15% Fire Rate, -10 Max HP', effects:{reloadMult:-0.15, maxHpAdd:-10}},
   {id:'precision', name:'Stability Gyro', rarity:'rare', price:60, desc:'+20% Accuracy, -10% Reload Speed', effects:{accuracyMult:0.2, reloadMult:0.1}},
   {id:'vamp', name:'Life Tap', rarity:'epic', price:125, desc:'+8% Life Steal, -10 Max HP', effects:{lifestealAdd:0.08, maxHpAdd:-10}},
   {id:'belt', name:'Ammo Belt', rarity:'common', price:30, desc:'+6 Magazine Size, -5% Accuracy', effects:{magBonus:6, accuracyMult:-0.05}},
@@ -541,7 +542,7 @@ const items = [
 // The C# records (wasm/BrotatoSystems/Extra.cs) use PascalCase properties and int enums, so the JS data
 // has to be converted before LoadData, and RollShop results ({Type, Data:{Id..}, Rarity, Price}) have to
 // be mapped back to the JS objects buildShop expects ({type, data, rarity, price}).
-const WASM_RARITY = { common:0, rare:1, epic:2, red:3 };        // C# Rarity: Common, Rare, Epic, Legendary
+const WASM_RARITY = { common:0, rare:1, epic:2, legendary:3 };        // C# Rarity: Common, Rare, Epic, Legendary
 const WASM_TIMEOUT_MS = 10000;
 function wasmDamageType(w){ return w.elemental==='fire' ? 1 : w.elemental==='ice' ? 2 : w.elemental==='shock' ? 3 : w.explosive ? 4 : 0; }
 function wasmWeaponData(){
@@ -667,8 +668,9 @@ const shop = { items: [], selection: 0, rerollCost: 6, locked: [] };
 
 const upgradeChoices = { items: [], selection: 0 };
 
-const rarityOrder = ['common','rare','epic','red'];
-function rarityMult(r){ return r==='common'?1:r==='rare'?1.25:r==='epic'?1.5:2.0; }
+const rarityOrder = ['common','rare','epic','legendary'];
+const RARITY_MULTS = {common:1, rare:1.25, epic:1.5, legendary:2.0};
+function rarityMult(r){ return RARITY_MULTS[r] || 1; }
 
 function createWeaponInstance(base, rarity){
   const mult = rarityMult(rarity);
@@ -847,17 +849,17 @@ function buildShop(){
   const poolItems = [...items];
 
   function rollRarity(luck){
-    const base = { common:50, rare:35, epic:10, red:5 };
+    const base = { common:50, rare:35, epic:10, legendary:5 };
     const wCommon = base.common + luck * 5;
     const wRare = base.rare + luck * 10;
     const wEpic = base.epic + luck * 15;
-    const wRed = base.red + luck * 20;
-    const total = wCommon + wRare + wEpic + wRed;
+    const wLegendary = base.legendary + luck * 20;
+    const total = wCommon + wRare + wEpic + wLegendary;
     let r = Math.random() * total;
     if((r -= wCommon) <= 0) return 'common';
     if((r -= wRare) <= 0) return 'rare';
     if((r -= wEpic) <= 0) return 'epic';
-    return 'red';
+    return 'legendary';
   }
 
   const luck = players[0]?.luck || 0;
@@ -921,8 +923,18 @@ function rerollShop(){
   audio.click();
 }
 
-// Wave calculation: Wave 1 = 10 enemies, each wave +5, cap at state.maxWave
-function computeWaveTotal(wave){ return 10 + (Math.max(1, wave) - 1) * 5; }
+// Wave calculation: horde scaling — Wave 1 = 16 enemies, each wave +8.
+// Danger and co-op multipliers stack on top in startWave.
+function computeWaveTotal(wave){ return 16 + (Math.max(1, wave) - 1) * 8; }
+
+// Elites: tougher enemy variants on danger-gated waves.
+// Wave 12 → danger 2-5, wave 16 → danger 4-5, wave 20 (boss) → danger 1-5.
+function eliteCountFor(wave, danger){
+  if(wave !== 12 && wave !== 16 && wave !== 20) return 0;
+  if(wave === 12 && danger < 2) return 0;
+  if(wave === 16 && danger < 4) return 0;
+  return 2 + (danger >= 4 ? 1 : 0);
+}
 
 function startWave(){
   state.phase = 'wave';
@@ -932,6 +944,16 @@ function startWave(){
   if(state.wave >= state.maxWave){
     state.waveTotal = 1;
     state.bossSpawned = false;
+  }
+  // elites spawn with the wave and count toward its completion total
+  // (added after the boss-wave override so wave 20 keeps its elites in the total)
+  state.eliteTotal = eliteCountFor(state.wave, state.danger);
+  state.waveTotal += state.eliteTotal;
+  if(state.eliteTotal > 0){
+    for(let i=0;i<state.eliteTotal;i++){ spawnEnemy({elite:true}); state.waveSpawned++; }
+    state.eliteBanner = 2.6;
+    audio.beep(220, 0.18, 'sawtooth', 0.07);
+    audio.beep(174, 0.22, 'sawtooth', 0.07);
   }
   state.waveBanner = 2.2;
   buildShop();
@@ -968,7 +990,9 @@ function spawnFruit(x, y){
   fruits.push({x, y, r:8, t:0});
 }
 
-function spawnEnemy(){
+function spawnEnemy(opts){
+  opts = opts || {};
+  const elite = !!opts.elite;
   const edge = Math.floor(Math.random()*4);
   let x,y; if(edge===0){ x=-20; y=Math.random()*H } else if(edge===1){ x=W+20; y=Math.random()*H } else if(edge===2){ x=Math.random()*W; y=-20 } else { x=Math.random()*W; y=H+20 }
   const tier = Math.min(enemyTypes.length-1, Math.floor((state.wave-1)/3));
@@ -981,9 +1005,13 @@ function spawnEnemy(){
   const dangerDmg = 1 + (state.danger-1) * 0.28;
   const waveScale = 1 + Math.max(0, state.wave-1) * 0.12;
   const lateDmg = 1 + Math.max(0, state.wave-1) * 0.18;
-  enemies.push({ id: t.id, x,y, r: t.r, hp: Math.floor(t.hp * waveScale * dangerHP), maxHp: Math.floor(t.hp * waveScale * dangerHP), speed: t.speed + state.wave*2, dmg: Math.floor(t.dmg * dangerDmg * lateDmg + state.wave*1.2), color: t.color, xp: t.xp + Math.floor(state.wave*0.6)*(state.danger), money: Math.max(1, Math.floor(t.money * 0.7) + Math.floor(state.wave*0.2) * state.danger), explodes: !!t.explodes, splits: !!t.splits });
+  // elites: scaled-up variants — 3x HP, 1.4x damage, bigger body, triple rewards
+  const eliteHP = elite ? 3 : 1, eliteDmg = elite ? 1.4 : 1;
+  const xp = Math.floor((t.xp + Math.floor(state.wave*0.6)*(state.danger)) * (elite ? 3 : 1));
+  const money = Math.max(1, Math.floor((Math.floor(t.money * 0.7) + Math.floor(state.wave*0.2) * state.danger) * (elite ? 3 : 1)));
+  enemies.push({ id: t.id, x,y, r: Math.floor(t.r * (elite ? 1.35 : 1)), hp: Math.floor(t.hp * waveScale * dangerHP * eliteHP), maxHp: Math.floor(t.hp * waveScale * dangerHP * eliteHP), speed: t.speed + state.wave*2, dmg: Math.floor(t.dmg * dangerDmg * lateDmg * eliteDmg + state.wave*1.2), color: t.color, xp, money, explodes: !!t.explodes, splits: !!t.splits, elite });
   if(enemies.length > 120){ enemies.shift(); }
-  addParticle({x, y, life:0.35, r:18, color: palette.uiAccent});
+  addParticle({x, y, life:0.35, r:18, color: elite ? '#ffd166' : palette.uiAccent});
 }
 
 function spawnBoss(){
@@ -1391,6 +1419,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
   state.animTime += dt;
   updateCamera(dt);
   if(state.waveBanner > 0) state.waveBanner = Math.max(0, state.waveBanner - dt);
+  if(state.eliteBanner > 0) state.eliteBanner = Math.max(0, state.eliteBanner - dt);
   // players movement
   for(let idx=0; idx<players.length; idx++){
     const p = players[idx]; if(p.dead) continue; let dx=0, dy=0;
@@ -1469,7 +1498,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
       state.treeWave = state.wave;
     }
     // spawn logic
-    const baseSpawnRate = Math.max(0.45, 1.2 - state.wave*0.04);
+    const baseSpawnRate = Math.max(0.35, 1.0 - state.wave*0.035);
     const dangerSpawnMult = 1 + (state.danger-1)*0.2;
     state.spawnTimer -= dt;
     const spawnInterval = Math.max(0.12, baseSpawnRate / dangerSpawnMult / (state.coop?1.4:1));
@@ -1478,7 +1507,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
       if(!state.bossSpawned){
         spawnBoss();
         state.bossSpawned = true;
-        state.waveSpawned = 1;
+        state.waveSpawned++;   // elites (if any) already counted in startWave
       }
     } else if(state.waveSpawned < state.waveTotal && Math.random() < dt / spawnInterval){
       spawnEnemy();
@@ -2403,12 +2432,21 @@ function drawEffects(){
       ctx.beginPath(); ctx.arc(e.r*0.3 + look,-e.r*0.15,Math.max(1.6, e.r*0.16),0,Math.PI*2); ctx.fill();
     }
 
+    // elite: pulsing gold ring
+    if(e.elite){
+      const pulse = 1 + Math.sin(state.animTime * 8 + e.x * 0.05) * 0.07;
+      ctx.save(); ctx.globalAlpha = 0.9;
+      ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(0, 0, (e.r + 7) * pulse, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    }
+
     // hp bar (only once damaged, keeps crowds readable)
     const barTop = fxTop > 0 ? -fxTop - 6 : useSprite ? -22 : -e.r-10;
-    if(e.hp < e.maxHp || e.isBoss){
+    if(e.hp < e.maxHp || e.isBoss || e.elite){
       ctx.fillStyle = palette.outline;
       roundRect(-e.r-2, barTop, e.r*2+4, 6, 3); ctx.fill();
-      ctx.fillStyle = e.isBoss ? '#ff6b6b' : '#ff8a5c';
+      ctx.fillStyle = e.isBoss ? '#ff6b6b' : e.elite ? '#ffd166' : '#ff8a5c';
       roundRect(-e.r, barTop+1, (e.r*2) * Math.max(0, e.hp/e.maxHp), 4, 2); ctx.fill();
     }
     if(e.isBoss){
@@ -2433,6 +2471,15 @@ function drawEffects(){
 }
 
 function drawWaveBanner(){
+  if(state.eliteBanner > 0){
+    const t = state.eliteBanner, alpha = Math.min(1, t);
+    const y = H*0.2 + 74;
+    ctx.save(); ctx.globalAlpha = alpha;
+    panel(W/2 - 190, y, 380, 46, palette.uiLight, palette.outline, 12, {alpha});
+    ctx.fillStyle = '#ffd166'; ctx.font = uiFont(22, 'bold'); ctx.textAlign = 'center';
+    ctx.fillText('⚠ ELITES INBOUND ⚠', W/2, y + 32);
+    ctx.textAlign = 'start'; ctx.restore();
+  }
   if(state.waveBanner <= 0) return;
   const t = state.waveBanner;
   const alpha = Math.min(1, t);
@@ -2511,7 +2558,7 @@ function drawGameOver(){
       ctx.fillStyle = (r && r.color) || w.color;
       ctx.fillRect(px+16, wy-10, 10, 10);
       ctx.fillStyle = palette.text;
-      ctx.fillText(`${w.name} (${w.rarity})`, px+32, wy);
+      ctx.fillText(`${w.name} (${(r && r.name) || w.rarity})`, px+32, wy);
       wy += 16;
     }
     ctx.fillText('Items:', px+16, wy+6);
