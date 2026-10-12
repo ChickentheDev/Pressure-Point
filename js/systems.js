@@ -350,8 +350,14 @@ function spawnEnemy(opts){
   let x,y; if(edge===0){ x=-20; y=Math.random()*H } else if(edge===1){ x=W+20; y=Math.random()*H } else if(edge===2){ x=Math.random()*W; y=-20 } else { x=Math.random()*W; y=H+20 }
   const tier = Math.min(enemyTypes.length-1, Math.floor((state.wave-1)/3));
   // weighted pick: swarms of weak types early, tougher types as the tier unlocks
+  // late game: widen the top bracket so new enemies actually appear
   const roll = Math.random();
-  const idx = roll < 0.55 ? 0 : roll < 0.8 ? Math.min(tier, 1) : roll < 0.93 ? Math.min(tier, 2) : tier;
+  let idx;
+  if(state.wave >= 19 && tier >= 6){
+    idx = roll < 0.45 ? 0 : roll < 0.65 ? Math.min(tier, 1) : roll < 0.8 ? Math.min(tier, 2) : roll < 0.9 ? Math.min(tier, 5) : tier;
+  } else {
+    idx = roll < 0.55 ? 0 : roll < 0.8 ? Math.min(tier, 1) : roll < 0.93 ? Math.min(tier, 2) : tier;
+  }
   const t = enemyTypes[Math.max(0, idx)];
   // danger scaling
   const dangerHP = 1 + (state.danger-1) * 0.35;
@@ -363,7 +369,7 @@ function spawnEnemy(opts){
   const eliteHP = elite ? 3 : 1, eliteDmg = elite ? 1.4 : 1;
   const xp = Math.floor((t.xp + Math.floor(state.wave*0.6)*(state.danger)) * (elite ? 3 : 1));
   const money = Math.max(1, Math.floor((Math.floor(t.money * 0.7) + Math.floor(state.wave*0.2) * state.danger) * (elite ? 3 : 1)));
-  enemies.push({ id: t.id, x,y, r: Math.floor(t.r * (elite ? 1.35 : 1)), hp: Math.floor(t.hp * waveScale * dangerHP * eliteHP), maxHp: Math.floor(t.hp * waveScale * dangerHP * eliteHP), speed: Math.floor((t.speed + state.wave*2) * dangerSpeed), dmg: Math.floor(t.dmg * dangerDmg * lateDmg * eliteDmg + state.wave*1.2), color: t.color, xp, money, explodes: !!t.explodes, splits: !!t.splits, elite });
+  enemies.push({ id: t.id, x,y, r: Math.floor(t.r * (elite ? 1.35 : 1)), hp: Math.floor(t.hp * waveScale * dangerHP * eliteHP), maxHp: Math.floor(t.hp * waveScale * dangerHP * eliteHP), speed: Math.floor((t.speed + state.wave*2) * dangerSpeed), dmg: Math.floor(t.dmg * dangerDmg * lateDmg * eliteDmg + state.wave*1.2), color: t.color, xp, money, explodes: !!t.explodes, splits: !!t.splits, dashes: !!t.dashes, shields: !!t.shields, spawns: !!t.spawns, elite, dashTimer: 2 + Math.random()*2, dashTime: 0, spawnTimer: 3 });
   if(enemies.length > 120){ enemies.shift(); }
   addParticle({x, y, life:0.35, r:18, color: elite ? '#ffd166' : palette.uiAccent});
 }
@@ -953,11 +959,28 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
 
     const slowMult = e.status.slow > 0 ? 0.6 : 1;
     const ang = Math.atan2(target.y - e.y, target.x - e.x);
+    // dasher: periodic burst toward the player
+    let dashMult = 1;
+    if(e.dashes){
+      e.dashTimer -= dt;
+      if(e.dashTime > 0){ e.dashTime -= dt; dashMult = 3; }
+      else if(e.dashTimer <= 0){ e.dashTime = 0.5; e.dashTimer = 2.5 + Math.random()*1.5; addParticle({x:e.x,y:e.y,life:0.25,r:12,color:'#ff9f43'}); }
+    }
+    // nester: spawns a runner every 5s (capped so it can't flood)
+    if(e.spawns){
+      e.spawnTimer -= dt;
+      if(e.spawnTimer <= 0 && enemies.length < 110){
+        e.spawnTimer = 5;
+        const rt = enemyTypes[0];
+        enemies.push({ id:'runner', x:e.x+rand(-20,20), y:e.y+rand(-20,20), r:rt.r, hp:Math.floor(rt.hp*(1+state.wave*0.12)), maxHp:Math.floor(rt.hp*(1+state.wave*0.12)), speed:rt.speed, dmg:Math.floor(rt.dmg+state.wave*1.2), color:rt.color, xp:rt.xp, money:rt.money });
+        addParticle({x:e.x,y:e.y,life:0.3,r:16,color:'#9b59b6'});
+      }
+    }
     // visual only: facing + hit flash timer
     e.face = Math.cos(ang) < 0 ? -1 : 1;
     if(e.hitFlash > 0) e.hitFlash -= dt;
-    e.vx = Math.cos(ang) * e.speed * slowMult;   // kept for auto-aim lead
-    e.vy = Math.sin(ang) * e.speed * slowMult;
+    e.vx = Math.cos(ang) * e.speed * slowMult * dashMult;   // kept for auto-aim lead
+    e.vy = Math.sin(ang) * e.speed * slowMult * dashMult;
     e.x += e.vx * dt;
     e.y += e.vy * dt;
     integrateEnemyKnockback(e, dt);
@@ -978,7 +1001,10 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
           // Perf: squared distance instead of Math.hypot here — this runs per bullet/enemy pair.
           if(b.rehit && b.lastHit === e){ const rdx = b.x - e.x, rdy = b.y - e.y, rr2 = e.r + BULLET_HIT_R; if(rdx*rdx + rdy*rdy >= rr2*rr2) continue; }
           if(segmentHitsCircle(b.px ?? b.x, b.py ?? b.y, b.x, b.y, e.x, e.y, e.r + BULLET_HIT_R)){
-            e.hp -= b.damage;
+            // aegis shield aura: nearby enemies take 30% less damage
+            let dmgMult = 1;
+            for(const o of enemies){ if(o.shields && o !== e){ const dx=o.x-e.x, dy=o.y-e.y; if(dx*dx+dy*dy < 150*150){ dmgMult = 0.7; break; } } }
+            e.hp -= b.damage * dmgMult;
             e.lastHitBy = b.ownerId;
             applyKnockback(e, b.vx, b.vy, b.damage);
             e.hitFlash = 0.1; // visual only
