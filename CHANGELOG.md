@@ -1,3 +1,10 @@
+## v0.6.1 — File system cleanup
+- Removed legacy cruft: `Brotato-Lite.sln`, `Extra.cs`, `electron/`, `wasm/`, `build/` (old C#/Electron experiments, unreferenced).
+- Moved loose docs (`AC_TASKS.md`, `IMPROVEMENTS.md`, `INSTALL.md`, `INTEGRATION_EXAMPLE.js`) into `docs/`.
+- Reorganized `assets/`: `assets/weapons/` (16 weapon sprites), `assets/sprites/players/` (36), `assets/sprites/enemies/` (7), `assets/sprites/cosmetics/` (3), `assets/sprites/fx/` (2), `assets/sprites/ui/` (2). All code references updated.
+- Split the 152 KB `game.js` monolith into 8 classic-script modules under `js/` (`core`, `sprites`, `data`, `state`, `systems`, `menu`, `render`, `main`) — same zero-build workflow, plain `<script>` tags in load order (ES modules stay blocked on `file://`).
+- No gameplay changes.
+
 ## Unreleased — asset organization
 - Moved all 12 root image assets (11 weapon PNGs + Map.png) into `assets/`; updated all code references. No visual changes.
 

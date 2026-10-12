@@ -15,7 +15,7 @@
   const ITEM_IDS = ['plating', 'overclock', 'precision', 'vamp', 'belt', 'boots', 'luck', 'pierce'];
   const STAT_IDS = ['level', 'hp', 'armor', 'lifesteal', 'damage', 'dmgpct', 'atkspd', 'crit', 'elemental', 'speed', 'accuracy', 'mag', 'pierce', 'recoil', 'critdmg', 'luck', 'danger', 'enemies', 'coin'];
   const atlas = src => { const im = new Image(); im.src = src; return im; };
-  const itemAtlas = atlas('assets/sprites/ui_items.png'), statAtlas = atlas('assets/sprites/ui_stats.png');
+  const itemAtlas = atlas('assets/sprites/ui/ui_items.png'), statAtlas = atlas('assets/sprites/ui/ui_stats.png');
   const ok = im => im.complete && im.naturalWidth > 0;
   function itemIcon(id, x, y, size){
     const k = ITEM_IDS.indexOf(id);

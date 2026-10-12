@@ -1,37 +1,37 @@
 {
  "player": {
   "p1_down": {
-   "src": "assets/sprites/player_p1_down.png",
+   "src": "assets/sprites/players/player_p1_down.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "p1_up": {
-   "src": "assets/sprites/player_p1_up.png",
+   "src": "assets/sprites/players/player_p1_up.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "p1_side": {
-   "src": "assets/sprites/player_p1_side.png",
+   "src": "assets/sprites/players/player_p1_side.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "p2_down": {
-   "src": "assets/sprites/player_p2_down.png",
+   "src": "assets/sprites/players/player_p2_down.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "p2_up": {
-   "src": "assets/sprites/player_p2_up.png",
+   "src": "assets/sprites/players/player_p2_up.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "p2_side": {
-   "src": "assets/sprites/player_p2_side.png",
+   "src": "assets/sprites/players/player_p2_side.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
@@ -39,181 +39,181 @@
  },
  "classes": {
   "ironheart_down": {
-   "src": "assets/sprites/player_ironheart_down.png",
+   "src": "assets/sprites/players/player_ironheart_down.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "ironheart_up": {
-   "src": "assets/sprites/player_ironheart_up.png",
+   "src": "assets/sprites/players/player_ironheart_up.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "ironheart_side": {
-   "src": "assets/sprites/player_ironheart_side.png",
+   "src": "assets/sprites/players/player_ironheart_side.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "foxglove_down": {
-   "src": "assets/sprites/player_foxglove_down.png",
+   "src": "assets/sprites/players/player_foxglove_down.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "foxglove_up": {
-   "src": "assets/sprites/player_foxglove_up.png",
+   "src": "assets/sprites/players/player_foxglove_up.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "foxglove_side": {
-   "src": "assets/sprites/player_foxglove_side.png",
+   "src": "assets/sprites/players/player_foxglove_side.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "gravelord_down": {
-   "src": "assets/sprites/player_gravelord_down.png",
+   "src": "assets/sprites/players/player_gravelord_down.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "gravelord_up": {
-   "src": "assets/sprites/player_gravelord_up.png",
+   "src": "assets/sprites/players/player_gravelord_up.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "gravelord_side": {
-   "src": "assets/sprites/player_gravelord_side.png",
+   "src": "assets/sprites/players/player_gravelord_side.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "scrapjack_down": {
-   "src": "assets/sprites/player_scrapjack_down.png",
+   "src": "assets/sprites/players/player_scrapjack_down.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "scrapjack_up": {
-   "src": "assets/sprites/player_scrapjack_up.png",
+   "src": "assets/sprites/players/player_scrapjack_up.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "scrapjack_side": {
-   "src": "assets/sprites/player_scrapjack_side.png",
+   "src": "assets/sprites/players/player_scrapjack_side.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "voltlade_down": {
-   "src": "assets/sprites/player_voltlade_down.png",
+   "src": "assets/sprites/players/player_voltlade_down.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "voltlade_up": {
-   "src": "assets/sprites/player_voltlade_up.png",
+   "src": "assets/sprites/players/player_voltlade_up.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "voltlade_side": {
-   "src": "assets/sprites/player_voltlade_side.png",
+   "src": "assets/sprites/players/player_voltlade_side.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "circuitry_down": {
-   "src": "assets/sprites/player_circuitry_down.png",
+   "src": "assets/sprites/players/player_circuitry_down.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "circuitry_up": {
-   "src": "assets/sprites/player_circuitry_up.png",
+   "src": "assets/sprites/players/player_circuitry_up.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "circuitry_side": {
-   "src": "assets/sprites/player_circuitry_side.png",
+   "src": "assets/sprites/players/player_circuitry_side.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "bulwark_down": {
-   "src": "assets/sprites/player_bulwark_down.png",
+   "src": "assets/sprites/players/player_bulwark_down.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "bulwark_up": {
-   "src": "assets/sprites/player_bulwark_up.png",
+   "src": "assets/sprites/players/player_bulwark_up.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "bulwark_side": {
-   "src": "assets/sprites/player_bulwark_side.png",
+   "src": "assets/sprites/players/player_bulwark_side.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "redline_down": {
-   "src": "assets/sprites/player_redline_down.png",
+   "src": "assets/sprites/players/player_redline_down.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "redline_up": {
-   "src": "assets/sprites/player_redline_up.png",
+   "src": "assets/sprites/players/player_redline_up.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "redline_side": {
-   "src": "assets/sprites/player_redline_side.png",
+   "src": "assets/sprites/players/player_redline_side.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "skylark_down": {
-   "src": "assets/sprites/player_skylark_down.png",
+   "src": "assets/sprites/players/player_skylark_down.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "skylark_up": {
-   "src": "assets/sprites/player_skylark_up.png",
+   "src": "assets/sprites/players/player_skylark_up.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "skylark_side": {
-   "src": "assets/sprites/player_skylark_side.png",
+   "src": "assets/sprites/players/player_skylark_side.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "nightreap_down": {
-   "src": "assets/sprites/player_nightreap_down.png",
+   "src": "assets/sprites/players/player_nightreap_down.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "nightreap_up": {
-   "src": "assets/sprites/player_nightreap_up.png",
+   "src": "assets/sprites/players/player_nightreap_up.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
   },
   "nightreap_side": {
-   "src": "assets/sprites/player_nightreap_side.png",
+   "src": "assets/sprites/players/player_nightreap_side.png",
    "fw": 16,
    "fh": 21,
    "frames": 4
@@ -221,19 +221,19 @@
  },
  "cosmetics": {
   "crown": {
-   "src": "assets/sprites/cosmetic_crown.png",
+   "src": "assets/sprites/cosmetics/cosmetic_crown.png",
    "fw": 14,
    "fh": 7,
    "frames": 1
   },
   "armor": {
-   "src": "assets/sprites/cosmetic_armor.png",
+   "src": "assets/sprites/cosmetics/cosmetic_armor.png",
    "fw": 16,
    "fh": 8,
    "frames": 1
   },
   "belt": {
-   "src": "assets/sprites/cosmetic_belt.png",
+   "src": "assets/sprites/cosmetics/cosmetic_belt.png",
    "fw": 12,
    "fh": 5,
    "frames": 1
@@ -241,43 +241,43 @@
  },
  "enemies": {
   "runner": {
-   "src": "assets/sprites/enemy_runner.png",
+   "src": "assets/sprites/enemies/enemy_runner.png",
    "fw": 20,
    "fh": 20,
    "frames": 4
   },
   "bruiser": {
-   "src": "assets/sprites/enemy_bruiser.png",
+   "src": "assets/sprites/enemies/enemy_bruiser.png",
    "fw": 26,
    "fh": 26,
    "frames": 4
   },
   "spitter": {
-   "src": "assets/sprites/enemy_spitter.png",
+   "src": "assets/sprites/enemies/enemy_spitter.png",
    "fw": 22,
    "fh": 22,
    "frames": 4
   },
   "bulwark": {
-   "src": "assets/sprites/enemy_bulwark.png",
+   "src": "assets/sprites/enemies/enemy_bulwark.png",
    "fw": 32,
    "fh": 32,
    "frames": 4
   },
   "burster": {
-   "src": "assets/sprites/enemy_burster.png",
+   "src": "assets/sprites/enemies/enemy_burster.png",
    "fw": 20,
    "fh": 20,
    "frames": 4
   },
   "splitter": {
-   "src": "assets/sprites/enemy_splitter.png",
+   "src": "assets/sprites/enemies/enemy_splitter.png",
    "fw": 24,
    "fh": 24,
    "frames": 4
   },
   "boss": {
-   "src": "assets/sprites/enemy_sandworm.png",
+   "src": "assets/sprites/enemies/enemy_sandworm.png",
    "fw": 52,
    "fh": 56,
    "frames": 6
@@ -285,38 +285,38 @@
  },
  "weapons": {
   "flame": {
-   "src": "assets/sprites/weapon_flame.png",
+   "src": "assets/weapons/weapon_flame.png",
    "fw": 32,
    "fh": 14,
    "frames": 1
   },
   "arc": {
-   "src": "assets/sprites/weapon_arc.png",
+   "src": "assets/weapons/weapon_arc.png",
    "fw": 30,
    "fh": 14,
    "frames": 1
   },
   "rail": {
-   "src": "assets/sprites/weapon_rail.png",
+   "src": "assets/weapons/weapon_rail.png",
    "fw": 38,
    "fh": 12,
    "frames": 1
   },
   "mine": {
-   "src": "assets/sprites/weapon_mine.png",
+   "src": "assets/weapons/weapon_mine.png",
    "fw": 28,
    "fh": 16,
    "frames": 1
   },
   "sprayer": {
-   "src": "assets/sprites/weapon_sprayer.png",
+   "src": "assets/weapons/weapon_sprayer.png",
    "fw": 30,
    "fh": 14,
    "frames": 1
   }
  },
  "items": {
-  "src": "assets/sprites/ui_items.png",
+  "src": "assets/sprites/ui/ui_items.png",
   "fw": 16,
   "fh": 16,
   "frames": 8,
@@ -332,7 +332,7 @@
   ]
  },
  "stats": {
-  "src": "assets/sprites/ui_stats.png",
+  "src": "assets/sprites/ui/ui_stats.png",
   "fw": 12,
   "fh": 12,
   "frames": 19,
@@ -359,7 +359,7 @@
   ]
  },
  "decals": {
-  "src": "assets/sprites/ground_decals.png",
+  "src": "assets/sprites/fx/ground_decals.png",
   "fw": 16,
   "fh": 16,
   "frames": 8,
@@ -375,7 +375,7 @@
   ]
  },
  "tree": {
-  "src": "assets/sprites/tree.png",
+  "src": "assets/sprites/fx/tree.png",
   "fw": 26,
   "fh": 32,
   "frames": 1

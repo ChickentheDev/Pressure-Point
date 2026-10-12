@@ -8,34 +8,34 @@
   const PX = 2;                                    // screen px per art px
   // fw/fh = frame size in art px, ax/ay = body centre in art px (lines the body up with the hitbox)
   const SHEETS = {
-    p1_down: {src:'assets/sprites/player_p1_down.png', fw:16, fh:21, n:4, ax:8, ay:10.5},
-    p1_up:   {src:'assets/sprites/player_p1_up.png',   fw:16, fh:21, n:4, ax:8, ay:10.5},
-    p1_side: {src:'assets/sprites/player_p1_side.png', fw:16, fh:21, n:4, ax:8, ay:10.5},
-    p2_down: {src:'assets/sprites/player_p2_down.png', fw:16, fh:21, n:4, ax:8, ay:10.5},
-    p2_up:   {src:'assets/sprites/player_p2_up.png',   fw:16, fh:21, n:4, ax:8, ay:10.5},
-    p2_side: {src:'assets/sprites/player_p2_side.png', fw:16, fh:21, n:4, ax:8, ay:10.5},
+    p1_down: {src:'assets/sprites/players/player_p1_down.png', fw:16, fh:21, n:4, ax:8, ay:10.5},
+    p1_up:   {src:'assets/sprites/players/player_p1_up.png',   fw:16, fh:21, n:4, ax:8, ay:10.5},
+    p1_side: {src:'assets/sprites/players/player_p1_side.png', fw:16, fh:21, n:4, ax:8, ay:10.5},
+    p2_down: {src:'assets/sprites/players/player_p2_down.png', fw:16, fh:21, n:4, ax:8, ay:10.5},
+    p2_up:   {src:'assets/sprites/players/player_p2_up.png',   fw:16, fh:21, n:4, ax:8, ay:10.5},
+    p2_side: {src:'assets/sprites/players/player_p2_side.png', fw:16, fh:21, n:4, ax:8, ay:10.5},
     // v0.56 enemy set: raptor runner, dino-head bruiser, mosquito spitter, sandworm boss (frames 4-5 = emerging)
-    runner:   {src:'assets/sprites/enemy_runner.png',   fw:20, fh:20, n:4, ax:9,  ay:10,  fps:12},
-    bruiser:  {src:'assets/sprites/enemy_bruiser.png',  fw:26, fh:26, n:4, ax:12, ay:12,  fps:6},
-    spitter:  {src:'assets/sprites/enemy_spitter.png',  fw:22, fh:22, n:4, ax:13, ay:12,  fps:10},
-    bulwark:  {src:'assets/sprites/enemy_bulwark.png',  fw:32, fh:32, n:4, ax:16, ay:16,  fps:6},
-    burster:  {src:'assets/sprites/enemy_burster.png',  fw:20, fh:20, n:4, ax:10, ay:11,  fps:10},
-    splitter: {src:'assets/sprites/enemy_splitter.png', fw:24, fh:24, n:4, ax:12, ay:13,  fps:8},
-    boss:     {src:'assets/sprites/enemy_sandworm.png', fw:52, fh:56, n:6, ax:27, ay:30,  fps:4, loop:4, faceLeft:true},
-    tree:     {src:'assets/sprites/tree.png',           fw:26, fh:32, n:1, ax:13, ay:20},
-    decals:   {src:'assets/sprites/ground_decals.png',  fw:16, fh:16, n:8, ax:8,  ay:8},
+    runner:   {src:'assets/sprites/enemies/enemy_runner.png',   fw:20, fh:20, n:4, ax:9,  ay:10,  fps:12},
+    bruiser:  {src:'assets/sprites/enemies/enemy_bruiser.png',  fw:26, fh:26, n:4, ax:12, ay:12,  fps:6},
+    spitter:  {src:'assets/sprites/enemies/enemy_spitter.png',  fw:22, fh:22, n:4, ax:13, ay:12,  fps:10},
+    bulwark:  {src:'assets/sprites/enemies/enemy_bulwark.png',  fw:32, fh:32, n:4, ax:16, ay:16,  fps:6},
+    burster:  {src:'assets/sprites/enemies/enemy_burster.png',  fw:20, fh:20, n:4, ax:10, ay:11,  fps:10},
+    splitter: {src:'assets/sprites/enemies/enemy_splitter.png', fw:24, fh:24, n:4, ax:12, ay:13,  fps:8},
+    boss:     {src:'assets/sprites/enemies/enemy_sandworm.png', fw:52, fh:56, n:6, ax:27, ay:30,  fps:4, loop:4, faceLeft:true},
+    tree:     {src:'assets/sprites/fx/tree.png',           fw:26, fh:32, n:1, ax:13, ay:20},
+    decals:   {src:'assets/sprites/fx/ground_decals.png',  fw:16, fh:16, n:8, ax:8,  ay:8},
   };
   // v0.6.0 class sprites: one sheet per class per view. P2 uses the same sprite as P1
   // (the co-op ring distinguishes players); p1_/p2_ sheets stay as fallback.
   for(const cid of ['ironheart','foxglove','gravelord','scrapjack','voltlade','circuitry','bulwark','redline','skylark','nightreap']){
     for(const v of ['down','up','side']){
-      SHEETS['cls_'+cid+'_'+v] = {src:'assets/sprites/player_'+cid+'_'+v+'.png', fw:16, fh:21, n:4, ax:8, ay:10.5};
+      SHEETS['cls_'+cid+'_'+v] = {src:'assets/sprites/players/player_'+cid+'_'+v+'.png', fw:16, fh:21, n:4, ax:8, ay:10.5};
     }
   }
   // paper-doll cosmetics: single-frame overlays drawn on the owning player
-  SHEETS.cos_crown = {src:'assets/sprites/cosmetic_crown.png', fw:14, fh:7, n:1, ax:7, ay:3.5};
-  SHEETS.cos_armor = {src:'assets/sprites/cosmetic_armor.png', fw:16, fh:8, n:1, ax:8, ay:4};
-  SHEETS.cos_belt  = {src:'assets/sprites/cosmetic_belt.png',  fw:12, fh:5, n:1, ax:6, ay:2.5};
+  SHEETS.cos_crown = {src:'assets/sprites/cosmetics/cosmetic_crown.png', fw:14, fh:7, n:1, ax:7, ay:3.5};
+  SHEETS.cos_armor = {src:'assets/sprites/cosmetics/cosmetic_armor.png', fw:16, fh:8, n:1, ax:8, ay:4};
+  SHEETS.cos_belt  = {src:'assets/sprites/cosmetics/cosmetic_belt.png',  fw:12, fh:5, n:1, ax:6, ay:2.5};
   const imgs = {};
   for(const [k, s] of Object.entries(SHEETS)){ const im = new Image(); im.src = s.src; imgs[k] = im; }
   const ready = k => { const im = imgs[k]; return im && im.complete && im.naturalWidth > 0; };
