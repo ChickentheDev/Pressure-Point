@@ -1,3 +1,8 @@
+## v0.6.5 — Elite mini-bosses
+- **Elites are now mini-bosses**: each of the 9 enemy types has a unique elite name (Swiftclaw, Plaguewing, Skullcrusher, Detonator, Fracture, Ironwall, Ravager, Warden, Broodmother) with its own enhanced trait — massive explosions, 4-way splits, damage reflect, wider shield auras, rapid spawning, relentless dashes, venomous slow, shockwave slams.
+- **Elite HP bar**: the toughest living elite's name + HP bar shows under the wave counter.
+- **Elite drops**: killing an elite showers bonus money and shows a "slain!" banner.
+
 ## v0.6.4 — New enemies + Meta progression
 - **3 new enemies**: Dasher (periodic burst dashes toward you), Aegis (projects a shield aura — nearby enemies take 30% less damage), Nester (spawns runners every 5s). Unlock at waves 19/22/25; late-game spawn weights widened so they actually appear.
 - **Meta progression**: earn Essence from runs (wave reached + kills), spend it on 6 permanent upgrades — Vitality (+HP), Power (+damage), Swiftness (+speed), Fortune (+luck), Wealth (+starting currency), Haste (+fire rate). Upgrades screen on the main menu; essence and levels persist in localStorage. Run summaries show essence earned.
