@@ -379,11 +379,13 @@ function spawnBoss(){
   let x,y; if(edge===0){ x=-40; y=Math.random()*H } else if(edge===1){ x=W+40; y=Math.random()*H } else if(edge===2){ x=Math.random()*W; y=-40 } else { x=Math.random()*W; y=H+40 }
   const dangerHP = 1 + (state.danger-1) * 0.5;
   const dangerDmg = 1 + (state.danger-1) * 0.35;
+  const bt = bossTypes[Math.min(state.danger, 5) - 1] || bossTypes[0];
   enemies.push({
-    id: bossType.id, x,y, r: bossType.r, hp: Math.floor(bossType.hp * dangerHP), maxHp: Math.floor(bossType.hp * dangerHP),
-    speed: bossType.speed, dmg: Math.floor(bossType.dmg * dangerDmg * (1 + (state.wave-1)*0.12)),
-    color: bossType.color, xp: bossType.xp * state.danger, money: bossType.money * state.danger,
-    isBoss: true,
+    id: bt.id, x,y, r: bt.r, hp: Math.floor(bt.hp * dangerHP), maxHp: Math.floor(bt.hp * dangerHP),
+    speed: bt.speed, dmg: Math.floor(bt.dmg * dangerDmg * (1 + (state.wave-1)*0.12)),
+    color: bt.color, xp: bt.xp * state.danger, money: bt.money * state.danger,
+    isBoss: true, bossAbility: bt.ability, bossName: bt.name,
+    abilityTimer: 4, dashTimer: 2, dashTime: 0, spawnTimer: 5,
   });
   addParticle({x, y, life:0.6, r:28, color: '#ff6b6b'});
 }
@@ -864,7 +866,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     if(isBossWave(state.wave)){
       if(!state.bossSpawned){
         spawnBoss();
-        if(dangerMods(state.danger).doubleBoss){ spawnBoss(); state.waveSpawned++; }  // D5: two Overlords at once
+        if(dangerMods(state.danger).doubleBoss){ spawnBoss(); state.waveSpawned++; }  // D5: two Voidreavers at once
         state.bossSpawned = true;
         state.waveSpawned++;   // elites (if any) already counted in startWave
       }
@@ -985,6 +987,54 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
         addParticle({x:e.x,y:e.y,life:0.3,r:16,color:'#9b59b6'});
       }
     }
+    // boss abilities
+    if(e.isBoss && e.bossAbility){
+      const ab = e.bossAbility;
+      // Hive Tyrant / Voidreaver: spawn minions
+      if((ab === 'spawn' || ab === 'annihilator')){
+        e.spawnTimer -= dt;
+        if(e.spawnTimer <= 0 && enemies.length < 110){
+          e.spawnTimer = ab === 'annihilator' ? 4 : 6;
+          const pool = [enemyTypes[0], enemyTypes[1], enemyTypes[2]];
+          const rt = pool[Math.floor(Math.random()*pool.length)];
+          for(let k=0;k<2;k++){
+            enemies.push({ id:rt.id, x:e.x+rand(-30,30), y:e.y+rand(-30,30), r:rt.r,
+              hp:Math.floor(rt.hp*(1+state.wave*0.12)), maxHp:Math.floor(rt.hp*(1+state.wave*0.12)),
+              speed:rt.speed, dmg:Math.floor(rt.dmg+state.wave*1.2), color:rt.color, xp:rt.xp, money:rt.money });
+          }
+          addParticle({x:e.x,y:e.y,life:0.4,r:24,color:'#9b59b6'});
+        }
+      }
+      // Stormcaller / Voidreaver: shockwave slam
+      if((ab === 'shockwave' || ab === 'annihilator')){
+        e.abilityTimer -= dt;
+        if(e.abilityTimer <= 0){
+          e.abilityTimer = ab === 'annihilator' ? 5 : 7;
+          const R = 120;
+          addParticle({x:e.x,y:e.y,life:0.5,r:R,color:'#4cc3ff'});
+          addShake(10);
+          audio.beep(80,0.3,'sawtooth',0.08);
+          for(const p of players){
+            if(p.dead) continue;
+            const d = Math.hypot(p.x-e.x, p.y-e.y);
+            if(d < R + p.r){
+              p.hp -= Math.max(1, e.dmg * 1.5 - p.armor);
+              runStats.tookDamage = true;
+              const ka = Math.atan2(p.y-e.y, p.x-e.x);
+              p.vx += Math.cos(ka)*500; p.vy += Math.sin(ka)*500;
+              p.hitFlash = 0.12;
+              if(p.hp <= 0){ p.hp = 0; p.dead = true; if(players.every(pl=>pl.dead)){ state.phase='gameover'; showRunOver(); } }
+            }
+          }
+        }
+      }
+      // Stormcaller / Voidreaver: dashes
+      if((ab === 'shockwave' || ab === 'annihilator')){
+        e.dashTimer -= dt;
+        if(e.dashTime > 0){ e.dashTime -= dt; dashMult = 2.5; }
+        else if(e.dashTimer <= 0){ e.dashTime = 0.6; e.dashTimer = 3 + Math.random()*2; }
+      }
+    }
     // visual only: facing + hit flash timer
     e.face = Math.cos(ang) < 0 ? -1 : 1;
     if(e.hitFlash > 0) e.hitFlash -= dt;
@@ -1014,11 +1064,14 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
             let dmgMult = 1;
             for(const o of enemies){ if(o.shields && o !== e){ const auraR = o.elite ? 220 : 150; const dx=o.x-e.x, dy=o.y-e.y; if(dx*dx+dy*dy < auraR*auraR){ dmgMult = 0.7; break; } } }
             const finalDmg = b.damage * dmgMult;
-            e.hp -= finalDmg;
-            // elite bulwark (Ironwall): reflects 20% damage back to the shooter
-            if(e.elite && e.id === 'bulwark' && b.ownerId){
+            // Ironclad boss: 40% damage reduction
+            const bossDR = (e.isBoss && e.bossAbility === 'fortress') ? 0.6 : 1;
+            e.hp -= finalDmg * bossDR;
+            // elite bulwark (Ironwall) / Ironclad boss: reflects damage back to the shooter
+            const reflect = (e.elite && e.id === 'bulwark') ? 0.2 : (e.isBoss && e.bossAbility === 'fortress') ? 0.3 : 0;
+            if(reflect > 0 && b.ownerId){
               const shooter = players.find(p=>p.id === b.ownerId);
-              if(shooter && !shooter.dead){ shooter.hp -= Math.max(1, finalDmg * 0.2); runStats.tookDamage = true; shooter.hitFlash = 0.12; }
+              if(shooter && !shooter.dead){ shooter.hp -= Math.max(1, finalDmg * bossDR * reflect); runStats.tookDamage = true; shooter.hitFlash = 0.12; }
             }
             e.lastHitBy = b.ownerId;
             applyKnockback(e, b.vx, b.vy, b.damage);
