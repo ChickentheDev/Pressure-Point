@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased — asset organization
+- Moved all 12 root image assets (11 weapon PNGs + Map.png) into `assets/`; updated all code references. No visual changes.
+
 ## Unreleased — v0.6.0 Class expansion
 - **Custom class sprites**: all 10 classes now have their own distinct 4-direction walk-animated sprite (same pixel-art pipeline/style as the v0.56 set): steel-blue Ironheart, green Foxglove hunter, bulky brown Gravelord, orange Scrapjack, yellow Voltblade with arc shoulder spikes, cyan Circuitry with glowing traces, heavy gray Bulwark (bulkier frame), aggressive red Redline, white Skylark (slimmer), purple Nightreap with dark hood. Class select shows the sprite as the class portrait. P2 uses the same sprite as P1 (co-op ring still distinguishes players); old p1/p2 sheets kept as fallback.
 - **Cosmetic equipment (paper-doll)**: certain shop items now visibly render on your character — Dense Plating adds shoulder/chest armor, Ammo Belt adds ammo pouches, and the NEW epic item **War Crown** (+2 Luck, +6% Damage) puts a gold crown on your head. Works for P1 and P2 independently.
