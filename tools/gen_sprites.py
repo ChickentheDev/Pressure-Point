@@ -146,6 +146,101 @@ def gen_player():
             meta[f'{pid}_{view}'] = sheet([player_frame(view, f, pal) for f in range(4)], ramps, f'player_{pid}_{view}.png')
     return meta
 
+# ------------------------------------------------------- class sprites ----
+# v0.6.0: one distinct sprite per class. Same 16x21 4-frame walk rig as the
+# base player; identity comes from the palette plus small silhouette/detail
+# tweaks. P2 uses the same sprite as P1 (co-op ring distinguishes players).
+CLASS_PALETTES = {
+    'ironheart':  {'suit': ('#2350b8', '#3f8cff', '#8fd0ff'), 'eye': '#9ffcff', 'acc': '#ffb44c'},
+    'foxglove':   {'suit': ('#2a7a4a', '#3fb86a', '#8fe6b0'), 'eye': '#e8ffe8', 'acc': '#b87aff'},
+    'gravelord':  {'suit': ('#4a3a2a', '#7a5a3a', '#b89468'), 'eye': '#ffd88a', 'acc': '#ff6a3a'},
+    'scrapjack':  {'suit': ('#a04a18', '#d87828', '#ffb878'), 'eye': '#fff0d8', 'acc': '#ff5d5d'},
+    'voltlade':   {'suit': ('#a88418', '#e8c838', '#fff088'), 'eye': '#ffffff', 'acc': '#4ce8ff'},
+    'circuitry':  {'suit': ('#186a9a', '#28b8e8', '#a8ecff'), 'eye': '#e8fcff', 'acc': '#7affc8'},
+    'bulwark':    {'suit': ('#4a4a5a', '#7a7a8c', '#b8b8c8'), 'eye': '#ffe88a', 'acc': '#ff8a5a'},
+    'redline':    {'suit': ('#8a1a1a', '#d82828', '#ff8888'), 'eye': '#fff0e8', 'acc': '#303030'},
+    'skylark':    {'suit': ('#5a9ac8', '#8ac8f0', '#e8f8ff'), 'eye': '#ffffff', 'acc': '#ffb44c'},
+    'nightreap':  {'suit': ('#2a1a4a', '#4a2a7a', '#7a5aa8'), 'eye': '#ff5a8a', 'acc': '#180a28'},
+}
+# silhouette/detail tweaks per class (applied on top of the base rig)
+CLASS_BODY = {
+    'bulwark':   {'wide': 1},      # bulkier torso + helmet
+    'skylark':   {'slim': 1},      # narrower frame
+    'nightreap': {'hood': 1},      # dark hood over the helmet
+    'voltlade':  {'spikes': 1},    # arc spikes on the shoulders
+    'circuitry': {'traces': 1},   # glowing circuit traces on torso
+}
+
+def class_player_frame(view, f, pal, body):
+    g = player_frame(view, f, pal)
+    up = 1 if f in (1, 3) else 0; oy = -up
+    if body.get('wide'):
+        # widen torso and helmet by 1px each side (detail-safe: redraw bands)
+        for y in range(10+oy, 16+oy):
+            for x in (2, 13):
+                if 0 <= x < g.w: g.mat[y][x] = 'suit'
+    if body.get('slim'):
+        for y in range(10+oy, 16+oy):
+            for x in (3, 12):
+                if 0 <= x < g.w and g.mat[y][x] == 'suit': g.mat[y][x] = None
+    if body.get('hood') and view in ('down', 'up'):
+        g.ell(8, 5+oy, 7.6, 6.2, 'acc')   # dark hood over helmet
+        if view == 'down':
+            g.rect(3, 5+oy, 12, 7+oy, 'visor')
+            g.drect(4, 6+oy, 5, 6+oy, pal['eye']); g.drect(10, 6+oy, 11, 6+oy, pal['eye'])
+    if body.get('spikes'):
+        for sx, sy in ((2, 9+oy), (13, 9+oy)):
+            g.d(sx, sy, pal['acc']); g.d(sx, sy-1, '#ffffff')
+    if body.get('traces'):
+        g.dline(5, 11+oy, 10, 13+oy, pal['acc']); g.d(11, 12+oy, pal['acc'])
+    return g
+
+def _ramp_from_hex(h):
+    r, g, b, _ = hx(h)
+    dark = '#%02x%02x%02x' % (max(0, int(r*0.55)), max(0, int(g*0.55)), max(0, int(b*0.55)))
+    lite = '#%02x%02x%02x' % (min(255, int(r+(255-r)*0.45)), min(255, int(g+(255-g)*0.45)), min(255, int(b+(255-b)*0.45)))
+    return (dark, h, lite)
+
+def gen_class_players():
+    meta = {}
+    for cid, pal in CLASS_PALETTES.items():
+        body = CLASS_BODY.get(cid, {})
+        ramps = dict(COMMON); ramps['suit'] = pal['suit']; ramps['acc'] = _ramp_from_hex(pal['acc'])
+        for view in ('down', 'up', 'side'):
+            meta[f'{cid}_{view}'] = sheet([class_player_frame(view, f, pal, body) for f in range(4)],
+                                          ramps, f'player_{cid}_{view}.png')
+    return meta
+
+# ------------------------------------------------------------- cosmetics --
+# Paper-doll equipment: small overlays drawn on the player when the matching
+# shop item is owned. All horizontally symmetric (no flip issues). Anchors are
+# in art px, relative to the 16x21 player grid origin (top-left).
+def cosmetic_crown():
+    g = Grid(14, 7)
+    g.rect(2, 3, 11, 5, 'gold')
+    for x in (2, 5, 8, 11): g.rect(x, 1, x+1, 3, 'gold')
+    g.d(3, 4, '#ff5d5d'); g.d(7, 4, '#4c8dff'); g.d(10, 4, '#4ce88a')
+    g.drect(2, 5, 11, 5, '#8a6a1a')
+    return sheet([g], {'gold': ('#8a6a1a', '#e8b83a', '#ffe88a')}, 'cosmetic_crown.png')
+
+def cosmetic_armor():
+    g = Grid(16, 8)
+    g.ell(3, 4, 2.6, 3.2, 'plate'); g.ell(13, 4, 2.6, 3.2, 'plate')   # pauldrons
+    g.rect(5, 5, 10, 7, 'plate')                                       # chest plate
+    g.d(3, 3, '#ffffff'); g.d(13, 3, '#ffffff')
+    return sheet([g], {'plate': ('#3a3a48', '#6a6a7c', '#a8a8bc')}, 'cosmetic_armor.png')
+
+def cosmetic_belt():
+    g = Grid(12, 5)
+    g.rect(0, 1, 11, 2, 'leather')
+    for x in (1, 4, 7, 10): g.rect(x, 0, x+1, 3, 'pouch')
+    g.d(5, 1, '#ffb44c')
+    return sheet([g], {'leather': ('#3a2a1a', '#5a4028', '#7a5a38'),
+                       'pouch': ('#2a3a4a', '#4a5a6c', '#6a7a8c')}, 'cosmetic_belt.png')
+
+def gen_cosmetics():
+    return {'crown': cosmetic_crown(), 'armor': cosmetic_armor(), 'belt': cosmetic_belt()}
+
 # ------------------------------------------------------------------ enemies ---
 # v0.56 enemy set (original art; silhouettes inspired by Sam's reference sheet, nothing traced):
 # raptor runner, chomping dino-head bruiser, mosquito spitter, spiked sandworm boss. All face right.
@@ -447,7 +542,8 @@ def tree():
 
 if __name__ == '__main__':
     os.makedirs(OUT, exist_ok=True)
-    meta = {'player': gen_player(), 'enemies': gen_enemies(),
+    meta = {'player': gen_player(), 'classes': gen_class_players(), 'cosmetics': gen_cosmetics(),
+            'enemies': gen_enemies(),
             'weapons': {'flame': wpn_flame(), 'arc': wpn_arc(), 'rail': wpn_rail(), 'mine': wpn_mine(), 'sprayer': wpn_sprayer()},
             'items': icon_items(), 'stats': icon_stats(), 'decals': ground_decals(), 'tree': tree()}
     with open(os.path.join(OUT, 'sprites.json'), 'w') as fh: json.dump(meta, fh, indent=1)

@@ -25,6 +25,17 @@
     tree:     {src:'assets/sprites/tree.png',           fw:26, fh:32, n:1, ax:13, ay:20},
     decals:   {src:'assets/sprites/ground_decals.png',  fw:16, fh:16, n:8, ax:8,  ay:8},
   };
+  // v0.6.0 class sprites: one sheet per class per view. P2 uses the same sprite as P1
+  // (the co-op ring distinguishes players); p1_/p2_ sheets stay as fallback.
+  for(const cid of ['ironheart','foxglove','gravelord','scrapjack','voltlade','circuitry','bulwark','redline','skylark','nightreap']){
+    for(const v of ['down','up','side']){
+      SHEETS['cls_'+cid+'_'+v] = {src:'assets/sprites/player_'+cid+'_'+v+'.png', fw:16, fh:21, n:4, ax:8, ay:10.5};
+    }
+  }
+  // paper-doll cosmetics: single-frame overlays drawn on the owning player
+  SHEETS.cos_crown = {src:'assets/sprites/cosmetic_crown.png', fw:14, fh:7, n:1, ax:7, ay:3.5};
+  SHEETS.cos_armor = {src:'assets/sprites/cosmetic_armor.png', fw:16, fh:8, n:1, ax:8, ay:4};
+  SHEETS.cos_belt  = {src:'assets/sprites/cosmetic_belt.png',  fw:12, fh:5, n:1, ax:6, ay:2.5};
   const imgs = {};
   for(const [k, s] of Object.entries(SHEETS)){ const im = new Image(); im.src = s.src; imgs[k] = im; }
   const ready = k => { const im = imgs[k]; return im && im.complete && im.naturalWidth > 0; };
@@ -209,12 +220,21 @@
   const VIEW = { playerDown:'down', playerUp:'up', playerSide:'side' };
   // returns true when it drew the player (otherwise game.js falls back to the original PNGs)
   function drawPlayer(p, i, key, flipX, flash, moving){
-    const k = (i === 0 ? 'p1_' : 'p2_') + VIEW[key];
+    // v0.6.0: per-class sprite; P2 uses the same sprite as P1 (co-op ring tells them apart)
+    const cls = p.classId || 'ironheart';
+    let k = 'cls_' + cls + '_' + VIEW[key];
+    if(!ready(k)) k = (i === 0 ? 'p1_' : 'p2_') + VIEW[key];   // legacy fallback
     if(!ready(k)) return false;
     const f = moving ? Math.floor(state.animTime * 10 + i * 2) : 1;
     views.set(p, {k, f, flip: flipX});
     drawFrame(k, f, {flipX, flash});
     return true;
+  }
+  // paper-doll cosmetic overlay, drawn at (dx, dy) px relative to player centre
+  function drawCosmetic(cos, dx, dy){
+    const k = 'cos_' + cos, s = SHEETS[k];
+    if(!s || !ready(k)) return;
+    ctx.drawImage(imgs[k], dx - s.ax * PX, dy - s.ay * PX, s.fw * PX, s.fh * PX);
   }
   // returns the sprite's top (px above the centre) for the HP bar, or 0 when not drawn
   function drawEnemy(e, flash){
@@ -459,5 +479,5 @@
   }
 
   function stats(){ return {particles: parts.length, rings: rings.length, flashes: flashes.length, ghosts: ghosts.length, max: maxParts(), density: density()}; }
-  window.FX = { glow, drawGround, drawTree, drawMoney, drawMaterialIcon, frame, drawPlayer, drawEnemy, drawUnder, drawOver, ready, stats, SHEETS };
+  window.FX = { glow, drawGround, drawTree, drawMoney, drawMaterialIcon, frame, drawPlayer, drawCosmetic, drawEnemy, drawUnder, drawOver, ready, stats, SHEETS };
 })();
