@@ -37,6 +37,208 @@
    "frames": 4
   }
  },
+ "classes": {
+  "ironheart_down": {
+   "src": "assets/sprites/player_ironheart_down.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "ironheart_up": {
+   "src": "assets/sprites/player_ironheart_up.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "ironheart_side": {
+   "src": "assets/sprites/player_ironheart_side.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "foxglove_down": {
+   "src": "assets/sprites/player_foxglove_down.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "foxglove_up": {
+   "src": "assets/sprites/player_foxglove_up.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "foxglove_side": {
+   "src": "assets/sprites/player_foxglove_side.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "gravelord_down": {
+   "src": "assets/sprites/player_gravelord_down.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "gravelord_up": {
+   "src": "assets/sprites/player_gravelord_up.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "gravelord_side": {
+   "src": "assets/sprites/player_gravelord_side.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "scrapjack_down": {
+   "src": "assets/sprites/player_scrapjack_down.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "scrapjack_up": {
+   "src": "assets/sprites/player_scrapjack_up.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "scrapjack_side": {
+   "src": "assets/sprites/player_scrapjack_side.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "voltlade_down": {
+   "src": "assets/sprites/player_voltlade_down.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "voltlade_up": {
+   "src": "assets/sprites/player_voltlade_up.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "voltlade_side": {
+   "src": "assets/sprites/player_voltlade_side.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "circuitry_down": {
+   "src": "assets/sprites/player_circuitry_down.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "circuitry_up": {
+   "src": "assets/sprites/player_circuitry_up.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "circuitry_side": {
+   "src": "assets/sprites/player_circuitry_side.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "bulwark_down": {
+   "src": "assets/sprites/player_bulwark_down.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "bulwark_up": {
+   "src": "assets/sprites/player_bulwark_up.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "bulwark_side": {
+   "src": "assets/sprites/player_bulwark_side.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "redline_down": {
+   "src": "assets/sprites/player_redline_down.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "redline_up": {
+   "src": "assets/sprites/player_redline_up.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "redline_side": {
+   "src": "assets/sprites/player_redline_side.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "skylark_down": {
+   "src": "assets/sprites/player_skylark_down.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "skylark_up": {
+   "src": "assets/sprites/player_skylark_up.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "skylark_side": {
+   "src": "assets/sprites/player_skylark_side.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "nightreap_down": {
+   "src": "assets/sprites/player_nightreap_down.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "nightreap_up": {
+   "src": "assets/sprites/player_nightreap_up.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  },
+  "nightreap_side": {
+   "src": "assets/sprites/player_nightreap_side.png",
+   "fw": 16,
+   "fh": 21,
+   "frames": 4
+  }
+ },
+ "cosmetics": {
+  "crown": {
+   "src": "assets/sprites/cosmetic_crown.png",
+   "fw": 14,
+   "fh": 7,
+   "frames": 1
+  },
+  "armor": {
+   "src": "assets/sprites/cosmetic_armor.png",
+   "fw": 16,
+   "fh": 8,
+   "frames": 1
+  },
+  "belt": {
+   "src": "assets/sprites/cosmetic_belt.png",
+   "fw": 12,
+   "fh": 5,
+   "frames": 1
+  }
+ },
  "enemies": {
   "runner": {
    "src": "assets/sprites/enemy_runner.png",

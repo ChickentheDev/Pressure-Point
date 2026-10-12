@@ -551,14 +551,116 @@ const weapons = [
 const weaponPrices = { pistol:60, harpoon:135, rifle:95, shotgun:115, heavy:230, blade:100, smg:70, dmr:125, flame:155, rpg:170, arc:150, minigun:240, rail:260, mine:115, sprayer:120 };
 
 const items = [
-  {id:'plating', name:'Dense Plating', rarity:'rare', price:55, desc:'+20 Armor, -12% Move Speed', effects:{armor:20, speedMult:-0.12}},
-  {id:'overclock', name:'Overclock Core', rarity:'legendary', price:115, desc:'+15% Fire Rate, -10 Max HP', effects:{reloadMult:-0.15, maxHpAdd:-10}},
-  {id:'precision', name:'Stability Gyro', rarity:'rare', price:60, desc:'+20% Accuracy, -10% Reload Speed', effects:{accuracyMult:0.2, reloadMult:0.1}},
-  {id:'vamp', name:'Life Tap', rarity:'epic', price:125, desc:'+8% Life Steal, -10 Max HP', effects:{lifestealAdd:0.08, maxHpAdd:-10}},
-  {id:'belt', name:'Ammo Belt', rarity:'common', price:30, desc:'+6 Magazine Size, -5% Accuracy', effects:{magBonus:6, accuracyMult:-0.05}},
-  {id:'boots', name:'Kinetic Boots', rarity:'rare', price:55, desc:'+20 Move Speed, -5% Damage', effects:{speedMult:0.1, damageMult:-0.05}},
-  {id:'luck', name:'Lucky Charm', rarity:'common', price:35, desc:'+1 Luck (rarer shop rolls)', effects:{luckAdd:1}},
-  {id:'pierce', name:'Piercing Bullet', rarity:'rare', price:70, desc:'+1 Pierce for all shots', effects:{pierceAdd:1}},
+  {id:'plating', name:'Dense Plating', rarity:'rare', category:'tech', price:55, desc:'+20 Armor, -12% Move Speed', effects:{armor:20, speedMult:-0.12}, cosmetic:'armor'},
+  {id:'overclock', name:'Overclock Core', rarity:'legendary', category:'tech', price:115, desc:'+15% Fire Rate, -10 Max HP', effects:{reloadMult:-0.15, maxHpAdd:-10}},
+  {id:'precision', name:'Stability Gyro', rarity:'rare', category:'tech', price:60, desc:'+20% Accuracy, -10% Reload Speed', effects:{accuracyMult:0.2, reloadMult:0.1}},
+  {id:'vamp', name:'Life Tap', rarity:'epic', category:'primal', price:125, desc:'+8% Life Steal, -10 Max HP', effects:{lifestealAdd:0.08, maxHpAdd:-10}},
+  {id:'belt', name:'Ammo Belt', rarity:'common', category:'tech', price:30, desc:'+6 Magazine Size, -5% Accuracy', effects:{magBonus:6, accuracyMult:-0.05}, cosmetic:'belt'},
+  {id:'boots', name:'Kinetic Boots', rarity:'rare', category:'tech', price:55, desc:'+20 Move Speed, -5% Damage', effects:{speedMult:0.1, damageMult:-0.05}},
+  {id:'luck', name:'Lucky Charm', rarity:'common', category:'arcane', price:35, desc:'+1 Luck (rarer shop rolls)', effects:{luckAdd:1}},
+  {id:'pierce', name:'Piercing Bullet', rarity:'rare', category:'tech', price:70, desc:'+1 Pierce for all shots', effects:{pierceAdd:1}},
+  {id:"gyro_stab", name:"Gyroscopic Stabilizer", rarity:"common", category:"tech", price:28, desc:"+10% Accuracy, -5% Move Speed", effects:{accuracyMult:0.1, speedMult:-0.05}},
+  {id:"spring_loader", name:"Spring Loader", rarity:"common", category:"tech", price:30, desc:"+8% Fire Rate", effects:{reloadMult:-0.08}},
+  {id:"titanium_weave", name:"Titanium Weave", rarity:"common", category:"tech", price:32, desc:"+8 Armor", effects:{armor:8}},
+  {id:"coolant_flush", name:"Coolant Flush", rarity:"common", category:"tech", price:26, desc:"+6% Fire Rate, -6 Max HP", effects:{reloadMult:-0.06, maxHpAdd:-6}},
+  {id:"rangefinder", name:"Laser Rangefinder", rarity:"common", category:"tech", price:30, desc:"-4% Damage, +12% Accuracy", effects:{accuracyMult:0.12, damageMult:-0.04}},
+  {id:"shock_absorber", name:"Shock Absorber", rarity:"common", category:"tech", price:28, desc:"-5% Reload Speed, +8 Armor", effects:{armor:8, reloadMult:0.05}},
+  {id:"extended_mag", name:"Extended Magazine", rarity:"common", category:"tech", price:34, desc:"+8 Magazine Size", effects:{magBonus:8}},
+  {id:"hair_trigger", name:"Hair Trigger", rarity:"common", category:"tech", price:30, desc:"+10% Fire Rate, -8% Accuracy", effects:{reloadMult:-0.1, accuracyMult:-0.08}},
+  {id:"servo_greaves", name:"Servo Greaves", rarity:"common", category:"tech", price:32, desc:"+8% Move Speed", effects:{speedMult:0.08}},
+  {id:"patch_kit", name:"Field Patch Kit", rarity:"common", category:"tech", price:28, desc:"+10 Max HP", effects:{maxHpAdd:10}},
+  {id:"recoil_comp", name:"Recoil Compensator", rarity:"common", category:"tech", price:24, desc:"+10% Accuracy", effects:{accuracyMult:0.1}},
+  {id:"power_cell", name:"Spare Power Cell", rarity:"common", category:"tech", price:32, desc:"+6% Damage", effects:{damageMult:0.06}},
+  {id:"med_injector", name:"Med Injector", rarity:"common", category:"tech", price:34, desc:"+4 Armor, +8 Max HP", effects:{maxHpAdd:8, armor:4}},
+  {id:"light_frame", name:"Lightweight Frame", rarity:"common", category:"tech", price:30, desc:"+10% Move Speed, -6 Armor", effects:{speedMult:0.1, armor:-6}},
+  {id:"auto_target", name:"Auto-Targeting Module", rarity:"rare", category:"tech", price:55, desc:"-5% Damage, +15% Accuracy", effects:{accuracyMult:0.15, damageMult:-0.05}},
+  {id:"overdrive_gear", name:"Overdrive Gears", rarity:"rare", category:"tech", price:60, desc:"+12% Fire Rate, -8 Max HP", effects:{reloadMult:-0.12, maxHpAdd:-8}},
+  {id:"composite_plate", name:"Composite Plating", rarity:"rare", category:"tech", price:58, desc:"-8% Move Speed, +14 Armor", effects:{armor:14, speedMult:-0.08}},
+  {id:"drum_mag", name:"Drum Magazine", rarity:"rare", category:"tech", price:62, desc:"-8% Reload Speed, +10 Magazine Size", effects:{magBonus:10, reloadMult:0.08}},
+  {id:"lucky_circuit", name:"Lucky Circuit", rarity:"rare", category:"tech", price:70, desc:"+2 Luck", effects:{luckAdd:2}},
+  {id:"ap_rounds", name:"AP Rounds", rarity:"rare", category:"tech", price:68, desc:"-5% Reload Speed, +1 Pierce", effects:{pierceAdd:1, reloadMult:0.05}},
+  {id:"adrenaline_pump", name:"Adrenaline Pump", rarity:"rare", category:"tech", price:60, desc:"+12% Move Speed, -8 Max HP", effects:{speedMult:0.12, maxHpAdd:-8}},
+  {id:"nano_repair", name:"Nano Repair Bots", rarity:"rare", category:"tech", price:75, desc:"+3% Life Steal", effects:{lifestealAdd:0.03}},
+  {id:"heavy_barrel", name:"Heavy Barrel", rarity:"rare", category:"tech", price:65, desc:"+8% Damage, -8% Reload Speed", effects:{damageMult:0.08, reloadMult:0.08}},
+  {id:"reflex_sight", name:"Reflex Sight", rarity:"rare", category:"tech", price:72, desc:"+6% Fire Rate, +12% Accuracy", effects:{accuracyMult:0.12, reloadMult:-0.06}},
+  {id:"capacitor_bank", name:"Capacitor Bank", rarity:"epic", category:"tech", price:120, desc:"+10% Damage, +15% Fire Rate, -12 Max HP", effects:{reloadMult:-0.15, damageMult:0.1, maxHpAdd:-12}},
+  {id:"aegis_protocol", name:"Aegis Protocol", rarity:"epic", category:"tech", price:130, desc:"-10% Move Speed, +20 Armor, +10 Max HP", effects:{armor:20, maxHpAdd:10, speedMult:-0.1}},
+  {id:"smart_ammo", name:"Smart Ammunition", rarity:"epic", category:"tech", price:140, desc:"+10% Accuracy, +2 Pierce", effects:{pierceAdd:2, accuracyMult:0.1}},
+  {id:"exoskeleton", name:"Exoskeleton Rig", rarity:"epic", category:"tech", price:145, desc:"+15% Move Speed, +12 Armor", effects:{speedMult:0.15, armor:12}},
+  {id:"fusion_cell", name:"Fusion Cell", rarity:"epic", category:"tech", price:150, desc:"+12% Damage, +8% Fire Rate", effects:{damageMult:0.12, reloadMult:-0.08}},
+  {id:"singularity_core", name:"Singularity Core", rarity:"legendary", category:"tech", price:260, desc:"+18% Damage, +15% Fire Rate, +2 Pierce", effects:{damageMult:0.18, reloadMult:-0.15, pierceAdd:2}},
+  {id:"wolf_pelt", name:"Wolf Pelt", rarity:"common", category:"primal", price:28, desc:"+8% Move Speed, -4 Armor", effects:{speedMult:0.08, armor:-4}},
+  {id:"bone_charm", name:"Bone Charm", rarity:"common", category:"primal", price:30, desc:"+1 Luck", effects:{luckAdd:1}},
+  {id:"fang_necklace", name:"Fang Necklace", rarity:"common", category:"primal", price:30, desc:"+4% Damage", effects:{damageMult:0.04}},
+  {id:"thick_hide", name:"Thick Hide", rarity:"common", category:"primal", price:30, desc:"-6% Move Speed, +10 Armor", effects:{armor:10, speedMult:-0.06}},
+  {id:"blood_vial", name:"Blood Vial", rarity:"common", category:"primal", price:32, desc:"-6 Max HP, +2% Life Steal", effects:{lifestealAdd:0.02, maxHpAdd:-6}},
+  {id:"predator_eye", name:"Predator Eye", rarity:"common", category:"primal", price:26, desc:"+10% Accuracy", effects:{accuracyMult:0.1}},
+  {id:"sinew_wrap", name:"Sinew Wrap", rarity:"common", category:"primal", price:28, desc:"+8% Fire Rate, -6% Accuracy", effects:{reloadMult:-0.08, accuracyMult:-0.06}},
+  {id:"claw_gauntlet", name:"Claw Gauntlet", rarity:"common", category:"primal", price:30, desc:"+6% Damage, -6 Max HP", effects:{damageMult:0.06, maxHpAdd:-6}},
+  {id:"herb_pouch", name:"Herb Pouch", rarity:"common", category:"primal", price:26, desc:"+10 Max HP", effects:{maxHpAdd:10}},
+  {id:"feather_charm", name:"Feather Charm", rarity:"common", category:"primal", price:34, desc:"+6% Accuracy, +6% Move Speed", effects:{speedMult:0.06, accuracyMult:0.06}},
+  {id:"iron_gut", name:"Iron Gut", rarity:"common", category:"primal", price:30, desc:"-6% Move Speed, +12 Max HP", effects:{maxHpAdd:12, speedMult:-0.06}},
+  {id:"war_paint", name:"War Paint", rarity:"common", category:"primal", price:34, desc:"+5% Damage, +5% Move Speed", effects:{damageMult:0.05, speedMult:0.05}},
+  {id:"beast_heart", name:"Beast Heart", rarity:"common", category:"primal", price:36, desc:"+8 Max HP, +2% Life Steal", effects:{maxHpAdd:8, lifestealAdd:0.02}},
+  {id:"alpha_pelt", name:"Alpha Pelt", rarity:"rare", category:"primal", price:60, desc:"+12% Move Speed, +6 Armor", effects:{speedMult:0.12, armor:6}},
+  {id:"blood_pact", name:"Blood Pact", rarity:"rare", category:"primal", price:70, desc:"-10 Max HP, +5% Life Steal", effects:{lifestealAdd:0.05, maxHpAdd:-10}},
+  {id:"titan_bone", name:"Titan Bone Plate", rarity:"rare", category:"primal", price:62, desc:"-10% Move Speed, +16 Armor", effects:{armor:16, speedMult:-0.1}},
+  {id:"venom_sac", name:"Venom Sac", rarity:"rare", category:"primal", price:72, desc:"+8% Damage, +2% Life Steal", effects:{damageMult:0.08, lifestealAdd:0.02}},
+  {id:"eagle_eye", name:"Eagle Eye", rarity:"rare", category:"primal", price:68, desc:"+6% Damage, +15% Accuracy", effects:{accuracyMult:0.15, damageMult:0.06}},
+  {id:"frenzy_gland", name:"Frenzy Gland", rarity:"rare", category:"primal", price:75, desc:"+12% Fire Rate, +8% Move Speed, -8 Max HP", effects:{reloadMult:-0.12, speedMult:0.08, maxHpAdd:-8}},
+  {id:"mammoth_tusk", name:"Mammoth Tusk", rarity:"rare", category:"primal", price:70, desc:"+6% Damage, +1 Pierce", effects:{pierceAdd:1, damageMult:0.06}},
+  {id:"troll_gland", name:"Troll Gland", rarity:"rare", category:"primal", price:72, desc:"+4% Life Steal", effects:{lifestealAdd:0.04}},
+  {id:"primal_roar", name:"Primal Roar", rarity:"rare", category:"primal", price:78, desc:"+10% Damage, +10% Move Speed, -10 Armor", effects:{damageMult:0.1, speedMult:0.1, armor:-10}},
+  {id:"thick_fur", name:"Thick Fur", rarity:"rare", category:"primal", price:65, desc:"+12 Armor, +8 Max HP", effects:{armor:12, maxHpAdd:8}},
+  {id:"dragon_scale", name:"Dragon Scale", rarity:"epic", category:"primal", price:130, desc:"+22 Armor, +12 Max HP", effects:{armor:22, maxHpAdd:12}},
+  {id:"heart_of_beast", name:"Heart of the Beast", rarity:"epic", category:"primal", price:145, desc:"+10% Damage, +8% Life Steal", effects:{lifestealAdd:0.08, damageMult:0.1}},
+  {id:"apex_predator", name:"Apex Predator", rarity:"epic", category:"primal", price:150, desc:"+8% Damage, +12% Accuracy, +15% Move Speed", effects:{speedMult:0.15, accuracyMult:0.12, damageMult:0.08}},
+  {id:"blood_frenzy", name:"Blood Frenzy", rarity:"epic", category:"primal", price:140, desc:"+15% Fire Rate, -12 Max HP, +6% Life Steal", effects:{reloadMult:-0.15, lifestealAdd:0.06, maxHpAdd:-12}},
+  {id:"ancient_antler", name:"Ancient Antler", rarity:"epic", category:"primal", price:148, desc:"+10% Damage, +1 Luck, +2 Pierce", effects:{pierceAdd:2, damageMult:0.1, luckAdd:1}},
+  {id:"ember_charm", name:"Ember Charm", rarity:"common", category:"arcane", price:30, desc:"+6% Damage", effects:{damageMult:0.06}},
+  {id:"frost_shard", name:"Frost Shard", rarity:"common", category:"arcane", price:28, desc:"+8% Accuracy, -5% Move Speed", effects:{accuracyMult:0.08, speedMult:-0.05}},
+  {id:"spark_stone", name:"Spark Stone", rarity:"common", category:"arcane", price:30, desc:"+8% Fire Rate", effects:{reloadMult:-0.08}},
+  {id:"void_dust", name:"Void Dust", rarity:"common", category:"arcane", price:32, desc:"+1 Luck", effects:{luckAdd:1}},
+  {id:"mana_crystal", name:"Mana Crystal", rarity:"common", category:"arcane", price:34, desc:"+4% Damage, +8 Max HP", effects:{maxHpAdd:8, damageMult:0.04}},
+  {id:"wind_rune", name:"Wind Rune", rarity:"common", category:"arcane", price:30, desc:"+8% Move Speed", effects:{speedMult:0.08}},
+  {id:"stone_rune", name:"Stone Rune", rarity:"common", category:"arcane", price:30, desc:"+8 Armor", effects:{armor:8}},
+  {id:"hex_bag", name:"Hex Bag", rarity:"common", category:"arcane", price:28, desc:"+6% Damage, -6% Accuracy", effects:{damageMult:0.06, accuracyMult:-0.06}},
+  {id:"spirit_wisp", name:"Spirit Wisp", rarity:"common", category:"arcane", price:32, desc:"+2% Life Steal", effects:{lifestealAdd:0.02}},
+  {id:"arc_conduit", name:"Arc Conduit", rarity:"common", category:"arcane", price:30, desc:"+10% Fire Rate, -6 Max HP", effects:{reloadMult:-0.1, maxHpAdd:-6}},
+  {id:"shadow_cloak", name:"Shadow Cloak", rarity:"common", category:"arcane", price:34, desc:"+6% Accuracy, +6% Move Speed", effects:{speedMult:0.06, accuracyMult:0.06}},
+  {id:"crystal_heart", name:"Crystal Heart", rarity:"common", category:"arcane", price:28, desc:"+10 Max HP", effects:{maxHpAdd:10}},
+  {id:"storm_eye", name:"Storm Eye", rarity:"common", category:"arcane", price:34, desc:"+6% Fire Rate, +10% Accuracy", effects:{accuracyMult:0.1, reloadMult:-0.06}},
+  {id:"inferno_core", name:"Inferno Core", rarity:"rare", category:"arcane", price:70, desc:"+10% Damage, +8% Fire Rate", effects:{damageMult:0.1, reloadMult:-0.08}},
+  {id:"glacier_heart", name:"Glacier Heart", rarity:"rare", category:"arcane", price:68, desc:"+14 Armor, +10 Max HP", effects:{armor:14, maxHpAdd:10}},
+  {id:"tempest_rune", name:"Tempest Rune", rarity:"rare", category:"arcane", price:72, desc:"+10% Fire Rate, +12% Move Speed", effects:{speedMult:0.12, reloadMult:-0.1}},
+  {id:"soul_lantern", name:"Soul Lantern", rarity:"rare", category:"arcane", price:75, desc:"+5% Life Steal", effects:{lifestealAdd:0.05}},
+  {id:"phase_crystal", name:"Phase Crystal", rarity:"rare", category:"arcane", price:70, desc:"+10% Accuracy, +1 Pierce", effects:{pierceAdd:1, accuracyMult:0.1}},
+  {id:"arcane_battery", name:"Arcane Battery", rarity:"rare", category:"arcane", price:78, desc:"+8% Damage, +8% Fire Rate, +6% Move Speed", effects:{damageMult:0.08, reloadMult:-0.08, speedMult:0.06}},
+  {id:"void_mirror", name:"Void Mirror", rarity:"rare", category:"arcane", price:75, desc:"+8% Accuracy, +2 Luck", effects:{luckAdd:2, accuracyMult:0.08}},
+  {id:"runic_plate", name:"Runic Plate", rarity:"rare", category:"arcane", price:65, desc:"-8% Reload Speed, +16 Armor", effects:{armor:16, reloadMult:0.08}},
+  {id:"blood_moon", name:"Blood Moon Charm", rarity:"rare", category:"arcane", price:80, desc:"+8% Damage, -10 Max HP, +6% Life Steal", effects:{lifestealAdd:0.06, damageMult:0.08, maxHpAdd:-10}},
+  {id:"ley_line", name:"Ley Line Tap", rarity:"rare", category:"arcane", price:72, desc:"+12% Damage, -10% Move Speed", effects:{damageMult:0.12, speedMult:-0.1}},
+  {id:"phoenix_ash", name:"Phoenix Ash", rarity:"epic", category:"arcane", price:140, desc:"+12 Max HP, +8% Life Steal", effects:{lifestealAdd:0.08, maxHpAdd:12}},
+  {id:"storm_crown", name:"Storm Crown", rarity:"epic", category:"arcane", price:150, desc:"+10% Damage, +15% Fire Rate, +8% Move Speed", effects:{reloadMult:-0.15, damageMult:0.1, speedMult:0.08}},
+  {id:"void_heart", name:"Void Heart", rarity:"epic", category:"arcane", price:148, desc:"+12% Damage, +1 Luck, +2 Pierce", effects:{damageMult:0.12, pierceAdd:2, luckAdd:1}},
+  {id:"titan_rune", name:"Titan Rune", rarity:"epic", category:"arcane", price:145, desc:"-8% Move Speed, +22 Armor, +14 Max HP", effects:{armor:22, maxHpAdd:14, speedMult:-0.08}},
+  {id:"ouroboros", name:"Ouroboros Coil", rarity:"epic", category:"unique", price:150, desc:"+10% Fire Rate, +10% Move Speed, -15 Max HP, +6% Life Steal", effects:{lifestealAdd:0.06, reloadMult:-0.1, speedMult:0.1, maxHpAdd:-15}},
+  {id:"schrodingers_mag", name:"Schrodinger's Magazine", rarity:"epic", category:"unique", price:145, desc:"+12% Fire Rate, -12% Accuracy, +14 Magazine Size", effects:{magBonus:14, reloadMult:-0.12, accuracyMult:-0.12}},
+  {id:"golden_fleece", name:"Golden Fleece", rarity:"epic", category:"unique", price:150, desc:"+10% Damage, +10 Max HP, +3 Luck", effects:{luckAdd:3, damageMult:0.1, maxHpAdd:10}},
+  {id:"crown_of_kings", name:"Crown of Kings", rarity:"legendary", category:"unique", price:250, desc:"+15% Damage, +10% Fire Rate, +2 Luck", effects:{damageMult:0.15, reloadMult:-0.1, luckAdd:2}},
+  {id:"aegis_immortal", name:"Aegis of the Immortal", rarity:"legendary", category:"unique", price:260, desc:"-10% Move Speed, +30 Armor, +20 Max HP", effects:{armor:30, maxHpAdd:20, speedMult:-0.1}},
+  {id:"reapers_contract", name:"Reaper's Contract", rarity:"legendary", category:"unique", price:270, desc:"+12% Damage, -20 Max HP, +12% Life Steal", effects:{lifestealAdd:0.12, damageMult:0.12, maxHpAdd:-20}},
+  {id:"stormforged_core", name:"Stormforged Core", rarity:"legendary", category:"unique", price:260, desc:"+15% Fire Rate, +10% Accuracy, +15% Move Speed, +2 Pierce", effects:{reloadMult:-0.15, speedMult:0.15, pierceAdd:2, accuracyMult:0.1}},
+  {id:"worldseed", name:"Worldseed", rarity:"legendary", category:"unique", price:280, desc:"+24 Max HP, +8% Life Steal, +3 Luck", effects:{maxHpAdd:24, luckAdd:3, lifestealAdd:0.08}},
+  {id:"platinum_weave", name:"Platinum Weave", rarity:"epic", category:"exclusive", price:130, desc:"+18 Armor, +12 Max HP", effects:{armor:18, maxHpAdd:12}},
+  {id:"diamond_lens", name:"Diamond Lens", rarity:"epic", category:"exclusive", price:135, desc:"+10% Damage, +18% Accuracy", effects:{accuracyMult:0.18, damageMult:0.1}},
+  {id:"emperors_seal", name:"Emperor's Seal", rarity:"epic", category:"exclusive", price:140, desc:"+12% Damage, +8% Fire Rate, +2 Luck", effects:{luckAdd:2, damageMult:0.12, reloadMult:-0.08}},
+  {id:"throne_of_ash", name:"Throne of Ash", rarity:"legendary", category:"exclusive", price:220, desc:"+20% Damage, +12% Fire Rate", effects:{damageMult:0.2, reloadMult:-0.12}},
+  {id:"heart_of_mountain", name:"Heart of the Mountain", rarity:"legendary", category:"exclusive", price:230, desc:"+30 Armor, +24 Max HP", effects:{armor:30, maxHpAdd:24}},
+  {id:"eye_of_storm", name:"Eye of the Storm", rarity:"legendary", category:"exclusive", price:240, desc:"+15% Fire Rate, +15% Accuracy, +15% Move Speed", effects:{reloadMult:-0.15, speedMult:0.15, accuracyMult:0.15}},
+  {id:"soul_of_titan", name:"Soul of the Titan", rarity:"legendary", category:"exclusive", price:250, desc:"+15% Damage, +12% Life Steal, +2 Pierce", effects:{lifestealAdd:0.12, damageMult:0.15, pierceAdd:2}},
+  {id:"war_crown", name:"War Crown", rarity:"epic", category:"exclusive", price:145, desc:"+2 Luck, +6% Damage — worn with pride", effects:{luckAdd:2, damageMult:0.06}, cosmetic:"crown"},
+
 ];
 
 // ---- WASM shop bridge ----------------------------------------------------------------------------
@@ -594,7 +696,8 @@ function normalizeWasmPick(p){
   }
   if(type === 'item'){
     const it = items.find(x=>x.id === id); if(!it) return null;
-    return { type:'item', data:it, rarity:it.rarity, price:Math.round(it.price * rarityMult(it.rarity)) };
+    const exMult = it.category==='exclusive' ? 1.5 : 1;
+    return { type:'item', data:it, rarity:it.rarity, price:Math.round(it.price * rarityMult(it.rarity) * exMult) };
   }
   return null;
 }
@@ -695,6 +798,19 @@ const rarityOrder = ['common','rare','epic','legendary'];
 const RARITY_MULTS = {common:1, rare:1.25, epic:1.5, legendary:2.0};
 function rarityMult(r){ return RARITY_MULTS[r] || 1; }
 
+// Item categories. Unique: at most one per player, never combines. Exclusive: epic/legendary only, 1.5x shop price.
+const CATEGORIES = {
+  tech:      {name:'Tech',      color:'#7bdff2'},
+  primal:    {name:'Primal',    color:'#9bff7b'},
+  arcane:    {name:'Arcane',    color:'#b67bff'},
+  unique:    {name:'Unique',    color:'#ffd166'},
+  exclusive: {name:'Exclusive', color:'#ff4fd8'},
+};
+function itemCategory(it){ return (it && it.category) || 'tech'; }
+function playerOwnsUnique(player){
+  return player.items.some(it=>{ const d = items.find(x=>x.id===it.id); return d && d.category==='unique'; });
+}
+
 function createWeaponInstance(base, rarity){
   const mult = rarityMult(rarity);
   return {
@@ -737,7 +853,14 @@ function applyItemEffects(player, itemData, rarity, sign=1){
 
 function addItemToPlayer(player, itemData, rarity){
   if(player.items.length >= 6) return false;
-  player.items.push({id: itemData.id, rarity});
+  // Unique items: at most one per player, exempt from combining
+  if(itemData.category === 'unique'){
+    if(playerOwnsUnique(player)) return false;
+    player.items.push({id: itemData.id, rarity, cosmetic: itemData.cosmetic});
+    applyItemEffects(player, itemData, rarity, 1);
+    return true;
+  }
+  player.items.push({id: itemData.id, rarity, cosmetic: itemData.cosmetic});
   applyItemEffects(player, itemData, rarity, 1);
   // combine if two of same id+rarity
   let combined = true;
@@ -756,7 +879,7 @@ function addItemToPlayer(player, itemData, rarity){
         if(nextIdx < rarityOrder.length){
           const nextR = rarityOrder[nextIdx];
           if(player.items.length < 6){
-            player.items.push({id:itemData.id, rarity: nextR});
+            player.items.push({id:itemData.id, rarity: nextR, cosmetic: itemData.cosmetic});
             applyItemEffects(player, itemData, nextR, 1);
           }
         }
@@ -869,7 +992,9 @@ function normalizeShopSelection(){
 function buildShop(){
   const locked = shop.locked || [];
   const poolWeapons = [...weapons];
-  const poolItems = [...items];
+  // Unique: don't offer more once the player owns one; Exclusive enforced to epic/legendary below
+  const ownsUnique = players[0] && playerOwnsUnique(players[0]);
+  const poolItems = items.filter(it => !(ownsUnique && it.category === 'unique'));
 
   function rollRarity(luck){
     const base = { common:50, rare:35, epic:10, legendary:5 };
@@ -910,10 +1035,11 @@ function buildShop(){
     guard++;
     const rarity = rollRarity(luck);
     const weaponsOfR = poolWeapons.filter(w=>w.rarity === rarity);
-    const itemsOfR = poolItems.filter(it=>it.rarity === rarity);
+    const itemsOfR = poolItems.filter(it=>it.rarity === rarity && !(it.category==='exclusive' && rarity!=='epic' && rarity!=='legendary'));
+    const exclusiveMult = (it)=> it.category==='exclusive' ? 1.5 : 1;
     const combined = [
       ...weaponsOfR.map(w=>({type:'weapon', data:w, rarity, price:Math.round(weaponPrices[w.id] * rarityMult(rarity))})),
-      ...itemsOfR.map(it=>({type:'item', data:it, rarity, price:Math.round(it.price * rarityMult(rarity))})),
+      ...itemsOfR.map(it=>({type:'item', data:it, rarity, price:Math.round(it.price * rarityMult(rarity) * exclusiveMult(it))})),
     ];
     if(combined.length === 0) continue;
     const pick = combined[(Math.random()*combined.length)|0];
@@ -925,7 +1051,8 @@ function buildShop(){
   while(picks.some(p=>!p)){
     const fallback = poolItems[(Math.random()*poolItems.length)|0];
     if(!fallback) break;
-    const pick = {type:'item', data:fallback, rarity:fallback.rarity, price:fallback.price};
+    const exMult = fallback.category==='exclusive' ? 1.5 : 1;
+    const pick = {type:'item', data:fallback, rarity:fallback.rarity, price:Math.round(fallback.price * rarityMult(fallback.rarity) * exMult)};
     if(isDuplicate(pick)) continue;
     for(let i=0;i<6;i++){ if(!picks[i]){ picks[i] = pick; break; } }
   }
@@ -1282,12 +1409,13 @@ function buyShopItemFor(player){
   if(!item || !item.data) return;
   if(player.currency < item.price){ audio.deny(); return; }
   if(item.type === 'item' && player.items.length >= 6){ audio.deny(); return; }
+  if(item.type === 'item' && item.data.category === 'unique' && playerOwnsUnique(player)){ audio.deny(); return; }
   player.currency -= item.price;
   if(item.type === 'weapon'){
     player.ownedWeapons.push(createWeaponInstance(item.data, item.rarity || item.data.rarity));
     refreshAmmoFor(player);
   } else {
-    addItemToPlayer(player, item.data, item.rarity || item.data.rarity);
+    if(!addItemToPlayer(player, item.data, item.rarity || item.data.rarity)){ player.currency += item.price; audio.deny(); return; }
   }
   audio.buy();
 }
@@ -1416,6 +1544,7 @@ function renderClassDetail(){
   const c = classes.find(x=>x.id === state.classId) || classes[0];
   const w = weapons.find(x=>x.id === c.weapon);
   classDetailEl.innerHTML =
+    `<div class="class-portrait"><img src="assets/sprites/player_${c.id}_down.png" alt="${c.name}" draggable="false"></div>` +
     `<h3>${c.name}</h3>` +
     `<div class="sub">Starts with: ${w ? w.name : c.weapon} &bull; Class Lv ${state.danger}</div>` +
     classStatLines(c) +
@@ -2171,6 +2300,11 @@ function drawWeaponIcon(w, x, y, bw=44, bh=22){
   ctx.restore();
 }
 
+const _itemCatCache = {};
+function itemCategoryOf(id){
+  if(!(id in _itemCatCache)) _itemCatCache[id] = ((items.find(i=>i.id===id)||{}).category) || null;
+  return _itemCatCache[id];
+}
 function drawItemIcon(id, x, y){
   ctx.save();
   ctx.translate(x, y);
@@ -2190,8 +2324,31 @@ function drawItemIcon(id, x, y){
     roundRect(0,6,16,6,3); ctx.fill(); ctx.stroke();
   } else if(id === 'boots'){
     roundRect(0,8,16,6,2); ctx.fill(); ctx.stroke();
+  } else if(id === 'war_crown' || id === 'warcrown'){
+    ctx.fillStyle = '#e8b83a';
+    ctx.beginPath(); ctx.moveTo(1,13); ctx.lineTo(1,7); ctx.lineTo(4,10); ctx.lineTo(8,3); ctx.lineTo(12,10); ctx.lineTo(15,7); ctx.lineTo(15,13); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#ff5d5d'; ctx.fillRect(7,8,2,2);
   } else {
-    roundRect(0,0,14,14,3); ctx.fill(); ctx.stroke();
+    // category glyph for expansion items (no dedicated art): distinct silhouette per category
+    const cat = itemCategoryOf(id);
+    ctx.fillStyle = (cat && CATEGORIES[cat] ? CATEGORIES[cat].color : palette.uiAccent);
+    if(cat === 'tech'){
+      roundRect(0,0,16,16,3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = 'rgba(0,0,0,0.45)'; roundRect(4,4,8,8,2); ctx.fill();
+    } else if(cat === 'primal'){
+      ctx.beginPath(); ctx.moveTo(8,1); ctx.lineTo(15,15); ctx.lineTo(1,15); ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else if(cat === 'arcane'){
+      ctx.beginPath(); ctx.moveTo(8,0); ctx.lineTo(14,8); ctx.lineTo(8,16); ctx.lineTo(2,8); ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else if(cat === 'unique'){
+      ctx.beginPath();
+      for(let s=0;s<10;s++){ const a=-Math.PI/2 + s*Math.PI/5, r=s%2?3.5:7.5; ctx.lineTo(8+r*Math.cos(a), 8+r*Math.sin(a)); }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else if(cat === 'exclusive'){
+      ctx.beginPath(); ctx.moveTo(8,0); ctx.lineTo(13,8); ctx.lineTo(8,16); ctx.lineTo(3,8); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(8,5); ctx.lineTo(10.5,8); ctx.lineTo(8,11); ctx.lineTo(5.5,8); ctx.closePath(); ctx.stroke();
+    } else {
+      roundRect(0,0,14,14,3); ctx.fill(); ctx.stroke();
+    }
   }
   ctx.restore();
 }
@@ -2234,6 +2391,8 @@ function drawPlayerWeapon(p){
   });
 }
 
+// v0.6.0 paper-doll anchors: [dx, dy] in screen px relative to player centre
+const COSMETIC_ANCHOR = { crown:[0,-23], armor:[0,-2], belt:[0,7] };
 function drawPlayers(){
   for(let i=0;i<players.length;i++){
     const p = players[i];
@@ -2272,6 +2431,14 @@ function drawPlayers(){
     if(blink) ctx.globalAlpha = 0.55;
     // [brad-fx] animated v0.56 sprite sheets (fx.js); falls back to the original PNGs
     const drawn = (window.FX && FX.drawPlayer(p, i, key, flipX, flash, moving)) || drawSprite(key, null, 46, {flipX, flash});
+    // v0.6.0 paper-doll: owned cosmetic items render on the character (same for P1/P2)
+    if(drawn && window.FX && p.items){
+      for(const it of p.items){
+        if(!it.cosmetic) continue;
+        const a = COSMETIC_ANCHOR[it.cosmetic];
+        if(a) FX.drawCosmetic(it.cosmetic, a[0], a[1]);
+      }
+    }
     ctx.restore();
     if(!drawn){
       // fallback body

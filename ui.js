@@ -209,6 +209,18 @@
       ctx.fillStyle = C.dim; ctx.font = font(12); ctx.textAlign = 'center'; ctx.fillText('SOLD OUT', c.x + c.w / 2, fy + faceH / 2); ctx.textAlign = 'start';
       ctx.restore(); return hover;
     }
+    // category tag (items only): small pill, top-right of the card face
+    if(it.type === 'item' && it.data.category && typeof CATEGORIES !== 'undefined' && CATEGORIES[it.data.category]){
+      const cat = CATEGORIES[it.data.category];
+      ctx.font = font(10);
+      const tw = ctx.measureText(cat.name).width + 14;
+      const px = c.x + c.w - 10 - tw, py = fy + 8;
+      ctx.fillStyle = 'rgba(0,0,0,0.55)'; rr(px, py, tw, 16, 8); ctx.fill();
+      ctx.strokeStyle = cat.color; ctx.lineWidth = 1.5; rr(px + 0.75, py + 0.75, tw - 1.5, 14.5, 7); ctx.stroke();
+      ctx.fillStyle = cat.color; ctx.textAlign = 'center';
+      ctx.fillText(cat.name, px + tw / 2, py + 12);
+      ctx.textAlign = 'start';
+    }
     // icon tile
     const ts = Math.min(52, Math.max(42, c.w * 0.28)), tx = c.x + 10, ty = fy + 10;
     ctx.fillStyle = C.tile; rr(tx, ty, ts, ts, 8); ctx.fill();
