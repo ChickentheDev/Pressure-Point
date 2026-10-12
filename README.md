@@ -9,21 +9,10 @@ A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canva
 - **10 new weapons**: Scattergun, Crossbow, Sniper, Plasma Cutter, Mortar, Katana, Grenade Launcher, Flak Cannon, Tesla Coil, Energy Sword — roster now 25 weapons.
 
 ## Previous Update (v0.6.1 — File system cleanup)
-- Removed legacy cruft (`Brotato-Lite.sln`, `Extra.cs`, `electron/`, `wasm/`, `build/`).
-- Moved docs to `docs/`; reorganized `assets/` into subfolders.
-- Split the 152 KB `game.js` monolith into 8 modules under `js/`. No gameplay changes.
+- Removed legacy cruft, moved docs to `docs/`, reorganized `assets/` into subfolders, split `game.js` into 8 modules. No gameplay changes.
 
 ## Previous Update (v0.6.0 — Class expansion)
-- **Custom class sprites**: every class has its own walk-animated sprite — Ironheart, Foxglove, Gravelord, Scrapjack, Voltblade, Circuitry, Bulwark, Redline, Skylark, Nightreap. P2 shares P1's sprite (co-op ring tells players apart).
-- **Cosmetic equipment**: shop items now show on your character — Dense Plating (shoulder armor), Ammo Belt (pouches), War Crown epic (+2 Luck, +6% Damage).
-- **100 new items** across 5 categories: **Tech**, **Primal**, **Arcane**, **Unique** (one per player, never combines), **Exclusive** (epic/legendary only, 1.5x price).
-- **UI polish**: wave HUD shows kill progress as `killed/total`; elites wear a gold crown with a thicker gold HP bar; wave-1 shop guarantees one affordable starter deal.
-
-## Previous Update (v0.5.8B)
-- **Menu revamp**: Brotato-style 3-step flow — Class → Weapon → Danger. Class select is a grid with a detail panel. Weapon select shows all weapons with stats; your pick becomes the run's starting weapon. Danger select shows numbered 1-5 buttons with modifiers.
-- **Difficulty buffs**: each danger has explicit modifiers — D2: +8% enemy speed; D3: +15% horde size; D4: +15% enemy damage; D5: +30% horde size and TWO Overlords on wave 20.
-- **Run Won / Run Over screens**: summary panels (Stats, Weapons, Items, Progress) with Retry / New Run / Main Menu.
-- **Pause menu**: class info, owned weapons, full stats, Resume / Quit to Menu.
+- 10 custom class sprites, cosmetic equipment (armor/belt/crown render on your character), 100 new items in 5 categories, UI polish (wave HUD counter, elite crowns, wave-1 starter deal).
 
 ## What's Included
 - **Wave system**: Wave 1 → 20 with horde-scaled counts, then **endless mode** past 20.
