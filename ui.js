@@ -429,6 +429,9 @@
   }
 
   // ---- main draw -------------------------------------------------------------------------------------
+  // Perf: the old code wrote canvas.style.cursor every frame; only write when it changes.
+  // (Reads live DOM state so this can't desync with game.js's cursor writes on phase changes.)
+  function setCursor(c){ if(cv.style.cursor !== c) cv.style.cursor = c; }
   function draw(){
     const L = layout(), p = activePlayer();
     const a = Math.min(1, (state.shopAnim || 0) * 1.6 + 0.15);
@@ -466,7 +469,7 @@
     if(!L.narrow) ctx.fillText('Click a card to buy  •  Right-click or Lock to keep it  •  Tab: full stats  •  Enter: next wave', L.area.x + L.area.w / 2, hintY);
     ctx.textAlign = 'start';
     ctx.restore();
-    canvas.style.cursor = any ? 'pointer' : 'default';
+    setCursor(any ? 'pointer' : 'default');
   }
 
   // ---- clicks for the controls only this screen has --------------------------------------------------------
