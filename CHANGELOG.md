@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — weapon buffs
+- Railgun: mag 2→4, reload 2.2→1.8 (sustained ~36→~57 DPS — properly legendary now)
+- RPG-7: damage 45→55, mag 1→2, reload 2.6→2.2 (sustained ~12→~23 DPS before AoE)
+- Titan Cannon: damage 24→36, fireRate 1.0→0.9 (sustained ~15→~24 DPS before AoE)
+- In-game title renamed from Brotato-lite to Pressure Point (menu header + browser tab)
+
 ## Unreleased — hordes & balance
 - Hordes: wave sizes raised to `16 + (wave-1)*8` (wave 1: 16 enemies, wave 19: 160; was 10 + (wave-1)*5), and the spawn interval now ramps faster (`max(0.35, 1.0 - wave*0.035)`) so late waves keep real pressure. Danger and co-op multipliers still stack on top; the 120-concurrent-enemy safety cap is unchanged for the perf budget.
 - Enemy HP +20% across the board (runner 18→22, spitter 30→36, bruiser 50→60, burster 16→19, splitter 42→50, bulwark 150→180, Overlord boss 1200→1440). Wave/danger scaling stack on top unchanged.
