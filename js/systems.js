@@ -292,6 +292,7 @@ function startWave(){
   state.phase = 'wave';
   state.waveSpawned = 0;
   state.waveCompleteTimer = 0;
+  runStats.tookDamage = false;
   state.waveTotal = Math.floor(computeWaveTotal(state.wave) * (state.coop ? 1.5 : 1) * (1 + (state.danger-1)*0.15) * dangerMods(state.danger).countMult);
   if(isBossWave(state.wave)){
     state.waveTotal = dangerMods(state.danger).doubleBoss ? 2 : 1;
@@ -563,6 +564,8 @@ function killEnemy(index, ownerId){
   const e = enemies[index];
   if(!e) return;
   state.runKills++;
+  runStats.kills++;
+  if(runStats.kills === 1 || runStats.kills === 500 || runStats.kills === 2000) checkAchievements();
   awardToPlayerById(ownerId, e.xp, e.money);
   addParticle({x:e.x,y:e.y,life:0.35,r:16,color:'#ff5d5d'});
   addShake(e.isBoss ? 12 : 3);
@@ -590,6 +593,7 @@ function explodeEnemy(e, index){
     const d = Math.hypot(p.x - e.x, p.y - e.y);
     if(d < R + p.r){
       p.hp -= Math.max(1, base * (1 - d / (R + p.r)) - p.armor);
+      runStats.tookDamage = true;
       p.hitFlash = 0.12;
       addShake(6);
       if(p.hp <= 0){
@@ -613,11 +617,15 @@ function buyShopItemFor(player){
   if(item.type === 'item' && player.items.length >= 6){ audio.deny(); return; }
   if(item.type === 'item' && item.data.category === 'unique' && playerOwnsUnique(player)){ audio.deny(); return; }
   player.currency -= item.price;
+  runStats.spent += item.price;
+  if(runStats.spent >= 500) checkAchievements();
   if(item.type === 'weapon'){
     player.ownedWeapons.push(createWeaponInstance(item.data, item.rarity || item.data.rarity));
     refreshAmmoFor(player);
+    checkAchievements();
   } else {
     if(!addItemToPlayer(player, item.data, item.rarity || item.data.rarity)){ player.currency += item.price; audio.deny(); return; }
+    checkAchievements();
   }
   audio.buy();
 }
@@ -738,6 +746,8 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
           downed.dead = false;
           downed.hp = Math.floor(downed.baseMaxHp * 0.5);
           downed.reviveProgress = 0;
+          runStats.revives++;
+          checkAchievements();
           addParticle({x: downed.x, y: downed.y, life: 0.8, r: 24, color: '#6ef2b1'});
           flashMsg('REVIVED!', '#6ef2b1');
           audio.pickup();
@@ -850,6 +860,8 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     if(state.waveSpawned >= state.waveTotal && enemies.length === 0){ // wave complete
       state.waveCompleteTimer += dt;
       moneyDrops.length = 0;
+      if(!runStats.tookDamage && state.wave > 1) unlockAchievement('untouchable');
+      checkAchievements();
       if(state.wave >= state.maxWave && !state.endless){
         // Final wave cleared: unlock the next danger level (if this run earned it), celebrate
         // briefly, then return to the menu where the new danger is selectable. No victory screen.
@@ -1003,6 +1015,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
       const d = Math.hypot(p.x - e.x, p.y - e.y);
       if(d < p.r + e.r){
         p.hp -= Math.max(1, (e.dmg - p.armor) * dt);
+        runStats.tookDamage = true;
         addShake(p.hitFlash > 0 ? 0.3 : 5);   // a kick on first contact, not a constant max shake
         p.hitFlash = 0.12;
         if(p.hp <= 0){
