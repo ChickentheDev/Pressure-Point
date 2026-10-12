@@ -3,6 +3,7 @@
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
 ## Latest Changes (v0.5.8B)
+- **UI polish**: the wave HUD now shows kill progress as `killed/total` under the wave counter; elites wear a gold crown and get a thicker gold HP bar so they stand out in hordes; the wave-1 shop guarantees one affordable "starter deal" (a common item at 10 currency) so the first shop visit isn't a dead one.
 - **Menu revamp**: Brotato-style 3-step flow — Class → Weapon → Danger. Class select is a grid with a detail panel (starting weapon, green/red stat lines vs the Ironheart baseline, tagline). New weapon select: grid of all 15 weapons with a detail panel (damage, fire delay, magazine/reload, spread, traits); your pick becomes the run's starting weapon (class stat mods still apply). Danger select shows numbered 1-5 buttons with a detail panel listing that danger's full modifiers.
 - **Difficulty buffs**: each danger now has explicit modifiers (`DANGER_MODS`), displayed and applied for real — D2: +8% enemy speed; D3: +15% horde size; D4: +15% enemy damage; D5: +30% horde size and TWO Overlords on wave 20. Elites unchanged (wave 12 on D2-5, wave 16 on D4-5, wave 20 on D1-5).
 - **Run Won screen**: replaces the bare banner — "Run Won / Danger N" with Stats, Weapons, Items, and Progress panels, a gold "DANGER N UNLOCKED!" banner when earned, and Retry / New Run / Main Menu buttons (confetti + fanfare still play).

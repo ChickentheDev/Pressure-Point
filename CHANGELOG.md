@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — UI polish
+- Wave progress HUD: the wave panel now shows kill progress as `killed/total` (e.g. `47/160`) under the wave counter, including elites and the wave-20 double boss in the total; counts kills across both players in co-op.
+- Elite markers: elites now wear a gold crown above their HP bar (plus their existing pulsing gold ring), and their HP bar is thicker and gold — visible at a glance in a 160-enemy horde.
+- Wave-1 economy: the first shop was a dead visit (~13-17 currency, cheapest offer ~30). The wave-1 shop now guarantees one "starter deal" — a random common item at 10 currency. Wave 2+ shops are untouched.
+
 ## Unreleased — menu revamp
 - Menu flow is now Class → Weapon → Danger → Start (Brotato-style): class grid with detail panel (starting weapon, green/red stat lines vs Ironheart baseline, tagline); NEW weapon-select step with all 15 weapons (icon grid + detail panel: damage, fire delay, magazine/reload, spread, traits) — the pick becomes the run's starting weapon; danger select with numbered buttons and a detail panel showing each danger's full modifier list.
 - Difficulty buffs (`DANGER_MODS`, displayed and applied): D1 baseline; D2 +8% enemy speed; D3 +15% horde size; D4 +15% enemy damage; D5 +30% horde size and TWO Overlords on wave 20. Elite gating unchanged (12 on D2-5, 16 on D4-5, 20 on D1-5).
