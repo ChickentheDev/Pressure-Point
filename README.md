@@ -1,20 +1,18 @@
-# Pressure Point — v0.6.2
+# Pressure Point — v0.6.3
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.6.2)
-- **Balance patch**: rarity/DPS rebalance across all weapons — SMG tamed, RPG/Titan Cannon/Railgun/Harpoon/Arc Thrower/Mine Layer/Flamethrower buffed to match their rarities. Minigun untouched.
-- **Endless mode**: after clearing wave 20, "Continue: Endless" appears on the victory screen. Waves 21+ with scaling difficulty, elites every 4th wave, boss every 5th. Best wave tracked.
-- **Co-op**: in-wave revive (stand near a downed partner for 3s to revive at 50% HP); proximity synergy (+15% damage within 150px of your partner).
-- **10 new weapons**: Scattergun, Crossbow, Sniper, Plasma Cutter, Mortar, Katana, Grenade Launcher, Flak Cannon, Tesla Coil, Energy Sword — roster now 25 weapons.
+## Latest Changes (v0.6.3 — Achievements)
+- **15 achievements**: First Blood, Exterminator, Genocide, Survivor, Veteran, Unstoppable, Danger Zone, Gun Collector, Legendary Arsenal, Shopaholic, One of a Kind, Big Spender, Medic, Lifesaver, Untouchable. Unlock toasts fire mid-run; the Achievements screen on the main menu tracks progress and persists unlocks.
+
+## Previous Update (v0.6.2 — Balance, Endless, Co-op, Weapons)
+- Rarity/DPS rebalance; endless mode past wave 20; co-op revive + synergy; 10 new weapons (25 total).
 
 ## Previous Update (v0.6.1 — File system cleanup)
 - Removed legacy cruft, moved docs to `docs/`, reorganized `assets/` into subfolders, split `game.js` into 8 modules. No gameplay changes.
 
-## Previous Update (v0.6.0 — Class expansion)
-- 10 custom class sprites, cosmetic equipment (armor/belt/crown render on your character), 100 new items in 5 categories, UI polish (wave HUD counter, elite crowns, wave-1 starter deal).
-
 ## What's Included
+- **Achievements**: 15 unlockable, persisted across runs.
 - **Wave system**: Wave 1 → 20 with horde-scaled counts, then **endless mode** past 20.
 - **25 weapons** across rarities, all firing simultaneously.
 - **109 items** across 5 categories (Tech/Primal/Arcane/Unique/Exclusive).
