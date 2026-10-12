@@ -5,6 +5,9 @@ A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canva
 ## Latest Changes (Unreleased)
 - **Performance**: The web build runs faster with identical visuals. Bullets use cached glow sprites instead of per-bullet `shadowBlur`; HUD panels and bars cache their gradients and shadows; the hot loop no longer allocates arrays or objects per frame; the HUD no longer forces a layout every frame; the ground layer is blitted 1:1 instead of resampled.
 - **Controls**: In co-op, Player 1 dashes with `Left Shift` and Player 2 dashes with `Right Shift`, so each player dashes independently (`U` still works for P2).
+- **Victory**: Clearing wave 20 unlocks the next danger level with a celebration banner, then returns to the menu — no more replaying wave 20 forever.
+- **Arsenal**: All weapons you own fire at the same time, each on its own cooldown and ammo. No weapon switching.
+- **Enemies**: Three new types — the armored Bulwark tank, the exploding Burster, and the Splitter that bursts into runners.
 
 ## Previous Update (v0.56) — graphics division
 - **Map and money**: Flat warm grey-brown ground with sparse doodles (pebbles, cracks, bones, grass) and matching trees. Money drops are glowing green gems that bob, pulse and swoop toward you, and the HUD/shop currency icon matches.
@@ -51,7 +54,7 @@ Recommended: modern Chromium-based browser for best audio/visual support.
 - Dash: `Left Shift`
 - Aim and fire: see **Auto Shoot / Mouse Aim** below
 - Fire (when Auto Shoot is off): hold the left mouse button or `Space`
-- The last weapon you bought is the one you use
+- All weapons you own fire at the same time — there is no weapon switching
 
 ### Player 2 (co-op)
 - Move: Arrow keys
@@ -67,7 +70,7 @@ Recommended: modern Chromium-based browser for best audio/visual support.
 ### Shop
 - Click a card to buy (or `←`/`→` to select and `Space` to buy)
 - Right-click a card or click its **Lock** button to keep it for the next wave
-- Click **Reroll** to refresh the shop
+- Click **Reroll** (or press `R`) to refresh the shop
 - Co-op: click the **P1 / P2** tabs next to the title to choose who is shopping
 - **Primary / Secondary** tabs switch the Stats panel
 - `Tab` toggles the full **Stats** view
@@ -76,11 +79,6 @@ Recommended: modern Chromium-based browser for best audio/visual support.
 ### General Controls
 - `M` — Mute/Unmute audio
 - `P` — Pause/Resume
-
-### Planned (not in the game yet)
-- Weapon switching with `Q` / `E` or `1–5`
-- `R` to reroll the shop
-- `F` FPS counter and `H` keyboard-shortcuts help (these live in `game-improvements.js`, which `Index.html` does not load yet)
 
 ## Wave System
 - Wave 1 starts at **10 enemies**.
@@ -118,21 +116,17 @@ Shows:
 - `ui.js` — v0.56 shop screen layout and drawing (game.js delegates to it from lines marked `[brad-ui]`)
 - `assets/sprites/` — v0.56 pixel-art sprite sheets (player, enemies, weapons, UI icons); the original PNGs in the root are unchanged
 - `tools/gen_sprites.py` — regenerates everything in `assets/sprites/` (`python3 tools/gen_sprites.py`, needs Pillow)
-- `game-improvements.js` — performance, balance, and UX improvements (v0.51)
 - `style.css` — UI styling
 - `IMPROVEMENTS.md` — detailed documentation of v0.51 improvements
 - `INTEGRATION_EXAMPLE.js` — integration guide for improvements
 
 ## Performance
 - **Target**: 55-60 FPS on modern browsers
-- **Optimizations**: Object pooling, efficient collision detection, reduced garbage collection
-- **Monitoring**: FPS counter (`F`) is planned; it lives in `game-improvements.js`, which is not loaded yet
+- **Optimizations**: cached glow sprites, offscreen HUD panels, no per-frame allocations in the hot loop, no forced layout from the HUD
 
 ## Development
-To integrate the v0.51 improvements into the main game:
-1. Include `game-improvements.js` before `game.js` in `Index.html`
-2. Follow the integration steps in `INTEGRATION_EXAMPLE.js`
-3. See `IMPROVEMENTS.md` for complete documentation
+- `tools/gen_sprites.py` regenerates everything in `assets/sprites/` (`python3 tools/gen_sprites.py`, needs Pillow)
+- See `IMPROVEMENTS.md` for the v0.51 improvement notes (historical; `game-improvements.js` was removed in v0.56A — its balance tweaks conflicted with tuned values, its pooling was superseded by the perf pass, and its bug fixes were already applied)
 
 ## Changelog
 - **v0.56** (2026-10-07): Animated player/enemy sprites, art for 5 weapons, new enemy art (raptor, dino head, mosquito, sandworm boss), new ground and gem money, hit/death/muzzle/elemental/dash effects, Brotato-style shop, UI overlap fixes
