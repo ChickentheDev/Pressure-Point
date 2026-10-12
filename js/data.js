@@ -72,8 +72,18 @@ const weapons = [
   {id:'rail', name:'Railgun', type:'rifle', rarity:'legendary', fireRate:0.7, bulletSpeed:1200, spread:0.0, damage:65, mag:6, reload:1.5, recoil:1.8, color:'#ff6b6b'},
   {id:'mine', name:'Mine Layer', type:'special', rarity:'rare', fireRate:0.6, bulletSpeed:300, spread:0.2, damage:30, mag:8, reload:1.5, recoil:1.0, color:'#c9a867', explosive:true, elemental:'fire'},
   {id:'sprayer', name:'Frost Sprayer', type:'special', rarity:'rare', fireRate:0.08, bulletSpeed:520, spread:0.2, damage:5, mag:60, reload:1.7, recoil:0.8, color:'#6cd6ff', elemental:'ice'},
+  {id:'scatter', name:'Scattergun', type:'shotgun', rarity:'common', fireRate:0.7, bulletSpeed:480, spread:0.55, damage:5, pellets:6, mag:8, reload:1.6, recoil:1.3, color:'#c9a867'},
+  {id:'crossbow', name:'Crossbow', type:'rifle', rarity:'common', fireRate:0.8, bulletSpeed:750, spread:0.02, damage:32, mag:6, reload:1.5, recoil:1.0, color:'#8b6f47', pierce:1},
+  {id:'sniper', name:'Longshot Sniper', type:'rifle', rarity:'rare', fireRate:1.0, bulletSpeed:1100, spread:0.0, damage:55, mag:5, reload:1.8, recoil:1.6, color:'#6aaeff', pierce:3},
+  {id:'katana', name:'Katana', type:'melee', rarity:'epic', fireRate:0.35, bulletSpeed:420, spread:0.0, damage:22, mag:999, reload:0.2, recoil:0.5, color:'#e8e8ff', melee:true},
+  {id:'plasma', name:'Plasma Cutter', type:'special', rarity:'rare', fireRate:0.18, bulletSpeed:650, spread:0.08, damage:12, mag:24, reload:1.4, recoil:0.9, color:'#00ffcc'},
+  {id:'grenade', name:'Grenade Launcher', type:'heavy', rarity:'epic', fireRate:0.7, bulletSpeed:420, spread:0.1, damage:55, mag:6, reload:2.0, recoil:1.7, color:'#ffaa00', explosive:true, elemental:'fire'},
+  {id:'flak', name:'Flak Cannon', type:'shotgun', rarity:'epic', fireRate:0.8, bulletSpeed:500, spread:0.4, damage:8, pellets:8, mag:8, reload:2.0, recoil:1.6, color:'#ff8844', explosive:true},
+  {id:'tesla', name:'Tesla Coil', type:'special', rarity:'legendary', fireRate:0.3, bulletSpeed:700, spread:0.1, damage:25, mag:20, reload:1.6, recoil:1.1, color:'#b27bff', elemental:'shock'},
+  {id:'esword', name:'Energy Sword', type:'melee', rarity:'legendary', fireRate:0.6, bulletSpeed:450, spread:0.0, damage:45, mag:999, reload:0.2, recoil:0.7, color:'#00ffff', melee:true},
+  {id:'mortar', name:'Mortar', type:'heavy', rarity:'rare', fireRate:0.9, bulletSpeed:380, spread:0.15, damage:55, mag:4, reload:2.2, recoil:1.9, color:'#888866', explosive:true, elemental:'fire'},
 ];
-const weaponPrices = { pistol:60, harpoon:135, rifle:95, shotgun:115, heavy:230, blade:100, smg:70, dmr:125, flame:155, rpg:170, arc:150, minigun:240, rail:260, mine:115, sprayer:120 };
+const weaponPrices = { pistol:60, harpoon:135, rifle:95, shotgun:115, heavy:230, blade:100, smg:70, dmr:125, flame:155, rpg:170, arc:150, minigun:240, rail:260, mine:115, sprayer:120, scatter:55, crossbow:65, sniper:130, katana:165, plasma:110, grenade:175, flak:180, tesla:250, esword:245, mortar:120 };
 
 const items = [
   {id:'plating', name:'Dense Plating', rarity:'rare', category:'tech', price:55, desc:'+20 Armor, -12% Move Speed', effects:{armor:20, speedMult:-0.12}, cosmetic:'armor'},

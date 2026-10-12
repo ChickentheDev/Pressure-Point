@@ -37,6 +37,16 @@ const SPRITE_DEFS = {
   w_rail:      {src:'assets/weapons/weapon_rail.png',    crop:[0,0,38,12], pixel:true},
   w_mine:      {src:'assets/weapons/weapon_mine.png',    crop:[0,0,28,16], pixel:true},
   w_sprayer:   {src:'assets/weapons/weapon_sprayer.png', crop:[0,0,30,14], pixel:true},
+  w_scatter:   {src:'assets/weapons/weapon_scatter.png', crop:[0,0,32,14], pixel:true},
+  w_crossbow:  {src:'assets/weapons/weapon_crossbow.png',crop:[0,0,32,14], pixel:true},
+  w_sniper:    {src:'assets/weapons/weapon_sniper.png',  crop:[0,0,32,14], pixel:true},
+  w_katana:    {src:'assets/weapons/weapon_katana.png',  crop:[0,0,32,14], pixel:true},
+  w_plasma:    {src:'assets/weapons/weapon_plasma.png',  crop:[0,0,32,14], pixel:true},
+  w_grenade:   {src:'assets/weapons/weapon_grenade.png', crop:[0,0,32,14], pixel:true},
+  w_flak:      {src:'assets/weapons/weapon_flak.png',    crop:[0,0,32,14], pixel:true},
+  w_tesla:     {src:'assets/weapons/weapon_tesla.png',   crop:[0,0,32,14], pixel:true},
+  w_esword:    {src:'assets/weapons/weapon_esword.png',  crop:[0,0,32,14], pixel:true},
+  w_mortar:    {src:'assets/weapons/weapon_mortar.png',  crop:[0,0,32,14], pixel:true},
 };
 const sprites = {};
 for(const [key, def] of Object.entries(SPRITE_DEFS)){
