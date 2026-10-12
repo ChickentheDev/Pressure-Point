@@ -67,18 +67,18 @@ const palette = {
 // scaled by what is actually drawn, not by its transparent padding.
 // pixel = true -> nearest-neighbour scaling (pixel art); false -> smooth downscale (hi-res art).
 const SPRITE_DEFS = {
-  map:         {src:'Map.png',          crop:[0,0,512,512], pixel:true},
-  w_pistol:    {src:'CobaltPistol.png', crop:[69,279,893,480], pixel:false},
-  w_shotgun:   {src:'GravShotgun.png',  crop:[80,88,345,310],  pixel:false, fallback:'w_shotgunAlt'},
-  w_shotgunAlt:{src:'Shotgun.png',      crop:[46,25,147,169],  pixel:false},
-  w_blade:     {src:'ArcBlade.png',     crop:[103,52,283,382], pixel:false},
-  w_smg:       {src:'ViperSMG.png',     crop:[32,95,441,248],  pixel:false},
-  w_rifle:     {src:'Pulserifle.png',   crop:[0,8,127,137],    pixel:false},
-  w_heavy:     {src:'TitanCannon.png',  crop:[23,26,21,6],     pixel:true},
-  w_rpg:       {src:'RPG.png',          crop:[17,20,33,10],    pixel:true},
-  w_minigun:   {src:'Minigun.png',      crop:[2,5,117,108],    pixel:false},
-  w_harpoon:   {src:'Harpoongun.png',   crop:[8,24,48,18],     pixel:true},
-  w_dmr:       {src:'LongshotDMR.png',  crop:[2,24,58,16],     pixel:true},
+  map:         {src:'assets/Map.png',          crop:[0,0,512,512], pixel:true},
+  w_pistol:    {src:'assets/CobaltPistol.png', crop:[69,279,893,480], pixel:false},
+  w_shotgun:   {src:'assets/GravShotgun.png',  crop:[80,88,345,310],  pixel:false, fallback:'w_shotgunAlt'},
+  w_shotgunAlt:{src:'assets/Shotgun.png',      crop:[46,25,147,169],  pixel:false},
+  w_blade:     {src:'assets/ArcBlade.png',     crop:[103,52,283,382], pixel:false},
+  w_smg:       {src:'assets/ViperSMG.png',     crop:[32,95,441,248],  pixel:false},
+  w_rifle:     {src:'assets/Pulserifle.png',   crop:[0,8,127,137],    pixel:false},
+  w_heavy:     {src:'assets/TitanCannon.png',  crop:[23,26,21,6],     pixel:true},
+  w_rpg:       {src:'assets/RPG.png',          crop:[17,20,33,10],    pixel:true},
+  w_minigun:   {src:'assets/Minigun.png',      crop:[2,5,117,108],    pixel:false},
+  w_harpoon:   {src:'assets/Harpoongun.png',   crop:[8,24,48,18],     pixel:true},
+  w_dmr:       {src:'assets/LongshotDMR.png',  crop:[2,24,58,16],     pixel:true},
   // [brad-fx] v0.56 pixel art for the five weapons that had none (tools/gen_sprites.py)
   w_flame:     {src:'assets/sprites/weapon_flame.png',   crop:[0,0,32,14], pixel:true},
   w_arc:       {src:'assets/sprites/weapon_arc.png',     crop:[0,0,30,14], pixel:true},
@@ -1445,9 +1445,9 @@ function setMenuStep(step){
 
 // Weapon icon art (PNGs that exist); others fall back to a colored tile.
 const WEAPON_ICONS = {
-  pistol:'CobaltPistol.png', harpoon:'Harpoongun.png', rifle:'Pulserifle.png',
-  shotgun:'GravShotgun.png', heavy:'TitanCannon.png', blade:'ArcBlade.png',
-  smg:'ViperSMG.png', dmr:'LongshotDMR.png', rpg:'RPG.png', minigun:'Minigun.png',
+  pistol:'assets/CobaltPistol.png', harpoon:'assets/Harpoongun.png', rifle:'assets/Pulserifle.png',
+  shotgun:'assets/GravShotgun.png', heavy:'assets/TitanCannon.png', blade:'assets/ArcBlade.png',
+  smg:'assets/ViperSMG.png', dmr:'assets/LongshotDMR.png', rpg:'assets/RPG.png', minigun:'assets/Minigun.png',
 };
 function weaponIconHTML(w){
   const src = WEAPON_ICONS[w.id];
