@@ -20,15 +20,15 @@ const palette = {
 // pixel = true -> nearest-neighbour scaling (pixel art); false -> smooth downscale (hi-res art).
 const SPRITE_DEFS = {
   map:         {src:'assets/Map.png',          crop:[0,0,512,512], pixel:true},
-  w_pistol:    {src:'assets/weapons/CobaltPistol.png', crop:[69,279,893,480], pixel:false},
-  w_shotgun:   {src:'assets/weapons/GravShotgun.png',  crop:[80,88,345,310],  pixel:false, fallback:'w_shotgunAlt'},
-  w_shotgunAlt:{src:'assets/weapons/Shotgun.png',      crop:[46,25,147,169],  pixel:false},
-  w_blade:     {src:'assets/weapons/ArcBlade.png',     crop:[103,52,283,382], pixel:false},
-  w_smg:       {src:'assets/weapons/ViperSMG.png',     crop:[32,95,441,248],  pixel:false},
-  w_rifle:     {src:'assets/weapons/Pulserifle.png',   crop:[0,8,127,137],    pixel:false},
+  w_pistol:    {src:'assets/weapons/CobaltPistol.png', crop:[4,4,893,480], pixel:false},
+  w_shotgun:   {src:'assets/weapons/GravShotgun.png',  crop:[4,4,345,310],  pixel:false, fallback:'w_shotgunAlt'},
+  w_shotgunAlt:{src:'assets/weapons/Shotgun.png',      crop:[4,4,147,169],  pixel:false},
+  w_blade:     {src:'assets/weapons/ArcBlade.png',     crop:[4,4,283,382], pixel:false},
+  w_smg:       {src:'assets/weapons/ViperSMG.png',     crop:[4,4,441,248],  pixel:false},
+  w_rifle:     {src:'assets/weapons/Pulserifle.png',   crop:[0,4,127,137],    pixel:false},
   w_heavy:     {src:'assets/weapons/TitanCannon.png',  crop:[23,26,21,6],     pixel:true},
   w_rpg:       {src:'assets/weapons/RPG.png',          crop:[17,20,33,10],    pixel:true},
-  w_minigun:   {src:'assets/weapons/Minigun.png',      crop:[2,5,117,108],    pixel:false},
+  w_minigun:   {src:'assets/weapons/Minigun.png',      crop:[2,4,117,108],    pixel:false},
   w_harpoon:   {src:'assets/weapons/Harpoongun.png',   crop:[8,24,48,18],     pixel:true},
   w_dmr:       {src:'assets/weapons/LongshotDMR.png',  crop:[2,24,58,16],     pixel:true},
   // [brad-fx] v0.56 pixel art for the five weapons that had none (tools/gen_sprites.py)
