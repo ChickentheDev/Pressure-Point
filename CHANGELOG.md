@@ -1,3 +1,8 @@
+## v0.7 — Graphics update 2
+- **Bloom**: bright pixels now bleed light — muzzle flashes, explosions and elite glows bloom through a quarter-res separable gaussian blur (bright extract + 4 blur passes), added back over the lit frame.
+- **Animated fog**: two octaves of scrolling value noise drift over the arena, tinted by local light — subtle depth and atmosphere.
+- **Film grain**: a whisper of grain keeps gradients from banding and the image from looking flat.
+
 ## v0.6.9 — WebGL lighting
 - **Dynamic 2D lighting**: the world now renders to an offscreen canvas and is composited through a fullscreen WebGL shader (`js/webgl.js`) — players cast a warm glow, elites/bosses pulse, muzzle flashes and explosion rings throw light. Includes a subtle vignette and cool-shadow/warm-highlight color grade.
 - **HUD stays crisp**: HUD, shop, banners and menus draw directly to the visible canvas after the lighting pass, unaffected by it.
