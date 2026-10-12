@@ -1,3 +1,7 @@
+## v0.6.3 — Achievements
+- **15 achievements** with unlock toasts: First Blood, Exterminator (500 kills), Genocide (2,000 kills), Survivor (wave 10), Veteran (clear wave 20), Unstoppable (wave 30 endless), Danger Zone (D5 wave 20), Gun Collector (6 weapons), Legendary Arsenal (3 legendaries), Shopaholic (spend 500), One of a Kind (Unique item), Big Spender (Exclusive item), Medic (revive), Lifesaver (3 revives), Untouchable (clear a wave damage-free).
+- Achievements screen on the main menu; unlocks persist in localStorage.
+
 ## v0.6.2 — Balance patch
 - Rarity/DPS rebalance: SMG tamed (common 50→38 DPS); RPG, Titan Cannon, Railgun, Harpoon, Arc Thrower, Mine Layer, Flamethrower buffed to match their rarities; Arc Blade brought in line. Minigun untouched as the legendary benchmark.
 - **Endless mode**: after clearing wave 20, a "Continue: Endless" button appears on the victory screen. Waves 21+ scale enemy HP/damage/count, with elites every 4th wave and a boss every 5th. Best endless wave tracked in localStorage and shown on summaries.
