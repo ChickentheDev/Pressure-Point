@@ -1,18 +1,24 @@
-# Brotato-lite (Expanded) — v0.56 ALPHA
+# Brotato-lite (Expanded) — v0.5.7
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (Unreleased)
+## Latest Changes (v0.5.7)
 - **Hordes**: Waves are bigger — `16 + (wave-1)*8` enemies (wave 1: 16, wave 19: 160; was 10 + (wave-1)*5), and the spawn interval ramps up faster so late waves keep real pressure. Danger and co-op still multiply the total.
 - **Enemy HP**: +20% across the board, including the Overlord boss.
 - **Weapon rebalance**: Base damage reduced ~30% across the table (fire rates slightly lengthened) now that all owned weapons fire at once — each weapon keeps its role, and a full 6-weapon arsenal clears a wave-19 horde in ~30-40s instead of melting it. Minigun base price fixed (was 1000).
 - **Rarity fixed**: The top tier is now `Legendary` everywhere (it was inconsistently called `red` in code while the UI said Legendary). Tiers: Common → Rare → Epic → Legendary, scaling power and price 1x / 1.25x / 1.5x / 2x, with shop roll weights 50 / 35 / 10 / 5 (Luck improves the odds).
 - **Elites**: On wave 12 (Danger 2-5), wave 16 (Danger 4-5) and wave 20 (Danger 1-5), 2-3 elites spawn with the wave — 3x HP, 1.4x damage, bigger bodies, pulsing gold rings, triple XP/money, and an "ELITES INBOUND" banner. They count toward wave completion.
-- **Performance**: The web build runs faster with identical visuals. Bullets use cached glow sprites instead of per-bullet `shadowBlur`; HUD panels and bars cache their gradients and shadows; the hot loop no longer allocates arrays or objects per frame; the HUD no longer forces a layout every frame; the ground layer is blitted 1:1 instead of resampled.
-- **Controls**: In co-op, Player 1 dashes with `Left Shift` and Player 2 dashes with `Right Shift`, so each player dashes independently (`U` still works for P2).
+
+## Previous Update (v0.5.6)
 - **Victory**: Clearing wave 20 unlocks the next danger level with a celebration banner, then returns to the menu — no more replaying wave 20 forever.
 - **Arsenal**: All weapons you own fire at the same time, each on its own cooldown and ammo. No weapon switching.
 - **Enemies**: Three new types — the armored Bulwark tank, the exploding Burster, and the Splitter that bursts into runners.
+- **Controls**: `R` rerolls the shop; co-op shop locks are shared across P1/P2.
+- **Cleanup**: Removed `game-improvements.js` (superseded, never loaded) and 5 superseded pre-v0.56 sprite PNGs.
+
+## Previous Update (v0.56A)
+- **Performance**: The web build runs faster with identical visuals. Bullets use cached glow sprites instead of per-bullet `shadowBlur`; HUD panels and bars cache their gradients and shadows; the hot loop no longer allocates arrays or objects per frame; the HUD no longer forces a layout every frame; the ground layer is blitted 1:1 instead of resampled.
+- **Controls**: In co-op, Player 1 dashes with `Left Shift` and Player 2 dashes with `Right Shift`, so each player dashes independently (`U` still works for P2).
 
 ## Previous Update (v0.56) — graphics division
 - **Map and money**: Flat warm grey-brown ground with sparse doodles (pebbles, cracks, bones, grass) and matching trees. Money drops are glowing green gems that bob, pulse and swoop toward you, and the HUD/shop currency icon matches.
@@ -136,6 +142,9 @@ Shows:
 - See `IMPROVEMENTS.md` for the v0.51 improvement notes (historical; `game-improvements.js` was removed in v0.56A — its balance tweaks conflicted with tuned values, its pooling was superseded by the perf pass, and its bug fixes were already applied)
 
 ## Changelog
+- **v0.5.7** (2026-10-12): Hordes (16 + (wave-1)*8 enemies), enemy HP +20%, weapon rebalance for all-weapons-fire, rarity tiers fixed (common/rare/epic/legendary), elites on waves 12/16/20 by danger
+- **v0.5.6** (2026-10-12): Wave-20 danger unlock (no victory screen), all owned weapons fire at once, 3 new enemies (Bulwark/Burster/Splitter), R rerolls shop, shared co-op locks, removed game-improvements.js and 5 old PNGs
+- **v0.56A** (2026-10-12): Web performance pass (identical visuals), co-op dash split to Left Shift (P1) / Right Shift (P2)
 - **v0.56** (2026-10-07): Animated player/enemy sprites, art for 5 weapons, new enemy art (raptor, dino head, mosquito, sandworm boss), new ground and gem money, hit/death/muzzle/elemental/dash effects, Brotato-style shop, UI overlap fixes
 - **v0.55** (2026-10-07): Attack Speed fix, Harpoon damage restored, enemies kept in the arena, player acceleration, enemy knockback, calmer screen shake, NaN safety net, pause freezes animations, dash cooldown reset on new run, shop/HUD layout fixes for small windows
 - **v0.54** (2026-10-07): Point-blank and swept bullet hits, co-op chain-kill credit, enemy separation, auto-aim lead, WASM Start freeze fix
