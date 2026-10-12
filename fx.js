@@ -65,6 +65,18 @@
     g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
     return (glowCache[color] = c);
   }
+  // Perf: the old drawOver() ran a regex on every bullet's color every frame. Bullet colors never
+  // change after spawn, so validate once per bullet (WeakMap: entries die with the bullet).
+  const tracerColCache = new WeakMap();
+  function tracerColor(b){
+    let c = tracerColCache.get(b);
+    if(c === undefined){
+      const raw = b.color || '';
+      c = /^#[0-9a-fA-F]{6}$/.test(raw) ? raw : '#ffffff';
+      tracerColCache.set(b, c);
+    }
+    return c;
+  }
   function maxParts(){ return settings.graphics === 'high' || settings.graphics === 'custom' ? 700 : 260; }
   // fewer particles per event as the crowd grows, so big waves stay smooth
   function density(){ const n = enemies.length; return n > 140 ? 0.25 : n > 80 ? 0.45 : n > 40 ? 0.7 : 1; }
@@ -99,6 +111,7 @@
   const seed = o => { let s = seeds.get(o); if(s == null){ s = Math.random() * 8; seeds.set(o, s); } return s; };
   let lastNow = performance.now();
   let fdt = 0;
+  let fxFrame = 0;                                 // bumped each frame; replaces the per-frame Set of live enemies
   const ENEMY_COLORS = { runner:['#8a6670', '#b08f96', '#5e4048'], bruiser:['#6f5442', '#d9b54a', '#8f725c'], spitter:['#2e8a72', '#7f6048', '#9cff6b'], overlord:['#86604a', '#e8e0cc', '#5fd068'] };
 
   function ownerWeapon(id){ const p = players.find(q => q.id === id); return p ? getWeaponFor(p) : null; }
@@ -116,9 +129,10 @@
     budget = Math.round(140 * density());
     if(state.phase === 'menu'){ parts.length = rings.length = flashes.length = ghosts.length = arcs.length = 0; seenEnemies.clear(); return; }
     // enemies: hits (hitFlash rising), kills (gone from the list)
-    const alive = new Set();
+    // Perf: the old code allocated a Set of live enemies every frame; instead each seen entry is
+    // stamped with the current frame id, and entries with a stale stamp are the dead ones.
+    fxFrame++;
     for(const e of enemies){
-      alive.add(e);
       const prev = seenEnemies.get(e);
       const fl = e.hitFlash || 0;
       if(prev && fl > prev.flash + 0.02){
@@ -131,12 +145,12 @@
           if(near){ shockT.set(near, 0.45); arcs.push({a: e, b: near, life: 0.18}); }
         }
       }
-      if(prev){ prev.x = e.x; prev.y = e.y; prev.flash = fl; }
-      else seenEnemies.set(e, {x: e.x, y: e.y, flash: fl, id: e.id, r: e.r, boss: !!e.isBoss});
+      if(prev){ prev.x = e.x; prev.y = e.y; prev.flash = fl; prev.seen = fxFrame; }
+      else seenEnemies.set(e, {x: e.x, y: e.y, flash: fl, id: e.id, r: e.r, boss: !!e.isBoss, seen: fxFrame});
     }
-    let gone = 0; for(const e of seenEnemies.keys()) if(!alive.has(e)) gone++;
+    let gone = 0; for(const s of seenEnemies.values()) if(s.seen !== fxFrame) gone++;
     for(const [e, s] of seenEnemies){
-      if(alive.has(e)) continue;
+      if(s.seen === fxFrame) continue;
       seenEnemies.delete(e);
       if(gone > 40 || state.phase !== 'wave') continue;        // a mass clear (reset), not kills
       const cols = ENEMY_COLORS[s.id] || ['#ff8a5c', '#ffd166'];
@@ -244,8 +258,11 @@
     if(settings.graphics !== 'low'){
       ctx.lineCap = 'round';
       for(const b of bullets){
-        const sp = Math.hypot(b.vx || 0, b.vy || 0); if(!sp) continue;
-        const col = /^#[0-9a-fA-F]{6}$/.test(b.color || '') ? b.color : '#ffffff';
+        // Perf: squared speed (same value Math.hypot would return) and cached color validation.
+        const vx = b.vx || 0, vy = b.vy || 0, sp2 = vx * vx + vy * vy;
+        if(!sp2) continue;
+        const sp = Math.sqrt(sp2);
+        const col = tracerColor(b);
         if(b.elemental){
           const r = b.elemental === 'fire' ? 13 : 10;
           ctx.globalAlpha = 0.7; ctx.drawImage(glowSprite(b.elemental === 'fire' ? '#ff8c42' : b.elemental === 'ice' ? '#6cd6ff' : '#b27bff'), b.x - r, b.y - r, r * 2, r * 2); ctx.globalAlpha = 1;
@@ -295,8 +312,14 @@
     ctx.restore();
   }
   // soft additive glow used for the game's own particles; false = caller draws its fallback
+  // Perf: the old code ran a regex on every particle every frame; colors come from a small set,
+  // so cache the validation result per color string (fast length/prefix reject first).
+  const glowValidCache = new Map();
   function glow(color, x, y, r, a){
-    if(typeof color !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(color)) return false;
+    if(typeof color !== 'string' || color.length !== 7 || color.charCodeAt(0) !== 35) return false;
+    let ok = glowValidCache.get(color);
+    if(ok === undefined){ ok = /^#[0-9a-fA-F]{6}$/.test(color); glowValidCache.set(color, ok); }
+    if(!ok) return false;
     ctx.globalAlpha = a; ctx.drawImage(glowSprite(color), x - r, y - r, r * 2, r * 2); ctx.globalAlpha = 1;
     return true;
   }
@@ -304,11 +327,13 @@
   const GROUND = '#6f635a';
   let groundCv = null, groundKey = '';
   function buildGround(){
-    const dpr = window.devicePixelRatio || 1;
+    // Perf: size the offscreen canvas to the real backing store (canvas.width/height), not
+    // Math.round(W*dpr) — resize() uses Math.floor, so this avoids a 1px resample every frame.
+    const cw = Math.max(1, canvas.width), ch = Math.max(1, canvas.height);
     const c = document.createElement('canvas');
-    c.width = Math.max(1, Math.round(W * dpr)); c.height = Math.max(1, Math.round(H * dpr));
+    c.width = cw; c.height = ch;
     const g = c.getContext('2d');
-    g.scale(dpr, dpr);
+    g.scale(cw / W, ch / H);
     g.fillStyle = GROUND; g.fillRect(0, 0, W, H);
     let seed = 1337;                                 // fixed seed: decals stay put between frames and runs
     const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
@@ -345,9 +370,10 @@
   // draws the whole background; false = not ready yet (game.js then draws its old background)
   function drawGround(){
     if(!ready('decals')) return false;
-    const key = W + 'x' + H + '@' + (window.devicePixelRatio || 1);
+    const key = W + 'x' + H + '@' + canvas.width + 'x' + canvas.height;
     if(key !== groundKey){ groundCv = buildGround(); groundKey = key; }
-    ctx.drawImage(groundCv, 0, 0, W, H);
+    // Perf: 1:1 blit of the backing-store-sized canvas — the old (0,0,W,H) form resampled it.
+    ctx.drawImage(groundCv, 0, 0);
     return true;
   }
   function drawTree(){                              // called with the tree's transform already applied
@@ -387,7 +413,7 @@
   }
   const matLook = new WeakMap();                    // drop -> {v, rot, phase}
   function drawMoney(){
-    const near = players.filter(p => !p.dead);
+    // Perf: iterate players directly instead of players.filter() per frame (was an allocation).
     for(const m of moneyDrops){
       let L = matLook.get(m);
       if(!L){ L = {v: Math.floor(Math.random() * MAT_SHAPES), rot: (Math.random() - 0.5) * 1.2, ph: Math.random() * 6.28}; matLook.set(m, L); }
@@ -396,7 +422,7 @@
       const pulse = 0.5 + 0.5 * Math.sin(t * 5);
       // swoop: inside the game's 80px pickup range the gem stretches toward the player and leaves a streak
       let pull = 0, ang = 0;
-      for(const p of near){ const d = Math.hypot(p.x - m.x, p.y - m.y); if(d < 80){ const k = (80 - d) / 80; if(k > pull){ pull = k; ang = Math.atan2(p.y - m.y, p.x - m.x); } } }
+      for(const p of players){ if(p.dead) continue; const d = Math.hypot(p.x - m.x, p.y - m.y); if(d < 80){ const k = (80 - d) / 80; if(k > pull){ pull = k; ang = Math.atan2(p.y - m.y, p.x - m.x); } } }
       const size = 13;
       ctx.save();
       ctx.translate(m.x, m.y + bob * (1 - pull));

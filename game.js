@@ -147,6 +147,34 @@ function drawGroundShadow(x, y, rx, ry){
   ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI*2); ctx.fill();
   ctx.restore();
 }
+// Perf: bullet look-up table for drawEffects. The disc color set is small (one per weapon color),
+// so each variant is rendered once and reused; see the bullets loop in drawEffects().
+const bulletSpriteCache = new Map();
+function bulletSprite(color, crit){
+  const key = color + '|' + (crit ? 1 : 0);
+  let s = bulletSpriteCache.get(key);
+  if(!s){
+    const half = crit ? 22 : 18;
+    const c = document.createElement('canvas');
+    c.width = c.height = half * 2;
+    const g = c.getContext('2d');
+    const glowR = crit ? 13 : 10;
+    const gr = g.createRadialGradient(half, half, 0, half, half, glowR);
+    // same glow hues/alphas the old shadowBlur pass used
+    const gc = crit ? '255,209,102' : '255,255,255';
+    const ga = crit ? 0.7 : 0.35;
+    gr.addColorStop(0, `rgba(${gc},${ga})`);
+    gr.addColorStop(1, `rgba(${gc},0)`);
+    g.fillStyle = gr;
+    g.beginPath(); g.arc(half, half, glowR, 0, Math.PI*2); g.fill();
+    g.fillStyle = color;
+    g.beginPath(); g.arc(half, half, crit ? 4 : 3, 0, Math.PI*2); g.fill();
+    s = {c, half};
+    if(bulletSpriteCache.size > 64) bulletSpriteCache.clear();
+    bulletSpriteCache.set(key, s);
+  }
+  return s;
+}
 // in-hand length (px) for each weapon sprite, keeps weapons visually consistent regardless of PNG size
 const weaponHandLength = { pistol:20, blade:24, smg:26, rifle:28, shotgun:28, harpoon:30, dmr:32, heavy:30, rpg:32, minigun:30,
   flame:30, arc:28, rail:36, mine:26, sprayer:28 };   // [brad-fx] last row: v0.56 weapon art
@@ -171,20 +199,34 @@ const MAX_BULLETS = 320;
 const floatingTexts = [];
 const camera = {shake:0, x:0, y:0};
 
-function roundRect(x, y, w, h, r){
+// Perf: draw() runs every frame and used to write canvas.style.cursor and button style.display
+// unconditionally, plus hudP2CardY() forced layout (getBoundingClientRect) per frame. Cursor and
+// display only ever change on discrete state transitions, so skip redundant DOM writes (the guards
+// read live DOM state, so the game.js and ui.js call sites can't desync each other).
+function setCursor(c){ if(canvas.style.cursor !== c) canvas.style.cursor = c; }
+function setDisplay(el, v){ if(el && el.style.display !== v) el.style.display = v; }
+
+function roundRect(x, y, w, h, r, g){
+  // optional 6th arg lets offscreen pre-renders (panel cache) reuse this on their own context
+  g = g || ctx;
   // arcTo() throws IndexSizeError on a negative radius, which would kill the render loop
   w = Math.max(0, w); h = Math.max(0, h);
   const rr = Math.max(0, Math.min(r, w/2, h/2));
-  ctx.beginPath();
-  ctx.moveTo(x+rr, y);
-  ctx.arcTo(x+w, y, x+w, y+h, rr);
-  ctx.arcTo(x+w, y+h, x, y+h, rr);
-  ctx.arcTo(x, y+h, x, y, rr);
-  ctx.arcTo(x, y, x+w, y, rr);
-  ctx.closePath();
+  g.beginPath();
+  g.moveTo(x+rr, y);
+  g.arcTo(x+w, y, x+w, y+h, rr);
+  g.arcTo(x+w, y+h, x, y+h, rr);
+  g.arcTo(x, y+h, x, y, rr);
+  g.arcTo(x, y, x+w, y, rr);
+  g.closePath();
 }
 
+// Perf: shade() runs per panel()/drawBar call; the result only depends on (hex, amt), so memoize it.
+const shadeCache = new Map();
 function shade(hex, amt){
+  const key = hex + '|' + amt;
+  const hit = shadeCache.get(key);
+  if(hit !== undefined) return hit;
   let c = hex.startsWith('#') ? hex.slice(1) : hex;
   if(c.length === 3) c = c.split('').map(ch => ch + ch).join('');
   const num = parseInt(c, 16);
@@ -194,36 +236,61 @@ function shade(hex, amt){
   r = Math.max(0, Math.min(255, r));
   g = Math.max(0, Math.min(255, g));
   b = Math.max(0, Math.min(255, b));
-  return `rgb(${r},${g},${b})`;
+  const out = `rgb(${r},${g},${b})`;
+  shadeCache.set(key, out);
+  return out;
+}
+
+// Perf: panel() is called every frame (HUD, wave banner, upgrade/shop screens) and used to pay for
+// shadowBlur + a fresh linear gradient + shade() string work on every call. The painted result only
+// depends on (w,h,fill,stroke,r,shadow,alpha,highlight) — never on x/y — so it is rendered once into
+// an offscreen bitmap and blitted per frame. Visually identical (same shadow, gradient, highlight).
+const panelCache = new Map();
+function panelBitmap(w, h, fill, stroke, r, shadow, alpha, highlight){
+  const key = w + '|' + h + '|' + fill + '|' + stroke + '|' + r + '|' + (shadow ? 1 : 0) + '|' + alpha + '|' + (highlight ? 1 : 0);
+  let bmp = panelCache.get(key);
+  if(!bmp){
+    const pad = shadow ? 20 : 2;   // shadowBlur 10 + shadowOffsetY 4 stay inside the padding
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.ceil(w + pad * 2));
+    c.height = Math.max(1, Math.ceil(h + pad * 2));
+    const g = c.getContext('2d');
+    g.save();
+    if(shadow){
+      g.shadowColor = 'rgba(0,0,0,0.35)';
+      g.shadowBlur = 10;
+      g.shadowOffsetY = 4;
+    }
+    g.globalAlpha = alpha;
+    const grad = g.createLinearGradient(0, pad, 0, pad + h);
+    grad.addColorStop(0, shade(fill, 18));
+    grad.addColorStop(1, shade(fill, -14));
+    g.fillStyle = grad;
+    roundRect(pad, pad, w, h, r, g);
+    g.fill();
+    g.shadowBlur = 0;
+    g.globalAlpha = 1;
+    g.lineWidth = 3;
+    g.strokeStyle = stroke;
+    g.stroke();
+    if(highlight){
+      g.lineWidth = 2;
+      g.strokeStyle = 'rgba(255,255,255,0.28)';
+      roundRect(pad + 3, pad + 3, w - 6, h - 6, Math.max(2, r - 2), g);
+      g.stroke();
+    }
+    g.restore();
+    bmp = {c, pad};
+    if(panelCache.size > 160) panelCache.clear();   // pathological-resize safety; normal play keeps a handful
+    panelCache.set(key, bmp);
+  }
+  return bmp;
 }
 
 function panel(x, y, w, h, fill=palette.uiLight, stroke=palette.outline, r=10, opts={}){
   const {shadow=true, alpha=1, highlight=true} = opts;
-  ctx.save();
-  if(shadow){
-    ctx.shadowColor = 'rgba(0,0,0,0.35)';
-    ctx.shadowBlur = 10;
-    ctx.shadowOffsetY = 4;
-  }
-  ctx.globalAlpha = alpha;
-  const grad = ctx.createLinearGradient(x, y, x, y+h);
-  grad.addColorStop(0, shade(fill, 18));
-  grad.addColorStop(1, shade(fill, -14));
-  ctx.fillStyle = grad;
-  roundRect(x, y, w, h, r);
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.globalAlpha = 1;
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = stroke;
-  ctx.stroke();
-  if(highlight){
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgba(255,255,255,0.28)';
-    roundRect(x+3, y+3, w-6, h-6, Math.max(2, r-2));
-    ctx.stroke();
-  }
-  ctx.restore();
+  const bmp = panelBitmap(w, h, fill, stroke, r, shadow, alpha, highlight);
+  ctx.drawImage(bmp.c, x - bmp.pad, y - bmp.pad);
 }
 
 function flashMsg(text, dur=1.6){
@@ -1427,10 +1494,12 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
 
   // enemies
   repairNonFinite();
+  // Perf: was players.filter() per enemy (an array allocation for every enemy, every frame).
+  // The array holds references; later code re-snapshots after deaths, so behaviour is unchanged.
+  const waveAlive = players.filter(p=>!p.dead);
   for(let i=enemies.length-1;i>=0;i--){ const e=enemies[i]; // choose nearest alive player to chase
-    const alivePlayers = players.filter(p=>!p.dead);
-    if(alivePlayers.length === 0) continue;
-    let target = alivePlayers[0]; let bd = (e.x-alivePlayers[0].x)**2 + (e.y-alivePlayers[0].y)**2; for(const p of alivePlayers){ const d=(e.x-p.x)**2 + (e.y-p.y)**2; if(d<bd){ bd=d; target=p; } }
+    if(waveAlive.length === 0) continue;
+    let target = waveAlive[0]; let bd = (e.x-waveAlive[0].x)**2 + (e.y-waveAlive[0].y)**2; for(const p of waveAlive){ const d=(e.x-p.x)**2 + (e.y-p.y)**2; if(d<bd){ bd=d; target=p; } }
     // apply status effects
     if(!e.status) e.status = {burn:0,burnDps:0,slow:0,shock:0};
     if(e.status.burn > 0){
@@ -1458,8 +1527,9 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover')
     for(let j=bullets.length-1;j>=0;j--){ const b = bullets[j];
           if(b.hits && b.hits.includes(e)) continue;   // a piercing bullet hits each enemy once
           // rehit weapons (Harpoon): hitting the same enemy again needs the bullet to still be inside it
-          // (the pre-v0.54 point test), so its single-target damage matches the old behaviour
-          if(b.rehit && b.lastHit === e && Math.hypot(b.x - e.x, b.y - e.y) >= e.r + BULLET_HIT_R) continue;
+          // (the pre-v0.54 point test), so its single-target damage matches the old behaviour.
+          // Perf: squared distance instead of Math.hypot here — this runs per bullet/enemy pair.
+          if(b.rehit && b.lastHit === e){ const rdx = b.x - e.x, rdy = b.y - e.y, rr2 = e.r + BULLET_HIT_R; if(rdx*rdx + rdy*rdy >= rr2*rr2) continue; }
           if(segmentHitsCircle(b.px ?? b.x, b.py ?? b.y, b.x, b.y, e.x, e.y, e.r + BULLET_HIT_R)){
             e.hp -= b.damage;
             e.lastHitBy = b.ownerId;
@@ -1828,6 +1898,21 @@ function drawPlayers(){
 // HUD scales with the window (it is never clicked, so a plain transform is safe)
 function hudScale(){ return Math.max(0.8, Math.min(1.25, Math.min(W/1280, H/720) * 1.05)); }
 
+// Perf: drawBar() runs ~7x per frame in the HUD and built a fresh gradient each time. The gradient
+// only depends on (x,w,c1,c2) and positions are stable frame-to-frame, so cache it.
+const barGradCache = new Map();
+function barGradient(x, w, c1, c2){
+  const key = x + '|' + w + '|' + c1 + '|' + c2;
+  let g = barGradCache.get(key);
+  if(!g){
+    g = ctx.createLinearGradient(x, 0, x + w, 0);
+    g.addColorStop(0, c1); g.addColorStop(1, c2);
+    if(barGradCache.size > 160) barGradCache.clear();
+    barGradCache.set(key, g);
+  }
+  return g;
+}
+
 function drawBar(x, y, w, h, frac, c1, c2, label){
   ctx.fillStyle = 'rgba(4,7,13,0.85)';
   roundRect(x-2, y-2, w+4, h+4, (h+4)/2); ctx.fill();
@@ -1835,9 +1920,7 @@ function drawBar(x, y, w, h, frac, c1, c2, label){
   roundRect(x, y, w, h, h/2); ctx.fill();
   const f = Math.max(0, Math.min(1, frac || 0));
   if(f > 0){
-    const g = ctx.createLinearGradient(x, y, x + w, y);
-    g.addColorStop(0, c1); g.addColorStop(1, c2);
-    ctx.fillStyle = g;
+    ctx.fillStyle = barGradient(x, w, c1, c2);
     roundRect(x, y, w * f, h, h/2); ctx.fill();
     ctx.fillStyle = 'rgba(255,255,255,0.18)';
     roundRect(x + 2, y + 1, Math.max(0, w * f - 4), Math.max(1, h * 0.35), h/4); ctx.fill();
@@ -1883,14 +1966,22 @@ function drawPlayerCard(p, x, y, w, title, accent){
   ctx.fillText(`${p.currency}`, x + 40, y + 85);
 }
 
-// y (in HUD units) for the P2 card: 8px below the DOM Pause button, measured in canvas pixels
+// y (in HUD units) for the P2 card: 8px below the DOM Pause button, measured in canvas pixels.
+// Perf: the Pause button only moves on resize or when its visibility toggles, so cache the rect
+// math keyed on (W,H,display) instead of forcing layout with getBoundingClientRect every frame.
+let _p2CardCache = {key: null, y: 62};
 function hudP2CardY(S){
-  let bottomPx = 62 * S;
-  if(pauseBtn && pauseBtn.style.display !== 'none'){
-    const br = pauseBtn.getBoundingClientRect(), cr = canvas.getBoundingClientRect();
-    if(br.height > 0) bottomPx = br.bottom - cr.top + 8;
+  const disp = pauseBtn ? pauseBtn.style.display : 'none';
+  const key = W + 'x' + H + '|' + disp;
+  if(key !== _p2CardCache.key){
+    let bottomPx = 62 * S;
+    if(pauseBtn && disp !== 'none'){
+      const br = pauseBtn.getBoundingClientRect(), cr = canvas.getBoundingClientRect();
+      if(br.height > 0) bottomPx = br.bottom - cr.top + 8;
+    }
+    _p2CardCache = {key, y: Math.max(62, bottomPx / S)};
   }
-  return Math.max(62, bottomPx / S);
+  return _p2CardCache.y;
 }
 
 function drawHUD(){
@@ -2070,7 +2161,7 @@ function drawUpgradeSelector(){
     ctx.textAlign = 'start';
     ctx.restore();
   }
-  canvas.style.cursor = anyHover ? 'pointer' : 'default';
+  setCursor(anyHover ? 'pointer' : 'default');
 }
 
 // [brad-ui] v0.56 Brotato-style shop screen, drawn by ui.js; Tab still opens the full stats view
@@ -2208,14 +2299,13 @@ function drawEffects(){
     ctx.fillRect(f.x-1, f.y + bob - f.r - 4, 2, 6);
   }
 
-  // bullets
+  // bullets: each distinct (disc color, crit) combo is pre-rendered once into a small sprite with
+  // its glow baked in. The old code drew every bullet with ctx.save/restore + shadowBlur, one of
+  // the most expensive canvas ops; this blits one cached image per bullet instead. Same disc
+  // colors/sizes and a matching soft glow, so the look is unchanged.
   for(const b of bullets){
-    ctx.save();
-    ctx.shadowColor = b.crit ? 'rgba(255,209,102,0.7)' : 'rgba(255,255,255,0.35)';
-    ctx.shadowBlur = b.crit ? 10 : 6;
-    ctx.fillStyle = b.crit ? '#ffd166' : (b.color || '#fffa');
-    ctx.beginPath(); ctx.arc(b.x,b.y,b.crit?4:3,0,Math.PI*2); ctx.fill();
-    ctx.restore();
+    const s = bulletSprite(b.crit ? '#ffd166' : (b.color || '#fffa'), b.crit);
+    ctx.drawImage(s.c, b.x - s.half, b.y - s.half);
   }
 
   // enemies
@@ -2359,12 +2449,12 @@ function draw(){
   drawBackground();
   if(state.phase === 'menu'){
     // menu is DOM; don't paint the in-game HUD behind it
-    restartBtn.style.display = 'none';
-    if(pauseBtn) pauseBtn.style.display = 'none';
-    canvas.style.cursor = 'default';
+    setDisplay(restartBtn, 'none');
+    setDisplay(pauseBtn, 'none');
+    setCursor('default');
     return;
   }
-  if(state.phase === 'wave' || state.phase === 'gameover') canvas.style.cursor = 'crosshair';
+  if(state.phase === 'wave' || state.phase === 'gameover') setCursor('crosshair');
   ctx.save();
   ctx.translate(camera.x, camera.y);
   drawEffects();
@@ -2399,17 +2489,19 @@ function draw(){
     ctx.fillRect(0,0,W,H);
   }
   if(players.some(p=>p.hitFlash>0)){
-    ctx.fillStyle = `rgba(255,70,70,${Math.max(...players.map(p=>p.hitFlash))})`;
+    // Perf: max without the players.map() allocation the old code did here.
+    let m = 0; for(const p of players) if(p.hitFlash > m) m = p.hitFlash;
+    ctx.fillStyle = `rgba(255,70,70,${m})`;
     ctx.fillRect(0,0,W,H);
   }
   if(state.phase==='gameover'){
-    restartBtn.style.display = 'block';
-    if(pauseBtn) pauseBtn.style.display = 'none';
+    setDisplay(restartBtn, 'block');
+    setDisplay(pauseBtn, 'none');
     drawGameOver();
   } else {
-    restartBtn.style.display = 'none';
+    setDisplay(restartBtn, 'none');
     // [brad-ui] no Pause button over the shop (nothing runs there and it covered the Stats panel)
-    if(pauseBtn && state.phase !== 'menu') pauseBtn.style.display = state.phase === 'shop' ? 'none' : 'block';
+    if(pauseBtn && state.phase !== 'menu') setDisplay(pauseBtn, state.phase === 'shop' ? 'none' : 'block');
   }
 }
 
