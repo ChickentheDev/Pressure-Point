@@ -1,30 +1,27 @@
-# Pressure Point — v0.6.8
+# Pressure Point — v0.6.8.1
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.6.8 — Class unlocks + Glassjaw)
-- **New class: Glassjaw** — 1 HP glass cannon, unlocks by beating Nightmare.
-- **Class unlocks**: 9 classes now unlock via achievements. Ironheart is the starter.
+## Latest Changes (v0.6.8.1 — Map fix + Glassjaw 1-HP lock)
+- **Map off-center fixed** — the ground no longer shifts on hidpi/retina displays.
+- **Glassjaw truly 1 HP** — no upgrade, item, or level-up can raise it above 1 HP; revives land at 1 HP.
+- **Vitality substitute** — for Glassjaw it grants +4% move speed per level instead of HP.
 
-## Previous Update (v0.6.4 — New enemies + Meta progression)
-- 3 new enemies (Dasher, Aegis, Nester); Essence + 6 permanent upgrades.
+## Previous Update (v0.6.8 — Class unlocks + Glassjaw)
+- New class: Glassjaw (1 HP glass cannon, unlocks by beating Nightmare); 9 classes unlock via achievements.
 
 ## Previous Update (v0.6.7 — Nightmare danger + UI polish)
 - Danger 6 Nightmare with enraging boss; UI polish.
 
-## Previous Update (v0.6.6 — 5 danger bosses)
-- One unique boss per danger level with special abilities.
-
 ## What's Included
 - **11 classes**: 9 unlock via achievements, Glassjaw (1 HP) unlocks by beating Nightmare.
-- **Achievements**: 15 unlockable, persisted across runs.
+- **Achievements**: 16 unlockable, persisted across runs.
 - **Elite mini-bosses**: 9 named elites with unique traits, HP bars, and bonus loot.
 - **Meta progression**: earn Essence from runs; spend on 6 permanent upgrades.
 - **9 enemy types**: Runner, Spitter, Bruiser, Burster, Splitter, Bulwark, Dasher, Aegis, Nester.
 - **Wave system**: Wave 1 → 20 with horde-scaled counts, then **endless mode** past 20.
 - **25 weapons** across rarities, all firing simultaneously.
 - **109 items** across 5 categories (Tech/Primal/Arcane/Unique/Exclusive).
-- **11 character classes** with unique sprites.
 - **Bosses**: one unique boss per danger level at wave 20 (Overlord, Hive Tyrant, Stormcaller, Ironclad, Voidreaver, Nightmare); bosses every 5 waves in endless.
 - **Danger levels (1–6)** — D5 Inferno, D6 Nightmare; unlocks stored in `localStorage`.
 - **Co-op**: two local players, in-wave revive, proximity damage synergy.

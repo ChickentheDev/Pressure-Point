@@ -1,4 +1,4 @@
-## Unreleased
+## v0.6.8.1 — Map fix + Glassjaw 1-HP lock
 - **Map off-center fix**: ground blit now runs under identity transform (hidpi regression from perf pass).
 - **Glassjaw 1-HP invariant enforced**: Vitality, in-wave Max HP upgrades, shop +Max HP items, and level-up HP no longer raise Glassjaw above 1 HP (in-wave Max HP choice heals to full instead). Co-op revive can no longer revive at 0 HP.
 - **Vitality substitute for Glassjaw**: grants +4% move speed per level instead (shown in Upgrades screen when Glassjaw is selected).
