@@ -355,8 +355,7 @@
     ctx.globalAlpha = a; ctx.drawImage(glowSprite(color), x - r, y - r, r * 2, r * 2); ctx.globalAlpha = 1;
     return true;
   }
-  // ---- ground: flat warm grey-brown with sparse doodle decals, pre-rendered once per window size ----
-  const GROUND = '#6f635a';
+  // ---- ground: Brotato-style stone-tile arena with ornate border, pre-rendered once per window size ----
   let groundCv = null, groundKey = '';
   function buildGround(){
     // Perf: size the offscreen canvas to the real backing store (canvas.width/height), not
@@ -366,39 +365,110 @@
     c.width = cw; c.height = ch;
     const g = c.getContext('2d');
     g.scale(cw / W, ch / H);
-    g.fillStyle = GROUND; g.fillRect(0, 0, W, H);
-    let seed = 1337;                                 // fixed seed: decals stay put between frames and runs
+    let seed = 20261013;                             // fixed seed: arena stays put between frames and runs
     const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
-    // very soft large patches so the floor isn't perfectly flat
-    for(let i = 0; i < 14; i++){
-      const x = rnd() * W, y = rnd() * H, r = 120 + rnd() * 220;
-      const gr = g.createRadialGradient(x, y, 0, x, y, r);
-      const light = rnd() < 0.5;
-      gr.addColorStop(0, light ? 'rgba(255,240,220,0.035)' : 'rgba(30,20,10,0.05)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
-      g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2);
+
+    // 1. dark void outside the arena
+    g.fillStyle = '#100e14'; g.fillRect(0, 0, W, H);
+    for(let i = 0; i < 260; i++){
+      g.fillStyle = rnd() < 0.5 ? 'rgba(255,255,255,0.015)' : 'rgba(0,0,0,0.06)';
+      g.fillRect(rnd() * W, rnd() * H, 2 + rnd() * 3, 2 + rnd() * 3);
     }
-    // sparse decals on a jittered grid (about one per 110x110 px cell, some cells left empty)
-    const im = imgs.decals, cell = 110;
-    if(im && im.complete && im.naturalWidth){
-      g.imageSmoothingEnabled = false;
-      for(let gy = 0; gy < H + cell; gy += cell){
-        for(let gx = 0; gx < W + cell; gx += cell){
-          const n = rnd() < 0.25 ? 0 : rnd() < 0.7 ? 1 : 2;
-          for(let k = 0; k < n; k++){
-            const f = Math.floor(rnd() * 8), x = gx + rnd() * cell, y = gy + rnd() * cell;
-            const sc = rnd() < 0.75 ? 2 : 1, flip = rnd() < 0.5;
-            g.save(); g.globalAlpha = 0.55 + rnd() * 0.3; g.translate(Math.round(x), Math.round(y)); if(flip) g.scale(-1, 1);
-            g.drawImage(im, f * 16, 0, 16, 16, -8 * sc, -8 * sc, 16 * sc, 16 * sc); g.restore();
-          }
+
+    // 2. arena rect, inset for the border frame
+    const bw = Math.max(20, Math.min(34, Math.round(Math.min(W, H) * 0.035)));
+    const ax = bw, ay = bw, aw = W - bw * 2, ah = H - bw * 2;
+
+    // 3. stone tile floor with per-tile variation
+    const TILE = 96;
+    g.fillStyle = '#565b6b'; g.fillRect(ax, ay, aw, ah);
+    for(let ty = ay; ty < ay + ah; ty += TILE){
+      for(let tx = ax; tx < ax + aw; tx += TILE){
+        const v = (rnd() - 0.5) * 14;
+        g.fillStyle = 'rgb(' + Math.round(86 + v) + ',' + Math.round(91 + v) + ',' + Math.round(107 + v) + ')';
+        g.fillRect(tx + 1, ty + 1, TILE - 2, TILE - 2);
+        g.fillStyle = 'rgba(255,255,255,0.05)'; g.fillRect(tx + 1, ty + 1, TILE - 2, 3);
+        g.fillStyle = 'rgba(0,0,0,0.10)'; g.fillRect(tx + 1, ty + TILE - 5, TILE - 2, 3);
+        for(let s = 0; s < 6; s++){
+          g.fillStyle = rnd() < 0.5 ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)';
+          g.fillRect(tx + 4 + rnd() * (TILE - 8), ty + 4 + rnd() * (TILE - 8), 2, 2);
         }
       }
     }
-    // gentle edge darkening keeps the eye in the middle without the old heavy vignette
-    const vig = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75);
-    vig.addColorStop(0, 'rgba(0,0,0,0)'); vig.addColorStop(1, 'rgba(20,12,6,0.32)');
+    g.strokeStyle = 'rgba(20,22,30,0.55)'; g.lineWidth = 2;
+    g.beginPath();
+    for(let ty = ay; ty <= ay + ah + 1; ty += TILE){ g.moveTo(ax, ty); g.lineTo(ax + aw, ty); }
+    for(let tx = ax; tx <= ax + aw + 1; tx += TILE){ g.moveTo(tx, ay); g.lineTo(tx, ay + ah); }
+    g.stroke();
+
+    // 4. debris: pebbles, crystal shards, cracks
+    const nPeb = Math.round(aw * ah / 9000);
+    for(let i = 0; i < nPeb; i++){
+      const x = ax + rnd() * aw, y = ay + rnd() * ah, r = 2 + rnd() * 4, sh = 90 + rnd() * 50;
+      g.fillStyle = 'rgb(' + (sh | 0) + ',' + ((sh * 0.98) | 0) + ',' + ((sh * 1.05) | 0) + ')';
+      g.beginPath(); g.ellipse(x, y, r, r * 0.7, rnd() * 3.14, 0, 6.29); g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.10)';
+      g.beginPath(); g.ellipse(x - r * 0.25, y - r * 0.25, r * 0.45, r * 0.3, 0, 0, 6.29); g.fill();
+    }
+    const nSh = Math.round(aw * ah / 26000);
+    for(let i = 0; i < nSh; i++){
+      const x = ax + rnd() * aw, y = ay + rnd() * ah, s = 4 + rnd() * 7;
+      g.save(); g.translate(x, y); g.rotate(rnd() * 3.14);
+      g.fillStyle = '#d8c26a';
+      g.beginPath(); g.moveTo(0, -s); g.lineTo(s * 0.45, s * 0.6); g.lineTo(-s * 0.45, s * 0.6); g.closePath(); g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.35)';
+      g.beginPath(); g.moveTo(0, -s); g.lineTo(s * 0.18, s * 0.6); g.lineTo(-s * 0.12, s * 0.6); g.closePath(); g.fill();
+      g.restore();
+    }
+    g.strokeStyle = 'rgba(25,20,25,0.5)'; g.lineWidth = 2;
+    const nCr = Math.round(aw * ah / 60000);
+    for(let i = 0; i < nCr; i++){
+      let x = ax + rnd() * aw, y = ay + rnd() * ah, a = rnd() * 6.28;
+      g.beginPath(); g.moveTo(x, y);
+      for(let k = 0; k < 5; k++){ a += (rnd() - 0.5) * 1.2; x += Math.cos(a) * (8 + rnd() * 14); y += Math.sin(a) * (8 + rnd() * 14); g.lineTo(x, y); }
+      g.stroke();
+    }
+    // legacy doodle decals for extra variety
+    const im = imgs.decals, cell = 130;
+    if(im && im.complete && im.naturalWidth){
+      g.imageSmoothingEnabled = false;
+      for(let gy = ay; gy < ay + ah; gy += cell){
+        for(let gx = ax; gx < ax + aw; gx += cell){
+          if(rnd() < 0.45) continue;
+          const f = Math.floor(rnd() * 8), x = gx + rnd() * cell, y = gy + rnd() * cell;
+          const sc = 2, flip = rnd() < 0.5;
+          g.save(); g.globalAlpha = 0.5 + rnd() * 0.3; g.translate(Math.round(x), Math.round(y)); if(flip) g.scale(-1, 1);
+          g.drawImage(im, f * 16, 0, 16, 16, -8 * sc, -8 * sc, 16 * sc, 16 * sc); g.restore();
+        }
+      }
+    }
+
+    // 5. ornate border frame: dark rim, bronze diamond-studded band, light stone lip
+    g.fillStyle = '#241f2b';
+    g.fillRect(0, 0, W, bw); g.fillRect(0, H - bw, W, bw); g.fillRect(0, 0, bw, H); g.fillRect(W - bw, 0, bw, H);
+    const bandW = Math.round(bw * 0.52), bandOff = Math.round((bw - bandW) / 2);
+    g.fillStyle = '#6e4a33';
+    g.fillRect(bandOff, bandOff, W - bandOff * 2, bandW);
+    g.fillRect(bandOff, H - bandOff - bandW, W - bandOff * 2, bandW);
+    g.fillRect(bandOff, bandOff, bandW, H - bandOff * 2);
+    g.fillRect(W - bandOff - bandW, bandOff, bandW, H - bandOff * 2);
+    g.fillStyle = '#a8764f';
+    const step = 46;
+    const diamond = (x, y, s) => { g.beginPath(); g.moveTo(x, y - s); g.lineTo(x + s, y); g.lineTo(x, y + s); g.lineTo(x - s, y); g.closePath(); g.fill(); };
+    for(let x = bandOff + step / 2; x < W - bandOff; x += step){ diamond(x, bandOff + bandW / 2, 5); diamond(x, H - bandOff - bandW / 2, 5); }
+    for(let y = bandOff + step / 2; y < H - bandOff; y += step){ diamond(bandOff + bandW / 2, y, 5); diamond(W - bandOff - bandW / 2, y, 5); }
+    g.strokeStyle = '#aab0c4'; g.lineWidth = 3;
+    g.strokeRect(ax - 1.5, ay - 1.5, aw + 3, ah + 3);
+    g.strokeStyle = 'rgba(0,0,0,0.45)'; g.lineWidth = 2;
+    g.strokeRect(1, 1, W - 2, H - 2);
+
+    // 6. soft inner shadow so the arena sits in the void
+    const vig = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.42, W / 2, H / 2, Math.max(W, H) * 0.72);
+    vig.addColorStop(0, 'rgba(0,0,0,0)'); vig.addColorStop(1, 'rgba(8,6,12,0.38)');
     g.fillStyle = vig; g.fillRect(0, 0, W, H);
     return c;
   }
+
   // draws the whole background; false = not ready yet (game.js then draws its old background)
   function drawGround(){
     if(!ready('decals')) return false;
