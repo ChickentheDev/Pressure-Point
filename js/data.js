@@ -87,28 +87,28 @@ const rarities = [
 ];
 
 const weapons = [
-  {id:'pistol', name:'Cobalt Pistol', type:'sidearm', rarity:'common', fireRate:0.22, bulletSpeed:700, spread:0.05, damage:10, mag:12, reload:1.1, recoil:0.8, color:'#8be9ff'},
-  {id:'harpoon', name:'Harpoon Gun', type:'rifle', rarity:'rare', fireRate:0.5, bulletSpeed:900, spread:0.0, damage:30, mag:6, reload:1.6, recoil:1.2, color:'#9be7ff', pierce:2, rehit:true},   // rehit: a harpoon can hit the same enemy again with its pierce (pre-v0.54 behaviour)
-  {id:'rifle', name:'Pulse Rifle', type:'rifle', rarity:'rare', fireRate:0.13, bulletSpeed:860, spread:0.02, damage:8, mag:30, reload:1.4, recoil:1.1, color:'#9bff7b'},
-  {id:'shotgun', name:'Grav Shotgun', type:'shotgun', rarity:'rare', fireRate:0.65, bulletSpeed:520, spread:0.5, damage:7, pellets:7, mag:6, reload:1.8, recoil:1.4, color:'#ffd166'},
+  {id:'pistol', name:'Cobalt Pistol', type:'sidearm', rarity:'common', fireRate:0.22, bulletSpeed:700, spread:0.05, damage:10, mag:12, reload:1.1, recoil:0.8, color:'#8be9ff', range:760},
+  {id:'harpoon', name:'Harpoon Gun', type:'rifle', rarity:'rare', fireRate:0.5, bulletSpeed:900, spread:0.0, damage:30, mag:6, reload:1.6, recoil:1.2, color:'#9be7ff', pierce:2, rehit:true, range:1050},   // rehit: a harpoon can hit the same enemy again with its pierce (pre-v0.54 behaviour)
+  {id:'rifle', name:'Pulse Rifle', type:'rifle', rarity:'rare', fireRate:0.13, bulletSpeed:860, spread:0.02, damage:8, mag:30, reload:1.4, recoil:1.1, color:'#9bff7b', range:880},
+  {id:'shotgun', name:'Grav Shotgun', type:'shotgun', rarity:'rare', fireRate:0.65, bulletSpeed:520, spread:0.5, damage:7, pellets:7, mag:6, reload:1.8, recoil:1.4, color:'#ffd166', range:430},
   {id:'heavy', name:'Titan Cannon', type:'heavy', rarity:'legendary', fireRate:0.6, bulletSpeed:520, spread:0.08, damage:55, mag:7, reload:1.8, recoil:1.8, color:'#ff7b7b', explosive:true, elemental:'fire'},
   {id:'blade', name:'Arc Blade', type:'melee', rarity:'rare', fireRate:0.5, bulletSpeed:420, spread:0.0, damage:20, mag:999, reload:0.2, recoil:0.6, color:'#7bdff2', melee:true},
-  {id:'smg', name:'Viper SMG', type:'rifle', rarity:'common', fireRate:0.09, bulletSpeed:720, spread:0.06, damage:5, mag:30, reload:1.2, recoil:0.9, color:'#7CFF6B'},
-  {id:'dmr', name:'Longshot DMR', type:'rifle', rarity:'rare', fireRate:0.3, bulletSpeed:980, spread:0.01, damage:20, mag:8, reload:1.6, recoil:1.2, color:'#6aaeff'},
-  {id:'flame', name:'Flamethrower', type:'special', rarity:'epic', fireRate:0.055, bulletSpeed:420, spread:0.25, damage:5, mag:80, reload:2.0, recoil:0.7, color:'#ff8c42', elemental:'fire'},
+  {id:'smg', name:'Viper SMG', type:'rifle', rarity:'common', fireRate:0.09, bulletSpeed:720, spread:0.06, damage:5, mag:30, reload:1.2, recoil:0.9, color:'#7CFF6B', range:700},
+  {id:'dmr', name:'Longshot DMR', type:'rifle', rarity:'rare', fireRate:0.3, bulletSpeed:980, spread:0.01, damage:20, mag:8, reload:1.6, recoil:1.2, color:'#6aaeff', range:1150},
+  {id:'flame', name:'Flamethrower', type:'special', rarity:'epic', fireRate:0.055, bulletSpeed:420, spread:0.25, damage:5, mag:80, reload:2.0, recoil:0.7, color:'#ff8c42', elemental:'fire', range:480},
   {id:'rpg', name:'RPG-7', type:'heavy', rarity:'epic', fireRate:0.8, bulletSpeed:460, spread:0.08, damage:65, mag:4, reload:1.8, recoil:2.0, color:'#ff5d5d', explosive:true, elemental:'fire'},
   {id:'arc', name:'Arc Thrower', type:'special', rarity:'epic', fireRate:0.22, bulletSpeed:600, spread:0.15, damage:15, mag:24, reload:1.5, recoil:1.0, color:'#b27bff', elemental:'shock'},
   {id:'minigun', name:'Minigun', type:'heavy', rarity:'legendary', fireRate:0.055, bulletSpeed:760, spread:0.12, damage:6, mag:200, reload:2.8, recoil:1.4, color:'#ffb44c', overheatMax:100, overheatPerShot:2, overheatCool:22, overheatLock:1.4},
-  {id:'rail', name:'Railgun', type:'rifle', rarity:'legendary', fireRate:0.7, bulletSpeed:1200, spread:0.0, damage:65, mag:6, reload:1.5, recoil:1.8, color:'#ff6b6b'},
+  {id:'rail', name:'Railgun', type:'rifle', rarity:'legendary', fireRate:0.7, bulletSpeed:1200, spread:0.0, damage:65, mag:6, reload:1.5, recoil:1.8, color:'#ff6b6b', range:1350},
   {id:'mine', name:'Mine Layer', type:'special', rarity:'rare', fireRate:0.6, bulletSpeed:300, spread:0.2, damage:30, mag:8, reload:1.5, recoil:1.0, color:'#c9a867', explosive:true, elemental:'fire'},
-  {id:'sprayer', name:'Frost Sprayer', type:'special', rarity:'rare', fireRate:0.08, bulletSpeed:520, spread:0.2, damage:5, mag:60, reload:1.7, recoil:0.8, color:'#6cd6ff', elemental:'ice'},
-  {id:'scatter', name:'Scattergun', type:'shotgun', rarity:'common', fireRate:0.7, bulletSpeed:480, spread:0.55, damage:5, pellets:6, mag:8, reload:1.6, recoil:1.3, color:'#c9a867'},
-  {id:'crossbow', name:'Crossbow', type:'rifle', rarity:'common', fireRate:0.8, bulletSpeed:750, spread:0.02, damage:32, mag:6, reload:1.5, recoil:1.0, color:'#8b6f47', pierce:1},
-  {id:'sniper', name:'Longshot Sniper', type:'rifle', rarity:'rare', fireRate:1.0, bulletSpeed:1100, spread:0.0, damage:55, mag:5, reload:1.8, recoil:1.6, color:'#6aaeff', pierce:3},
+  {id:'sprayer', name:'Frost Sprayer', type:'special', rarity:'rare', fireRate:0.08, bulletSpeed:520, spread:0.2, damage:5, mag:60, reload:1.7, recoil:0.8, color:'#6cd6ff', elemental:'ice', range:620},
+  {id:'scatter', name:'Scattergun', type:'shotgun', rarity:'common', fireRate:0.7, bulletSpeed:480, spread:0.55, damage:5, pellets:6, mag:8, reload:1.6, recoil:1.3, color:'#c9a867', range:390},
+  {id:'crossbow', name:'Crossbow', type:'rifle', rarity:'common', fireRate:0.8, bulletSpeed:750, spread:0.02, damage:32, mag:6, reload:1.5, recoil:1.0, color:'#8b6f47', pierce:1, range:950},
+  {id:'sniper', name:'Longshot Sniper', type:'rifle', rarity:'rare', fireRate:1.0, bulletSpeed:1100, spread:0.0, damage:55, mag:5, reload:1.8, recoil:1.6, color:'#6aaeff', pierce:3, range:1450},
   {id:'katana', name:'Katana', type:'melee', rarity:'epic', fireRate:0.35, bulletSpeed:420, spread:0.0, damage:22, mag:999, reload:0.2, recoil:0.5, color:'#e8e8ff', melee:true},
   {id:'plasma', name:'Plasma Cutter', type:'special', rarity:'rare', fireRate:0.18, bulletSpeed:650, spread:0.08, damage:12, mag:24, reload:1.4, recoil:0.9, color:'#00ffcc'},
   {id:'grenade', name:'Grenade Launcher', type:'heavy', rarity:'epic', fireRate:0.7, bulletSpeed:420, spread:0.1, damage:55, mag:6, reload:2.0, recoil:1.7, color:'#ffaa00', explosive:true, elemental:'fire'},
-  {id:'flak', name:'Flak Cannon', type:'shotgun', rarity:'epic', fireRate:0.8, bulletSpeed:500, spread:0.4, damage:8, pellets:8, mag:8, reload:2.0, recoil:1.6, color:'#ff8844', explosive:true},
+  {id:'flak', name:'Flak Cannon', type:'shotgun', rarity:'epic', fireRate:0.8, bulletSpeed:500, spread:0.4, damage:8, pellets:8, mag:8, reload:2.0, recoil:1.6, color:'#ff8844', explosive:true, range:460},
   {id:'tesla', name:'Tesla Coil', type:'special', rarity:'legendary', fireRate:0.3, bulletSpeed:700, spread:0.1, damage:25, mag:20, reload:1.6, recoil:1.1, color:'#b27bff', elemental:'shock'},
   {id:'esword', name:'Energy Sword', type:'melee', rarity:'legendary', fireRate:0.6, bulletSpeed:450, spread:0.0, damage:45, mag:999, reload:0.2, recoil:0.7, color:'#00ffff', melee:true},
   {id:'mortar', name:'Mortar', type:'heavy', rarity:'rare', fireRate:0.9, bulletSpeed:380, spread:0.15, damage:55, mag:4, reload:2.2, recoil:1.9, color:'#888866', explosive:true, elemental:'fire'},
@@ -225,7 +225,10 @@ const items = [
   {id:"eye_of_storm", name:"Eye of the Storm", rarity:"legendary", category:"exclusive", price:240, desc:"+15% Fire Rate, +15% Accuracy, +15% Move Speed", effects:{reloadMult:-0.15, speedMult:0.15, accuracyMult:0.15}},
   {id:"soul_of_titan", name:"Soul of the Titan", rarity:"legendary", category:"exclusive", price:250, desc:"+15% Damage, +12% Life Steal, +2 Pierce", effects:{lifestealAdd:0.12, damageMult:0.15, pierceAdd:2}},
   {id:"war_crown", name:"War Crown", rarity:"epic", category:"exclusive", price:145, desc:"+2 Luck, +6% Damage — worn with pride", effects:{luckAdd:2, damageMult:0.06}, cosmetic:"crown"},
-
+,
+  {id:'longbarrel', name:'Long Barrel', rarity:'common', category:'tech', price:32, desc:'+150 Bullet Range', effects:{rangeBonus:150}},
+  {id:'scope', name:'Marksman Scope', rarity:'rare', category:'tech', price:58, desc:'+300 Bullet Range, +10% Accuracy', effects:{rangeBonus:300, accuracyMult:0.1}},
+  {id:'railgun', name:'Rail Amplifier', rarity:'epic', category:'tech', price:110, desc:'+35% Bullet Range, +8% Damage', effects:{rangeMult:0.35, damageMult:0.08}}
 ];
 
 // ---- WASM shop bridge ----------------------------------------------------------------------------
@@ -345,6 +348,7 @@ function classUnlockText(c){
 const upgradeStats = [
   {id:'atkspd', name:'Attack Speed', apply:(p, mult)=>{ p.reloadSpeed /= mult; }},   // reloadSpeed scales shot delay and reload time: lower = faster
   {id:'baseDmg', name:'Base Damage', apply:(p, mult)=>{ p.damageBonus += Math.floor((mult-1)*10); }},
+  {id:'range', name:'Range', apply:(p, mult)=>{ p.rangeBonus = (p.rangeBonus || 0) + Math.round(120 * mult); }},
   {id:'hp', name:'Max HP', apply:(p, mult)=>{ if(isGlassjaw(p)){ p.hp = p.baseMaxHp; return; } p.baseMaxHp += Math.max(4, Math.round((mult-1)*40)); p.hp = p.baseMaxHp; }},
   {id:'lifesteal', name:'Life Steal', apply:(p, mult)=>{ p.lifesteal = Math.min(0.5, p.lifesteal + (mult-1)*0.05); }},
   {id:'armor', name:'Armor', apply:(p, mult)=>{ p.armor += Math.floor((mult-1)*6); }},

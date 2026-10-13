@@ -101,7 +101,7 @@ function resetRunStats(){
 function createPlayer(x,y){ return {
   x, y, r:14, angle:0, baseSpeed:220, baseMaxHp:120, hp:120,
   level:1, xp:0, xpNext:60, armor:0, lifesteal:0, reloadSpeed:1, accuracy:1, magBonus:0,
-  damageBonus:0, damageMult:1, recoil:1, luck:0, critChance:0.05, critMult:1.5, elementalBonus:0,
+  damageBonus:0, damageMult:1, recoil:1, luck:0, critChance:0.05, critMult:1.5, elementalBonus:0, rangeBonus:0, rangeMult:1,
   ownedWeapons: [], kick:0,
   currency:0, id: Math.random().toString(36).slice(2,8), hitFlash:0,
   items: [], dead: false, pierceBonus:0,

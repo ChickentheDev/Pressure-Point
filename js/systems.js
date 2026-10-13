@@ -58,6 +58,8 @@ function applyItemEffects(player, itemData, rarity, sign=1){
   if(e.damageMult) player.damageMult = Math.max(0.5, player.damageMult * (1 + e.damageMult * m));
   if(e.luckAdd) player.luck += Math.round(e.luckAdd * m);
   if(e.pierceAdd) player.pierceBonus = Math.max(0, player.pierceBonus + Math.round(e.pierceAdd * m));
+  if(e.rangeBonus) player.rangeBonus = (player.rangeBonus || 0) + Math.round(e.rangeBonus * m);
+  if(e.rangeMult) player.rangeMult = Math.max(0.5, (player.rangeMult || 1) * (1 + e.rangeMult * m));
 }
 
 function addItemToPlayer(player, itemData, rarity){
@@ -573,7 +575,7 @@ function fireWeaponFor(player, time, target){
       const elemental = w.elemental || (w.explosive ? 'fire' : null);
       // px/py = previous position for the swept hit test. A new bullet starts its sweep at the player's
       // centre, so an enemy overlapping the player (inside the muzzle offset) still gets hit.
-      bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, px: player.x, py: player.y, fresh: true, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, pierce: (w.pierce||0) + (player.pierceBonus||0), rehit: !!w.rehit });
+      bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, px: player.x, py: player.y, fresh: true, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, pierce: (w.pierce||0) + (player.pierceBonus||0), rehit: !!w.rehit, dist: 0, maxDist: ((w.range || 900) + (player.rangeBonus || 0)) * (player.rangeMult || 1) });
     }
     addParticle({x:player.x + Math.cos(angle)*16, y:player.y + Math.sin(angle)*16, life:0.15, r: w.type==='heavy'?18:w.type==='shotgun'?14:10, color:w.color});
     if(audio.ctx && time - (w.lastSound||0) > 0.06){ w.lastSound = time; const freq = w.type==='heavy'?120:w.type==='shotgun'?180:w.type==='rifle'?240:320; audio.beep(freq,0.04,'square',0.03); }
@@ -899,8 +901,9 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     // enemy bullets: move, hit players (capped by hurtPlayer), expire off-screen
     for(let i = enemyBullets.length - 1; i >= 0; i--){
       const b = enemyBullets[i];
-      b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt;
-      let consumed = b.life <= 0 || b.x < -40 || b.x > W + 40 || b.y < -40 || b.y > H + 40;
+      const esx = b.vx * dt, esy = b.vy * dt;
+      b.x += esx; b.y += esy; b.life -= dt; b.dist = (b.dist || 0) + Math.sqrt(esx*esx + esy*esy);
+      let consumed = b.life <= 0 || (b.maxDist && b.dist >= b.maxDist) || b.x < -40 || b.x > W + 40 || b.y < -40 || b.y > H + 40;
       if(!consumed){
         for(const p of players){
           if(p.dead || p.iFrames > 0) continue;
@@ -966,7 +969,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
   }
 
   // bullets update
-  for(let i=bullets.length-1;i>=0;i--){ const b=bullets[i]; if(b.fresh){ b.fresh = false; } else { b.px = b.x; b.py = b.y; } b.x += b.vx*dt; b.y += b.vy*dt; b.life -= dt; if(b.life<=0 || b.x<-50 || b.x>W+50 || b.y<-50 || b.y>H+50 || bullets.length>MAX_BULLETS) bullets.splice(i,1); }
+  for(let i=bullets.length-1;i>=0;i--){ const b=bullets[i]; if(b.fresh){ b.fresh = false; } else { b.px = b.x; b.py = b.y; } const stepx = b.vx*dt, stepy = b.vy*dt; b.x += stepx; b.y += stepy; b.life -= dt; b.dist = (b.dist || 0) + Math.sqrt(stepx*stepx + stepy*stepy); if(b.life<=0 || (b.maxDist && b.dist >= b.maxDist) || b.x<-50 || b.x>W+50 || b.y<-50 || b.y>H+50 || bullets.length>MAX_BULLETS) bullets.splice(i,1); }
 
   // bullets vs trees (destructibles)
   for(let i=bullets.length-1;i>=0;i--){
@@ -1032,7 +1035,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
         e.shootTimer = 2.1 + Math.random() * 0.9;
         const sa = Math.atan2(target.y - e.y, target.x - e.x), spd = 330;
         enemyBullets.push({x:e.x, y:e.y, vx:Math.cos(sa)*spd, vy:Math.sin(sa)*spd, r:6,
-          dmg:Math.max(4, Math.floor(e.dmg * 0.7)), color:'#aaff66', life:3.2});
+          dmg:Math.max(4, Math.floor(e.dmg * 0.7)), color:'#aaff66', life:3.2, dist:0, maxDist:700});
         addParticle({x:e.x, y:e.y, life:0.2, r:10, color:'#aaff66'});
         audio.beep(300, 0.07, 'square', 0.03);
       }
