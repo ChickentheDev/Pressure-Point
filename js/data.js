@@ -383,6 +383,70 @@ const ACHIEVEMENTS = [
   {id:'lifesaver', name:'Lifesaver', desc:'Revive partners 3 times in one run'},
   {id:'untouchable', name:'Untouchable', desc:'Clear a wave without taking damage'},
   {id:'nightmare_slain', name:'Nightmare Slain', desc:'Beat the Nightmare boss on Danger 6'},
+  {id:'map_rustlands', name:'Home Turf', desc:'Clear wave 20 on Rustlands'},
+  {id:'map_frosthold', name:'Icebreaker', desc:'Clear wave 20 on Frosthold'},
+  {id:'map_abyss', name:'Into the Abyss', desc:'Clear wave 20 on Abyssal Hollow'},
+  {id:'danger5_conqueror', name:'Inferno Conquered', desc:'Clear wave 20 on Danger 5'},
+  {id:'nightmare_cartographer', name:'Nightmare Cartographer', desc:'Clear wave 20 on all 3 maps on Nightmare difficulty'},
 ];
+
+// ---- Maps: 3 full maps (unique enemies + difficulty), 8 mini-map background themes ----
+const MINI_MAPS = {
+  rust:  {name:'Rustlands',     tile:[86,91,107],   crystal:'#d8c26a', rim:'#241f2b', band:'#6e4a33', lip:'#aab0c4', void:'#100e14'},
+  ash:   {name:'Ashen Field',   tile:[104,100,104], crystal:'#c9c9d4', rim:'#1e1c22', band:'#5a4a3a', lip:'#9aa0b4', void:'#0e0d12'},
+  moss:  {name:'Mossy Ruins',   tile:[72,94,70],    crystal:'#7ddf8a', rim:'#1c241c', band:'#4a5a33', lip:'#8aa484', void:'#0c120c'},
+  sand:  {name:'Dune Sea',      tile:[122,106,78],  crystal:'#ffd166', rim:'#2b2118', band:'#7a5a33', lip:'#c4b48a', void:'#141008'},
+  frost: {name:'Frozen Wastes', tile:[108,128,150], crystal:'#8fe9ff', rim:'#1c2430', band:'#4a6a8a', lip:'#c4d8ea', void:'#0c1218'},
+  ember: {name:'Emberfall',     tile:[96,70,68],    crystal:'#ff7a4d', rim:'#2b1a1a', band:'#7a3a2a', lip:'#c48a7a', void:'#140c0c'},
+  void:  {name:'The Void',      tile:[52,46,72],    crystal:'#b67bff', rim:'#1a1426', band:'#4a2a6a', lip:'#8a6ac4', void:'#0a0812'},
+  storm: {name:'Stormpeak',     tile:[78,84,108],   crystal:'#5df0ff', rim:'#1c2030', band:'#3a4a6a', lip:'#9aa8c4', void:'#0c0e16'},
+};
+const MAPS = [
+  {id:'rustlands', name:'Rustlands', tag:'The standard arena.', unlock:null,
+   set:'standard', diffMult:1, bg:['rust','ash','moss','sand','ember','void']},
+  {id:'frosthold', name:'Frosthold', tag:'Frozen wastes. New enemies, ~22% harder.', unlock:{danger:5},
+   set:'frost', diffMult:1.22, bg:['frost','frost','storm','storm','frost','void']},
+  {id:'abyss', name:'Abyssal Hollow', tag:'The void below. New enemies, +50% harder.', unlock:{map:'frosthold', danger:5},
+   set:'abyss', diffMult:1.5, bg:['void','ember','storm','void','ember','void']},
+];
+function mapDef(id){ return MAPS.find(m=>m.id===id) || MAPS[0]; }
+function mapBg(mapId, danger){ const m = mapDef(mapId); return m.bg[Math.max(1, Math.min(6, danger|0)) - 1] || 'rust'; }
+
+// Themed enemy variants per map (new names, colors, stat profiles).
+const FROST_STYLE = {
+  runner:['Glider','#9fd8ff'], spitter:['Frostspit','#7fb8e8'], bruiser:['Glacier','#6a9fd8'],
+  burster:['Shatter','#cfeaff'], splitter:['Floe','#a8d0e8'], bulwark:['Icewall','#8ab8d8'],
+  dasher:['Skater','#b8e0ff'], aegis:['Rimeguard','#7aa8cc'], nester:['Snowmound','#a0c8e0'],
+};
+const ABYSS_STYLE = {
+  runner:['Wisp','#b67bff'], spitter:['Voidspit','#8a4dff'], bruiser:['Maw','#6a2fb8'],
+  burster:['Rupture','#d44dff'], splitter:['Schism','#9a6aff'], bulwark:['Nullwall','#5a3a8a'],
+  dasher:['Phantom','#c44dff'], aegis:['Eventide','#7a4dcc'], nester:['Broodvoid','#8a2be2'],
+};
+function buildEnemySet(style, prefix, hpMult, speedMult, dmgMult){
+  return enemyTypes.map(t => {
+    const s = style[t.id] || [t.name, t.color];
+    const c = {...t, id: prefix + t.id, name: s[0], color: s[1],
+      hp: Math.round(t.hp * hpMult), speed: Math.round(t.speed * speedMult), dmg: Math.round(t.dmg * dmgMult)};
+    if(c.eliteName) c.eliteName = s[0] + ' Prime';
+    return c;
+  });
+}
+const ENEMY_SETS = {
+  standard: enemyTypes,
+  frost: buildEnemySet(FROST_STYLE, 'f_', 1.15, 0.95, 1.1),
+  abyss: buildEnemySet(ABYSS_STYLE, 'v_', 1.3, 1.1, 1.25),
+};
+function enemySetFor(mapId){ const m = mapDef(mapId); return ENEMY_SETS[m.set] || enemyTypes; }
+
+// Map unlock + nightmare-clear persistence
+const MAP_KEY = 'pp_unlockedMaps', NMC_KEY = 'pp_nightmareClears';
+let unlockedMaps = {rustlands:true};
+try{ unlockedMaps = Object.assign({rustlands:true}, JSON.parse(localStorage.getItem(MAP_KEY) || '{}')); }catch(e){}
+let nightmareClears = {};
+try{ nightmareClears = JSON.parse(localStorage.getItem(NMC_KEY) || '{}'); }catch(e){ nightmareClears = {}; }
+function saveMaps(){ try{ localStorage.setItem(MAP_KEY, JSON.stringify(unlockedMaps)); }catch(e){} }
+function saveNightmareClears(){ try{ localStorage.setItem(NMC_KEY, JSON.stringify(nightmareClears)); }catch(e){} }
+function isMapUnlocked(id){ return !!unlockedMaps[id]; }
 
 // runtime containers
