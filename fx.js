@@ -371,6 +371,10 @@
   // ---- ground: Brotato-style stone-tile arena with ornate border, pre-rendered once per window size ----
   let groundCv = null, groundKey = '';
   function buildGround(){
+    // v0.7.7: background theme per map/danger (8 mini-map themes)
+    const themeId = (typeof mapBg !== 'undefined' && typeof state !== 'undefined') ? mapBg(state.mapId, state.danger) : 'rust';
+    const TH = (typeof MINI_MAPS !== 'undefined' && MINI_MAPS[themeId]) || MINI_MAPS.rust;
+    const TR = TH.tile;
     // Perf: size the offscreen canvas to the real backing store (canvas.width/height), not
     // Math.round(W*dpr) — resize() uses Math.floor, so this avoids a 1px resample every frame.
     const cw = Math.max(1, canvas.width), ch = Math.max(1, canvas.height);
@@ -382,7 +386,7 @@
     const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
 
     // 1. dark void outside the arena
-    g.fillStyle = '#100e14'; g.fillRect(0, 0, W, H);
+    g.fillStyle = TH.void; g.fillRect(0, 0, W, H);
     for(let i = 0; i < 260; i++){
       g.fillStyle = rnd() < 0.5 ? 'rgba(255,255,255,0.015)' : 'rgba(0,0,0,0.06)';
       g.fillRect(rnd() * W, rnd() * H, 2 + rnd() * 3, 2 + rnd() * 3);
@@ -394,11 +398,11 @@
 
     // 3. stone tile floor with per-tile variation
     const TILE = 96;
-    g.fillStyle = '#565b6b'; g.fillRect(ax, ay, aw, ah);
+    g.fillStyle = 'rgb(' + TR[0] + ',' + TR[1] + ',' + TR[2] + ')'; g.fillRect(ax, ay, aw, ah);
     for(let ty = ay; ty < ay + ah; ty += TILE){
       for(let tx = ax; tx < ax + aw; tx += TILE){
         const v = (rnd() - 0.5) * 14;
-        g.fillStyle = 'rgb(' + Math.round(86 + v) + ',' + Math.round(91 + v) + ',' + Math.round(107 + v) + ')';
+        g.fillStyle = 'rgb(' + Math.round(TR[0] + v) + ',' + Math.round(TR[1] + v) + ',' + Math.round(TR[2] + v) + ')';
         g.fillRect(tx + 1, ty + 1, TILE - 2, TILE - 2);
         g.fillStyle = 'rgba(255,255,255,0.05)'; g.fillRect(tx + 1, ty + 1, TILE - 2, 3);
         g.fillStyle = 'rgba(0,0,0,0.10)'; g.fillRect(tx + 1, ty + TILE - 5, TILE - 2, 3);
@@ -427,7 +431,7 @@
     for(let i = 0; i < nSh; i++){
       const x = ax + rnd() * aw, y = ay + rnd() * ah, s = 4 + rnd() * 7;
       g.save(); g.translate(x, y); g.rotate(rnd() * 3.14);
-      g.fillStyle = '#d8c26a';
+      g.fillStyle = TH.crystal;
       g.beginPath(); g.moveTo(0, -s); g.lineTo(s * 0.45, s * 0.6); g.lineTo(-s * 0.45, s * 0.6); g.closePath(); g.fill();
       g.fillStyle = 'rgba(255,255,255,0.35)';
       g.beginPath(); g.moveTo(0, -s); g.lineTo(s * 0.18, s * 0.6); g.lineTo(-s * 0.12, s * 0.6); g.closePath(); g.fill();
@@ -457,10 +461,10 @@
     }
 
     // 5. ornate border frame: dark rim, bronze diamond-studded band, light stone lip
-    g.fillStyle = '#241f2b';
+    g.fillStyle = TH.rim;
     g.fillRect(0, 0, W, bw); g.fillRect(0, H - bw, W, bw); g.fillRect(0, 0, bw, H); g.fillRect(W - bw, 0, bw, H);
     const bandW = Math.round(bw * 0.52), bandOff = Math.round((bw - bandW) / 2);
-    g.fillStyle = '#6e4a33';
+    g.fillStyle = TH.band;
     g.fillRect(bandOff, bandOff, W - bandOff * 2, bandW);
     g.fillRect(bandOff, H - bandOff - bandW, W - bandOff * 2, bandW);
     g.fillRect(bandOff, bandOff, bandW, H - bandOff * 2);
@@ -470,7 +474,7 @@
     const diamond = (x, y, s) => { g.beginPath(); g.moveTo(x, y - s); g.lineTo(x + s, y); g.lineTo(x, y + s); g.lineTo(x - s, y); g.closePath(); g.fill(); };
     for(let x = bandOff + step / 2; x < W - bandOff; x += step){ diamond(x, bandOff + bandW / 2, 5); diamond(x, H - bandOff - bandW / 2, 5); }
     for(let y = bandOff + step / 2; y < H - bandOff; y += step){ diamond(bandOff + bandW / 2, y, 5); diamond(W - bandOff - bandW / 2, y, 5); }
-    g.strokeStyle = '#aab0c4'; g.lineWidth = 3;
+    g.strokeStyle = TH.lip; g.lineWidth = 3;
     g.strokeRect(ax - 1.5, ay - 1.5, aw + 3, ah + 3);
     g.strokeStyle = 'rgba(0,0,0,0.45)'; g.lineWidth = 2;
     g.strokeRect(1, 1, W - 2, H - 2);
@@ -485,7 +489,8 @@
   // draws the whole background; false = not ready yet (game.js then draws its old background)
   function drawGround(){
     if(!ready('decals')) return false;
-    const key = W + 'x' + H + '@' + canvas.width + 'x' + canvas.height;
+    const _th = (typeof mapBg !== 'undefined' && typeof state !== 'undefined') ? mapBg(state.mapId, state.danger) : 'rust';
+    const key = W + 'x' + H + '@' + canvas.width + 'x' + canvas.height + '#' + _th;
     if(key !== groundKey){ groundCv = buildGround(); groundKey = key; }
     // Perf: true 1:1 blit of the backing-store-sized canvas. The CTM is DPR-scaled
     // (resize()), so blit under identity — drawImage(cv,0,0) under the scaled CTM
