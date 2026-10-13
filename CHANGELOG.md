@@ -1,3 +1,17 @@
+## v0.7.2 — Combat update: range, splash, fire, dev code
+- **Bullet range**: projectiles now expire after traveling their range — shotguns fall off fast (~430px), marksman weapons reach far (sniper 1450px). New **Range** level-up upgrade (+120/level) and 3 new items (Long Barrel, Marksman Scope, Rail Amplifier) extend it; enemy spitballs also fizzle out at range.
+- **Splash damage**: RPG, Grenade Launcher, Mortar, Titan Cannon, Mine Layer and Flak Cannon now detonate on impact — AoE with distance falloff, burn, knockback and a proper boom. Rockets also burst at the end of their flight.
+- **Fire buff**: burn now deals 60% of hit damage per second (was 25%) for 4s (was 2.5s); Flamethrower damage 5 → 7 and range 480 → 560.
+- **Shop sold-out**: bought items/weapons leave the shop stock — no more buying the same offer over and over in one visit. Fresh stock every wave.
+- **Dev code**: enter `PRESSURE` in Settings → Dev Code to unlock everything (all achievements/classes, maxed meta upgrades) and enable creative mode — god mode, free shop/rerolls, DEV badge in HUD. Redeem again to disable.
+- **Ranged enemies**: Spitters keep their distance and fire projectiles; single hits are capped at 50% max HP so nothing one-shots you (Glassjaw still lives at 1 HP).
+- **60-second waves**: waves now end on a 1-minute survival timer instead of requiring every enemy dead; leftover enemies are cleared.
+- **Class weapon pools**: weapon select shows only your class's 5–6 thematic weapons.
+- **Retry**: wipes all enemies/projectiles and respawns player(s) at map center, fully healed.
+- **Minigun**: no longer overheats almost instantly (~7s of continuous fire now).
+- **Sound settings**: mute toggle + volume slider in Settings, persisted.
+- **Vitality (meta)**: now +2 Max HP per level (was +10); Glassjaw still gets +4% move speed instead.
+
 ## v0.7.1 — Brotato-style arena
 - **New map**: the flat brown ground is now a Brotato-style stone-tile arena — cool blue-grey tiles with grout lines and per-tile variation, an ornate bronze border with diamond studs framing the play area, and much denser floor detail (pebbles, crystal shards, cracks) plus the legacy doodle decals. Still pre-rendered once per resize, so zero per-frame cost.
 - No gameplay changes; the border is decorative at the screen edge.

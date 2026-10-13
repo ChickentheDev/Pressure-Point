@@ -1,19 +1,21 @@
-# Pressure Point — v0.7.1
+# Pressure Point — v0.7.2
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.7.1 — Brotato-style arena)
-- **New map**: stone-tile arena floor with grout lines and per-tile shading, an ornate bronze diamond-studded border framing the play area, and dense floor detail — pebbles, crystal shards, cracks. Pre-rendered once per resize, zero per-frame cost. No gameplay changes.
+## Latest Changes (v0.7.2 — Combat update)
+- **Bullet range**: projectiles expire after traveling their range (shotguns short, snipers long); new Range upgrade + 3 range items.
+- **Splash damage**: RPG, grenades, mortar, Titan Cannon, mines and flak now explode with AoE, burn and knockback.
+- **Fire buff**: burn deals 60% of hit damage/s for 4s; Flamethrower 5 → 7 damage, longer reach.
+- **Shop sold-out**: bought offers leave the stock; fresh stock every wave.
+- **Dev code**: enter `PRESSURE` in Settings for unlock-everything + creative mode (god mode, free shop).
+- **Ranged enemies**: Spitters shoot projectiles; single hits capped at 50% max HP.
+- **60-second waves**, **class weapon pools**, **retry respawns at center**, **minigun heat fix**, **mute/volume settings**, **Vitality now +2 HP/level**.
+
+## Previous (v0.7.1 — Brotato-style arena)
+- **New map**: stone-tile arena floor with grout lines and per-tile shading, an ornate bronze diamond-studded border, dense floor detail — pebbles, crystal shards, cracks. Pre-rendered once per resize, zero per-frame cost.
 
 ## Previous (v0.7.0.2 — file:// WebGL fallback fix)
 - Fixed: opening the game from disk (file://) left the canvas blank — the WebGL compositor now falls back to Canvas2D automatically.
-
-
-## Previous (v0.7.0.1 — Rarity borders)
-- **Rarity-colored weapon borders** — the HUD arsenal and the menu weapon grid now show borders in the weapon's rarity color (grey/blue/purple/red).
-
-## Previous Update (v0.6.9 — WebGL lighting)
-- Dynamic 2D lighting: players glow, elites/bosses pulse; vignette + color grade; Lighting FX toggle.
 
 ## What's Included
 - **11 classes**: 9 unlock via achievements, Glassjaw (1 HP) unlocks by beating Nightmare.
@@ -23,7 +25,7 @@ A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canva
 - **9 enemy types**: Runner, Spitter, Bruiser, Burster, Splitter, Bulwark, Dasher, Aegis, Nester.
 - **Wave system**: Wave 1 → 20 with horde-scaled counts, then **endless mode** past 20.
 - **25 weapons** across rarities, all firing simultaneously.
-- **109 items** across 5 categories (Tech/Primal/Arcane/Unique/Exclusive).
+- **112 items** across 5 categories (Tech/Primal/Arcane/Unique/Exclusive).
 - **Bosses**: one unique boss per danger level at wave 20 (Overlord, Hive Tyrant, Stormcaller, Ironclad, Voidreaver, Nightmare); bosses every 5 waves in endless.
 - **Danger levels (1–6)** — D5 Inferno, D6 Nightmare; unlocks stored in `localStorage`.
 - **Co-op**: two local players, in-wave revive, proximity damage synergy.
