@@ -1,3 +1,11 @@
+## v0.7.4 — Targeting, hordes, Mirror
+- **Per-weapon targeting**: each gun now independently locks onto its own enemy (nearest, 2nd-nearest, 3rd...) instead of the whole arsenal focusing one target. Mouse-aim still directs every gun at your cursor.
+- **Way more enemies**: wave sizes roughly tripled (wave 1: 16 → 40, wave 20: ~170 → ~380) with faster spawn pacing — proper Brotato-style hordes.
+- **Rarity rebalance**: luck no longer floods the shop with legendaries — legendary weight grows much more slowly and starts lower (5% → 2% base).
+- **Infinite item slots**: the 6-item cap is gone; buy as many as you want (duplicates still combine upward).
+- **New item: Mirror** (epic, arcane): the next item you buy comes in duplicate. Arming another Mirror doesn't chain.
+- **In-match settings**: the pause menu now has a Settings button — no more quitting to the main menu to tweak things.
+
 ## v0.7.3 — Boss buffs
 - **Bosses are actually scary now**: ~2x HP, +50% damage, faster across all six bosses (Overlord 3000 HP → Nightmare 12000 HP base, before danger scaling).
 - **Overlord finally burrows**: its namesake ability is real — dives underground, races at you, erupts with a 150px AoE slam (2x damage + heavy knockback). Nightmare does it too.

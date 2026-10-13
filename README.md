@@ -1,8 +1,15 @@
-# Pressure Point — v0.7.3
+# Pressure Point — v0.7.4
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.7.3 — Boss buffs)
+## Latest Changes (v0.7.4 — Targeting, hordes, Mirror)
+- **Per-weapon targeting**: each gun locks its own enemy; mouse-aim still focuses all guns.
+- **Way more enemies**: wave sizes ~3x, faster spawning.
+- **Rarity rebalance**: luck no longer floods legendaries.
+- **Infinite item slots** + new **Mirror** item (next item x2).
+- **Pause menu Settings**: tweak settings mid-run.
+
+## Previous (v0.7.3 — Boss buffs)
 - **Bosses buffed**: ~2x HP, +50% damage, faster; Overlord's burrow is a real ability now (dive, chase, AoE erupt); bigger/faster shockwaves, 3-at-a-time spawns, earlier Nightmare enrage, Ironclad 50% damage block, endless HP scaling.
 
 ## Previous (v0.7.2 — Combat update)
@@ -14,8 +21,6 @@ A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canva
 - **Ranged enemies**: Spitters shoot projectiles; single hits capped at 50% max HP.
 - **60-second waves**, **class weapon pools**, **retry respawns at center**, **minigun heat fix**, **mute/volume settings**, **Vitality now +2 HP/level**.
 
-## Previous (v0.7.1 — Brotato-style arena)
-- **New map**: stone-tile arena floor with grout lines and per-tile shading, an ornate bronze diamond-studded border, dense floor detail — pebbles, crystal shards, cracks. Pre-rendered once per resize, zero per-frame cost.
 
 
 ## What's Included
