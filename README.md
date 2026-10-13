@@ -1,8 +1,11 @@
-# Pressure Point — v0.7.2
+# Pressure Point — v0.7.3
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.7.2 — Combat update)
+## Latest Changes (v0.7.3 — Boss buffs)
+- **Bosses buffed**: ~2x HP, +50% damage, faster; Overlord's burrow is a real ability now (dive, chase, AoE erupt); bigger/faster shockwaves, 3-at-a-time spawns, earlier Nightmare enrage, Ironclad 50% damage block, endless HP scaling.
+
+## Previous (v0.7.2 — Combat update)
 - **Bullet range**: projectiles expire after traveling their range (shotguns short, snipers long); new Range upgrade + 3 range items.
 - **Splash damage**: RPG, grenades, mortar, Titan Cannon, mines and flak now explode with AoE, burn and knockback.
 - **Fire buff**: burn deals 60% of hit damage/s for 4s; Flamethrower 5 → 7 damage, longer reach.
@@ -14,8 +17,6 @@ A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canva
 ## Previous (v0.7.1 — Brotato-style arena)
 - **New map**: stone-tile arena floor with grout lines and per-tile shading, an ornate bronze diamond-studded border, dense floor detail — pebbles, crystal shards, cracks. Pre-rendered once per resize, zero per-frame cost.
 
-## Previous (v0.7.0.2 — file:// WebGL fallback fix)
-- Fixed: opening the game from disk (file://) left the canvas blank — the WebGL compositor now falls back to Canvas2D automatically.
 
 ## What's Included
 - **11 classes**: 9 unlock via achievements, Glassjaw (1 HP) unlocks by beating Nightmare.

@@ -1,3 +1,10 @@
+## v0.7.3 — Boss buffs
+- **Bosses are actually scary now**: ~2x HP, +50% damage, faster across all six bosses (Overlord 3000 HP → Nightmare 12000 HP base, before danger scaling).
+- **Overlord finally burrows**: its namesake ability is real — dives underground, races at you, erupts with a 150px AoE slam (2x damage + heavy knockback). Nightmare does it too.
+- **Nastier abilities**: shockwaves are bigger (150px), more frequent and hit harder (1.75x); Hive Tyrant spawns 3 minions at a time, faster; Nightmare enrages earlier (65% HP) and harder (45% faster); Ironclad now blocks 50% of damage.
+- **Endless scaling**: bosses past wave 20 keep gaining HP (+8% per wave).
+- Boss bounties bumped to match the threat.
+
 ## v0.7.2 — Combat update: range, splash, fire, dev code
 - **Bullet range**: projectiles now expire after traveling their range — shotguns fall off fast (~430px), marksman weapons reach far (sniper 1450px). New **Range** level-up upgrade (+120/level) and 3 new items (Long Barrel, Marksman Scope, Rail Amplifier) extend it; enemy spitballs also fizzle out at range.
 - **Splash damage**: RPG, Grenade Launcher, Mortar, Titan Cannon, Mine Layer and Flak Cannon now detonate on impact — AoE with distance falloff, burn, knockback and a proper boom. Rockets also burst at the end of their flight.
