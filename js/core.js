@@ -265,6 +265,7 @@ const state = {
   endless: false,     // true after continuing past wave 20
   bestEndless: parseInt(localStorage.getItem('pp_bestEndless') || '0', 10) || 0,
   danger: 1,
+  mapId: 'rustlands',
   coop: false,
   spawnTimer: 0,
   unlockedDanger: 1,

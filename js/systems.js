@@ -364,7 +364,8 @@ function spawnEnemy(opts){
   const elite = !!opts.elite;
   const edge = Math.floor(Math.random()*4);
   let x,y; if(edge===0){ x=-20; y=Math.random()*H } else if(edge===1){ x=W+20; y=Math.random()*H } else if(edge===2){ x=Math.random()*W; y=-20 } else { x=Math.random()*W; y=H+20 }
-  const tier = Math.min(enemyTypes.length-1, Math.floor((state.wave-1)/3));
+  const eset = enemySetFor(state.mapId);
+  const tier = Math.min(eset.length-1, Math.floor((state.wave-1)/3));
   // weighted pick: swarms of weak types early, tougher types as the tier unlocks
   // late game: widen the top bracket so new enemies actually appear
   const roll = Math.random();
@@ -374,7 +375,8 @@ function spawnEnemy(opts){
   } else {
     idx = roll < 0.55 ? 0 : roll < 0.8 ? Math.min(tier, 1) : roll < 0.93 ? Math.min(tier, 2) : tier;
   }
-  const t = enemyTypes[Math.max(0, idx)];
+  const t = eset[Math.max(0, idx)];
+  const mapMult = (mapDef(state.mapId).diffMult || 1);
   // danger scaling
   const dangerHP = 1 + (state.danger-1) * 0.35;
   const dangerDmg = (1 + (state.danger-1) * 0.28) * dangerMods(state.danger).dmgMult;
@@ -385,7 +387,7 @@ function spawnEnemy(opts){
   const eliteHP = elite ? 3 : 1, eliteDmg = elite ? 1.4 : 1;
   const xp = Math.floor((t.xp + Math.floor(state.wave*0.6)*(state.danger)) * (elite ? 3 : 1));
   const money = Math.max(1, Math.floor((Math.floor(t.money * 0.7) + Math.floor(state.wave*0.2) * state.danger) * (elite ? 3 : 1)));
-  enemies.push({ id: t.id, x,y, r: Math.floor(t.r * (elite ? 1.35 : 1)), hp: Math.floor(t.hp * waveScale * dangerHP * eliteHP), maxHp: Math.floor(t.hp * waveScale * dangerHP * eliteHP), speed: Math.floor((t.speed + state.wave*2) * dangerSpeed * (elite && t.id === 'runner' ? 1.5 : 1)), dmg: Math.floor(t.dmg * dangerDmg * lateDmg * eliteDmg + state.wave*1.2), color: t.color, xp, money, explodes: !!t.explodes, splits: !!t.splits, dashes: !!t.dashes, shields: !!t.shields, spawns: !!t.spawns, ranged: !!t.ranged, elite, eliteName: elite ? t.eliteName : null, dashTimer: 2 + Math.random()*2, dashTime: 0, spawnTimer: 3 });
+  enemies.push({ id: t.id, x,y, r: Math.floor(t.r * (elite ? 1.35 : 1)), hp: Math.floor(t.hp * waveScale * dangerHP * eliteHP * mapMult), maxHp: Math.floor(t.hp * waveScale * dangerHP * eliteHP * mapMult), speed: Math.floor((t.speed + state.wave*2) * dangerSpeed * (elite && t.id === 'runner' ? 1.5 : 1)), dmg: Math.floor(t.dmg * dangerDmg * lateDmg * eliteDmg * mapMult + state.wave*1.2), color: t.color, xp, money, explodes: !!t.explodes, splits: !!t.splits, dashes: !!t.dashes, shields: !!t.shields, spawns: !!t.spawns, ranged: !!t.ranged, elite, eliteName: elite ? t.eliteName : null, dashTimer: 2 + Math.random()*2, dashTime: 0, spawnTimer: 3 });
   if(enemies.length > 120){ enemies.shift(); }
   addParticle({x, y, life:0.35, r:18, color: elite ? '#ffd166' : palette.uiAccent});
 }
@@ -631,7 +633,7 @@ function killEnemy(index, ownerId){
   audio.beep(140,0.06,'triangle',0.04);
   // splitter: bursts into runners on death (elite: 4 instead of 2)
   if(e.splits){
-    const rt = enemyTypes[0];
+    const rt = enemySetFor(state.mapId)[0];
     const count = e.elite ? 4 : 2;
     for(let k=0;k<count;k++){
       const a = Math.random()*Math.PI*2;
@@ -1099,8 +1101,8 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
       e.spawnTimer -= dt;
       if(e.spawnTimer <= 0 && enemies.length < 110){
         e.spawnTimer = e.elite ? 3 : 5;
-        const rt = enemyTypes[0];
-        enemies.push({ id:'runner', x:e.x+rand(-20,20), y:e.y+rand(-20,20), r:rt.r, hp:Math.floor(rt.hp*(1+state.wave*0.12)), maxHp:Math.floor(rt.hp*(1+state.wave*0.12)), speed:rt.speed, dmg:Math.floor(rt.dmg+state.wave*1.2), color:rt.color, xp:rt.xp, money:rt.money });
+        const rt = enemySetFor(state.mapId)[0];
+        enemies.push({ id: rt.id, x:e.x+rand(-20,20), y:e.y+rand(-20,20), r:rt.r, hp:Math.floor(rt.hp*(1+state.wave*0.12)), maxHp:Math.floor(rt.hp*(1+state.wave*0.12)), speed:rt.speed, dmg:Math.floor(rt.dmg+state.wave*1.2), color:rt.color, xp:rt.xp, money:rt.money });
         addParticle({x:e.x,y:e.y,life:0.3,r:16,color:'#9b59b6'});
       }
     }
@@ -1129,7 +1131,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
         e.spawnTimer -= dt;
         if(e.spawnTimer <= 0 && enemies.length < 110){
           e.spawnTimer = (effAb === 'annihilator' ? 3.5 : 5) / enrage;
-          const pool = [enemyTypes[0], enemyTypes[1], enemyTypes[2]];
+          const _es = enemySetFor(state.mapId); const pool = [_es[0], _es[1], _es[2]];
           const rt = pool[Math.floor(Math.random()*pool.length)];
           for(let k=0;k<3;k++){
             enemies.push({ id:rt.id, x:e.x+rand(-30,30), y:e.y+rand(-30,30), r:rt.r,

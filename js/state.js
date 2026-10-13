@@ -78,6 +78,22 @@ function checkAchievements(){
   if(runStats.kills >= 2000) unlockAchievement('genocide');
   if(state.wave >= 10) unlockAchievement('survivor');
   if(state.wave > 20 || (state.wave === 20 && state.phase === 'runwon')) unlockAchievement('veteran');
+  if(state.phase === 'runwon' && state.wave >= 20){
+    unlockAchievement('map_' + state.mapId);
+    if(state.danger === 5) unlockAchievement('danger5_conqueror');
+    // map unlocks: beat danger 5 to open the next map
+    if(state.mapId === 'rustlands' && state.danger >= 5 && !unlockedMaps.frosthold){
+      unlockedMaps.frosthold = true; saveMaps();
+    }
+    if(state.mapId === 'frosthold' && state.danger >= 5 && !unlockedMaps.abyss){
+      unlockedMaps.abyss = true; saveMaps();
+    }
+    // nightmare cartographer: all 3 maps cleared on danger 6
+    if(state.danger === 6){
+      nightmareClears[state.mapId] = true; saveNightmareClears();
+      if(MAPS.every(m => nightmareClears[m.id])) unlockAchievement('nightmare_cartographer');
+    }
+  }
   if(state.endless && state.wave >= 30) unlockAchievement('unstoppable');
   if(state.wave === 20 && state.danger === 6 && state.phase === 'runwon'){
     unlockAchievement('danger_zone');
