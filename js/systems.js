@@ -392,13 +392,14 @@ function spawnBoss(){
   let x,y; if(edge===0){ x=-40; y=Math.random()*H } else if(edge===1){ x=W+40; y=Math.random()*H } else if(edge===2){ x=Math.random()*W; y=-40 } else { x=Math.random()*W; y=H+40 }
   const dangerHP = 1 + (state.danger-1) * 0.5;
   const dangerDmg = 1 + (state.danger-1) * 0.35;
+  const waveHP = 1 + Math.max(0, state.wave - 20) * 0.08;   // endless bosses keep scaling
   const bt = bossTypes[Math.min(state.danger, 6) - 1] || bossTypes[0];
   enemies.push({
-    id: bt.id, x,y, r: bt.r, hp: Math.floor(bt.hp * dangerHP), maxHp: Math.floor(bt.hp * dangerHP),
+    id: bt.id, x,y, r: bt.r, hp: Math.floor(bt.hp * dangerHP * waveHP), maxHp: Math.floor(bt.hp * dangerHP * waveHP),
     speed: bt.speed, dmg: Math.floor(bt.dmg * dangerDmg * (1 + (state.wave-1)*0.12)),
     color: bt.color, xp: bt.xp * state.danger, money: bt.money * state.danger,
     isBoss: true, bossAbility: bt.ability, bossName: bt.name,
-    abilityTimer: 4, dashTimer: 2, dashTime: 0, spawnTimer: 5,
+    abilityTimer: 4, dashTimer: 2, dashTime: 0, spawnTimer: 5, burrowTimer: 6, burrowTime: 0,
   });
   addParticle({x, y, life:0.6, r:28, color: '#ff6b6b'});
 }
@@ -1082,16 +1083,16 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
       const ab = e.bossAbility;
       const isNightmare = ab === 'nightmare';
       const effAb = isNightmare ? 'annihilator' : ab;
-      // Nightmare: enraged below 50% HP — 30% faster
-      const enrage = isNightmare && e.hp < e.maxHp * 0.5 ? 1.3 : 1;
+      // Nightmare: enraged below 65% HP — 45% faster
+      const enrage = isNightmare && e.hp < e.maxHp * 0.65 ? 1.45 : 1;
       // Hive Tyrant / Voidreaver / Nightmare: spawn minions
       if((effAb === 'spawn' || effAb === 'annihilator')){
         e.spawnTimer -= dt;
         if(e.spawnTimer <= 0 && enemies.length < 110){
-          e.spawnTimer = (effAb === 'annihilator' ? 4 : 6) / enrage;
+          e.spawnTimer = (effAb === 'annihilator' ? 3.5 : 5) / enrage;
           const pool = [enemyTypes[0], enemyTypes[1], enemyTypes[2]];
           const rt = pool[Math.floor(Math.random()*pool.length)];
-          for(let k=0;k<2;k++){
+          for(let k=0;k<3;k++){
             enemies.push({ id:rt.id, x:e.x+rand(-30,30), y:e.y+rand(-30,30), r:rt.r,
               hp:Math.floor(rt.hp*(1+state.wave*0.12)), maxHp:Math.floor(rt.hp*(1+state.wave*0.12)),
               speed:rt.speed, dmg:Math.floor(rt.dmg+state.wave*1.2), color:rt.color, xp:rt.xp, money:rt.money });
@@ -1099,12 +1100,45 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
           addParticle({x:e.x,y:e.y,life:0.4,r:24,color:'#9b59b6'});
         }
       }
+      // Overlord / Nightmare: burrow — dives underground, races at the player, erupts with an AoE slam
+      if(ab === 'burrow' || isNightmare){
+        if(e.burrowTime > 0){
+          e.burrowTime -= dt;
+          dashMult = 3 * enrage;
+          if(Math.random() < dt * 20) addParticle({x:e.x + rand(-20,20), y:e.y + rand(-10,10), life:0.4, r:10, color:'#8a6f4d'});
+          if(e.burrowTime <= 0){
+            const R = 150;
+            addParticle({x:e.x, y:e.y, life:0.5, r:R*0.7, color:'#ff8c42'});
+            addParticle({x:e.x, y:e.y, life:0.3, r:R*0.4, color:'#ffd166'});
+            addShake(10);
+            audio.beep(60, 0.35, 'sawtooth', 0.12);
+            for(const p of players){
+              if(p.dead) continue;
+              const d = Math.hypot(p.x - e.x, p.y - e.y);
+              if(d < R + p.r){
+                hurtPlayer(p, e.dmg * 2);
+                const ka = Math.atan2(p.y - e.y, p.x - e.x);
+                p.vx += Math.cos(ka) * 600; p.vy += Math.sin(ka) * 600;
+                if(p.hp <= 0){ p.hp = 0; p.dead = true; if(players.every(pl=>pl.dead)){ state.phase='gameover'; showRunOver(); } }
+              }
+            }
+          }
+        } else {
+          e.burrowTimer -= dt;
+          if(e.burrowTimer <= 0){
+            e.burrowTimer = (isNightmare ? 7 : 9) / enrage;
+            e.burrowTime = 1.1;
+            addShake(4);
+            audio.beep(90, 0.2, 'sawtooth', 0.06);
+          }
+        }
+      }
       // Stormcaller / Voidreaver / Nightmare: shockwave slam
       if((effAb === 'shockwave' || effAb === 'annihilator')){
         e.abilityTimer -= dt;
         if(e.abilityTimer <= 0){
-          e.abilityTimer = (effAb === 'annihilator' ? 5 : 7) / enrage;
-          const R = 120;
+          e.abilityTimer = (effAb === 'annihilator' ? 4 : 5.5) / enrage;
+          const R = 150;
           addParticle({x:e.x,y:e.y,life:0.5,r:R,color:'#4cc3ff'});
           addShake(10);
           audio.beep(80,0.3,'sawtooth',0.08);
@@ -1112,7 +1146,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
             if(p.dead) continue;
             const d = Math.hypot(p.x-e.x, p.y-e.y);
             if(d < R + p.r){
-              hurtPlayer(p, e.dmg * 1.5);
+              hurtPlayer(p, e.dmg * 1.75);
               const ka = Math.atan2(p.y-e.y, p.x-e.x);
               p.vx += Math.cos(ka)*500; p.vy += Math.sin(ka)*500;
               if(p.hp <= 0){ p.hp = 0; p.dead = true; if(players.every(pl=>pl.dead)){ state.phase='gameover'; showRunOver(); } }
@@ -1166,7 +1200,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
             for(const o of enemies){ if(o.shields && o !== e){ const auraR = o.elite ? 220 : 150; const dx=o.x-e.x, dy=o.y-e.y; if(dx*dx+dy*dy < auraR*auraR){ dmgMult = 0.7; break; } } }
             const finalDmg = b.damage * dmgMult;
             // Ironclad boss: 40% damage reduction
-            const bossDR = (e.isBoss && e.bossAbility === 'fortress') ? 0.6 : 1;
+            const bossDR = (e.isBoss && e.bossAbility === 'fortress') ? 0.5 : 1;
             e.hp -= finalDmg * bossDR;
             // elite bulwark (Ironwall) / Ironclad boss: reflects damage back to the shooter
             const reflect = (e.elite && e.id === 'bulwark') ? 0.2 : (e.isBoss && e.bossAbility === 'fortress') ? 0.3 : 0;

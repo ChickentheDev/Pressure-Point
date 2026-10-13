@@ -65,17 +65,17 @@ const bossType = {id:'overlord', name:'Overlord', color:'#ff6b6b', r:36, hp:1440
 
 // One boss per danger level, each with unique abilities
 const bossTypes = [
-  {id:'overlord', name:'Overlord', color:'#ff6b6b', r:36, hp:1440, speed:60, dmg:40, xp:120, money:40,
+  {id:'overlord', name:'Overlord', color:'#ff6b6b', r:36, hp:3000, speed:75, dmg:60, xp:150, money:60,
    ability:'burrow', desc:'Bursts from the ground'},
-  {id:'hive', name:'Hive Tyrant', color:'#9b59b6', r:34, hp:1800, speed:55, dmg:44, xp:150, money:50,
+  {id:'hive', name:'Hive Tyrant', color:'#9b59b6', r:34, hp:3600, speed:70, dmg:66, xp:180, money:75,
    ability:'spawn', desc:'Spawns minions'},
-  {id:'storm', name:'Stormcaller', color:'#4cc3ff', r:32, hp:2200, speed:85, dmg:48, xp:180, money:60,
+  {id:'storm', name:'Stormcaller', color:'#4cc3ff', r:32, hp:4500, speed:105, dmg:72, xp:220, money:90,
    ability:'shockwave', desc:'Shockwave slams + dashes'},
-  {id:'ironclad', name:'Ironclad', color:'#8a8a8a', r:40, hp:3200, speed:40, dmg:55, xp:220, money:75,
+  {id:'ironclad', name:'Ironclad', color:'#8a8a8a', r:40, hp:6500, speed:55, dmg:82, xp:260, money:110,
    ability:'fortress', desc:'Armored + reflects damage'},
-  {id:'void', name:'Voidreaver', color:'#1a1a2e', r:36, hp:4200, speed:100, dmg:65, xp:300, money:100,
+  {id:'void', name:'Voidreaver', color:'#1a1a2e', r:36, hp:8500, speed:120, dmg:98, xp:350, money:150,
    ability:'annihilator', desc:'Dashes, spawns, shockwaves'},
-  {id:'nightmare', name:'Nightmare', color:'#c44dff', r:42, hp:6000, speed:110, dmg:80, xp:400, money:150,
+  {id:'nightmare', name:'Nightmare', color:'#c44dff', r:42, hp:12000, speed:130, dmg:120, xp:500, money:220,
    ability:'nightmare', desc:'All abilities, enraged'},
 ];
 
