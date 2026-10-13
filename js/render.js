@@ -567,6 +567,7 @@ function drawUpgradeSelector(){
 
 // [brad-ui] v0.56 Brotato-style shop screen, drawn by ui.js; Tab still opens the full stats view
 function drawShop(){
+  if(typeof USE_DOM_UI !== 'undefined' && USE_DOM_UI) return;
   if(state.phase !== 'shop') return;
   if(state.shopView === 'stats'){
     drawStatsMenu();
@@ -855,7 +856,7 @@ function draw(){
   ctx.restore();
   if(glOn) WebGLFX.endWorld();   // world composited with lighting; ctx is the screen again
   // [brad-ui] the HUD is hidden behind the shop (it shows wallet/stats itself) and the game-over screen
-  if(state.phase !== 'shop' && state.phase !== 'gameover'){ drawHUD(); drawWaveBanner(); }
+  if(state.phase !== 'shop' && state.phase !== 'gameover'){ if(typeof USE_DOM_UI === 'undefined' || !USE_DOM_UI) drawHUD(); drawWaveBanner(); }
   if(state.phase === 'victory') drawVictory();
   drawUpgradeSelector();
   drawShop();

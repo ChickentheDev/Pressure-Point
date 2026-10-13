@@ -1,8 +1,11 @@
-# Pressure Point — v0.7.4
+# Pressure Point — v0.7.5
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.7.4 — Targeting, hordes, Mirror)
+## Latest Changes (v0.7.5 — New UI)
+- **DOM shop + HUD** rebuilt from the new design: card shop with rarity borders, real sprites, stats sidebar; crisp HUD with HP/XP bars, wave timer, weapon slots.
+
+## Previous (v0.7.4 — Targeting, hordes, Mirror)
 - **Per-weapon targeting**: each gun locks its own enemy; mouse-aim still focuses all guns.
 - **Way more enemies**: wave sizes ~3x, faster spawning.
 - **Rarity rebalance**: luck no longer floods legendaries.
@@ -12,14 +15,6 @@ A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canva
 ## Previous (v0.7.3 — Boss buffs)
 - **Bosses buffed**: ~2x HP, +50% damage, faster; Overlord's burrow is a real ability now (dive, chase, AoE erupt); bigger/faster shockwaves, 3-at-a-time spawns, earlier Nightmare enrage, Ironclad 50% damage block, endless HP scaling.
 
-## Previous (v0.7.2 — Combat update)
-- **Bullet range**: projectiles expire after traveling their range (shotguns short, snipers long); new Range upgrade + 3 range items.
-- **Splash damage**: RPG, grenades, mortar, Titan Cannon, mines and flak now explode with AoE, burn and knockback.
-- **Fire buff**: burn deals 60% of hit damage/s for 4s; Flamethrower 5 → 7 damage, longer reach.
-- **Shop sold-out**: bought offers leave the stock; fresh stock every wave.
-- **Dev code**: enter `PRESSURE` in Settings for unlock-everything + creative mode (god mode, free shop).
-- **Ranged enemies**: Spitters shoot projectiles; single hits capped at 50% max HP.
-- **60-second waves**, **class weapon pools**, **retry respawns at center**, **minigun heat fix**, **mute/volume settings**, **Vitality now +2 HP/level**.
 
 
 

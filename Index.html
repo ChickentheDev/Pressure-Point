@@ -6,6 +6,7 @@
   <title>Pressure Point</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23ffb44c'/%3E%3Ccircle cx='32' cy='32' r='18' fill='%230b0b0b'/%3E%3Ccircle cx='32' cy='32' r='12' fill='%23f6dfb3'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="domui.css">
   <!-- WASM systems loader (module). Only injected over http(s): on file:// (and in Electron, which uses
        loadFile) the browser blocks module scripts with a CORS error, and the game uses its JS shop anyway. -->
   <script>
@@ -210,6 +211,40 @@
     <div id="msg" class="overlay small" style="display:none"></div>
     <button id="pauseBtn" class="btn btn-primary pause-btn" type="button" style="display:none">Pause</button>
     <button id="restartBtn" class="btn btn-primary restart-btn" type="button" style="display:none">Back to Menu</button>
+
+    <!-- DOM UI (v0.7.5): shop + in-game HUD -->
+    <div id="domShop" class="pp-domshop" style="display:none">
+      <div class="pp-wrap">
+        <main>
+          <div class="pp-top"><h1 id="ppShopTitle">Shop</h1>
+            <div class="pp-money"><i class="pp-gem"></i><span id="ppShopMoney">0</span></div>
+            <button class="pp-pill pp-reroll" id="ppRerollBtn">Reroll &middot; <span id="ppRerollCost">0</span> <i class="pp-gem"></i></button>
+          </div>
+          <div class="pp-cards" id="ppCards"></div>
+          <div class="pp-row">
+            <section><h2>Items</h2><div class="pp-grid" id="ppItemsGrid"></div></section>
+            <section><h2>Weapons (<span id="ppWepsCount">0</span>)</h2><div class="pp-grid" id="ppWepsGrid"></div></section>
+          </div>
+          <div class="pp-pill pp-notice" id="ppNotice" style="display:none"></div>
+          <div class="pp-pill pp-mirror" id="ppMirrorNote">🪞 Mirror armed — your next item comes in duplicate</div>
+          <div class="pp-go"><button id="ppGoBtn">Go</button></div>
+        </main>
+        <aside class="pp-stats pp-pill"><h1>Stats</h1><div id="ppStats"></div></aside>
+      </div>
+    </div>
+    <div id="domHud" class="pp-domhud" style="display:none">
+      <div class="pp-hpbox">
+        <div class="pp-bar"><i id="ppHpFill"></i><b id="ppHpText"></b></div>
+        <div class="pp-bar xp"><i id="ppXpFill" style="width:0"></i><b id="ppLvlText" style="font-size:10px"></b></div>
+        <div class="pp-res">
+          <span class="pp-pill"><i class="pp-gem"></i><b id="ppHudMoney">0</b></span>
+          <span class="pp-pill">📦 <b id="ppHudItems">0</b></span>
+        </div>
+      </div>
+      <div class="pp-wave"><small id="ppHudWave"></small><strong id="ppHudTimer"></strong><span class="devbadge" id="ppDevBadge" style="display:none">DEV MODE</span></div>
+      <button class="pp-pill pp-pause" id="ppHudPause" aria-label="Pause">❚❚</button>
+      <div class="pp-wpns" id="ppHudWeps"></div>
+    </div>
   </div>
 
   <!-- v0.56 graphics (fx.js) and shop/UI screens (ui.js); both only draw, game.js stays the logic -->
@@ -223,6 +258,7 @@
   <script src="js/systems.js"></script>
   <script src="js/menu.js"></script>
   <script src="js/render.js"></script>
+  <script src="js/domui.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

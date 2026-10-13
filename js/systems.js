@@ -265,6 +265,7 @@ function buildShop(){
     if(dealItem) shop.items[0] = {type:'item', data:dealItem, rarity:'common', price:10, deal:true};
   }
   normalizeShopSelection();
+  if(typeof markShopDirty === 'function') markShopDirty();
 }
 
 function rerollShop(){
@@ -275,6 +276,7 @@ function rerollShop(){
   shop.rerollCost = Math.min(99, Math.floor(shop.rerollCost * 1.35 + 2));
   buildShop();
   audio.click();
+  if(typeof markShopDirty === 'function') markShopDirty();
 }
 
 // Wave calculation: horde scaling — Wave 1 = 16 enemies, each wave +8.
@@ -738,6 +740,7 @@ function buyShopItemFor(player){
   if(shop.locked) shop.locked[shop.selection] = null;
   normalizeShopSelection();
   audio.buy();
+  if(typeof markShopDirty === 'function') markShopDirty();
 }
 
 // UI: build dangers

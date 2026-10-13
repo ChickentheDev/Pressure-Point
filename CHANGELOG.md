@@ -1,3 +1,8 @@
+## v0.7.5 — New UI: DOM shop + HUD
+- **Shop and HUD rebuilt as DOM UI** from Sam's new design: card-based shop with rarity borders, real weapon sprites + item icons, money pill, reroll, lock buttons, items/weapons grids, stats sidebar, elite notice and Go button.
+- **In-game HUD**: HP/XP bars, money + item counts, wave + countdown timer, weapon slots, pause button — all in the new card style. The old canvas shop/HUD is retired (level-up picker and banners stay on canvas).
+- Pause menu Settings still works; the legacy pause button is hidden while the DOM HUD is up.
+
 ## v0.7.4 — Targeting, hordes, Mirror
 - **Per-weapon targeting**: each gun now independently locks onto its own enemy (nearest, 2nd-nearest, 3rd...) instead of the whole arsenal focusing one target. Mouse-aim still directs every gun at your cursor.
 - **Way more enemies**: wave sizes roughly tripled (wave 1: 16 → 40, wave 20: ~170 → ~380) with faster spawn pacing — proper Brotato-style hordes.
