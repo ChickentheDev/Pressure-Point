@@ -434,8 +434,8 @@ function buildEnemySet(style, prefix, hpMult, speedMult, dmgMult){
 }
 const ENEMY_SETS = {
   standard: enemyTypes,
-  frost: buildEnemySet(FROST_STYLE, 'f_', 1.15, 0.95, 1.1),
-  abyss: buildEnemySet(ABYSS_STYLE, 'v_', 1.3, 1.1, 1.25),
+  frost: buildEnemySet(FROST_STYLE, 'f_', 1, 1, 1),
+  abyss: buildEnemySet(ABYSS_STYLE, 'v_', 1, 1, 1),
 };
 function enemySetFor(mapId){ const m = mapDef(mapId); return ENEMY_SETS[m.set] || enemyTypes; }
 
