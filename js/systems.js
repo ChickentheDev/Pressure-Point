@@ -5,6 +5,7 @@ const RARITY_MULTS = {common:1, rare:1.25, epic:1.5, legendary:2.0};
 function rarityMult(r){ return RARITY_MULTS[r] || 1; }
 // rarity border colors (shared by HUD weapon slots, menu weapon grid; shop uses its own copy in ui.js)
 const RARITY_COLORS = {common:'#a7b3c4', rare:'#4cc3ff', epic:'#b67bff', legendary:'#ff5d5d'};
+const WAVE_DURATION = 60; // seconds per wave: survive the timer, Brotato-style
 
 // Item categories. Unique: at most one per player, never combines. Exclusive: epic/legendary only, 1.5x shop price.
 const CATEGORIES = {
@@ -299,6 +300,7 @@ function isBossWave(wave){
 function startWave(){
   state.phase = 'wave';
   state.waveSpawned = 0;
+  state.waveTime = 0;
   state.waveCompleteTimer = 0;
   runStats.tookDamage = false;
   state.waveTotal = Math.floor(computeWaveTotal(state.wave) * (state.coop ? 1.5 : 1) * (1 + (state.danger-1)*0.15) * dangerMods(state.danger).countMult);
@@ -865,11 +867,15 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
       for(let i=0;i<treeCount;i++){ spawnTree(); }
       state.treeWave = state.wave;
     }
-    // spawn logic
+    // wave timer: survive the clock instead of clearing every enemy
+    state.waveTime = (state.waveTime || 0) + dt;
+    const timeUp = state.waveTime >= WAVE_DURATION;
+    // spawn logic: pace the spawn budget across the timer so the action lasts the full wave
     const baseSpawnRate = Math.max(0.35, 1.0 - state.wave*0.035);
     const dangerSpawnMult = 1 + (state.danger-1)*0.2;
     state.spawnTimer -= dt;
-    const spawnInterval = Math.max(0.12, baseSpawnRate / dangerSpawnMult / (state.coop?1.4:1));
+    const pacedInterval = Math.max(0.12, (WAVE_DURATION - 2) / Math.max(1, state.waveTotal));
+    const spawnInterval = isBossWave(state.wave) ? Math.max(0.12, baseSpawnRate / dangerSpawnMult / (state.coop?1.4:1)) : pacedInterval;
     if(state.spawnTimer <= 0){ state.spawnTimer = spawnInterval; }
     if(isBossWave(state.wave)){
       if(!state.bossSpawned){
@@ -882,7 +888,9 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
       spawnEnemy();
       state.waveSpawned++;
     }
-    if(state.waveSpawned >= state.waveTotal && enemies.length === 0){ // wave complete
+    const bossCleared = isBossWave(state.wave) && state.bossSpawned && enemies.length === 0;
+    if(timeUp || bossCleared){ // wave complete
+      if(timeUp && enemies.length){ for(const e of enemies){ addParticle({x:e.x, y:e.y, life:0.4, r:e.r || 12, color:'#aab0c4'}); } enemies.length = 0; }
       state.waveCompleteTimer += dt;
       moneyDrops.length = 0;
       if(!runStats.tookDamage && state.wave > 1) unlockAchievement('untouchable');
@@ -905,10 +913,6 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
         state.phase = 'upgrade';
         buildUpgradeChoices();
       }
-    }
-    if(state.waveCompleteTimer > 6 && enemies.length === 0){
-      state.phase = 'upgrade';
-      buildUpgradeChoices();
     }
   } else if(state.phase === 'victory'){
     // Celebration beat after clearing the final wave: confetti, then back to the menu

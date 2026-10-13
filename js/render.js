@@ -409,13 +409,13 @@ function drawHUD(){
     ctx.textAlign = 'start';
   }
   if(state.phase === 'wave'){
-    const remaining = Math.max(0, state.waveTotal - state.waveSpawned) + enemies.length;
-    const killed = Math.max(0, state.waveTotal - remaining);
-    drawBar(wx + 14, 42, ww - 28, 10, state.waveTotal ? 1 - remaining / state.waveTotal : 0, '#48e0c2', '#5fb0ff');
+    const tLeft = Math.max(0, WAVE_DURATION - (state.waveTime || 0));
+    const tStr = Math.floor(tLeft / 60) + ':' + String(Math.floor(tLeft % 60)).padStart(2, '0');
+    drawBar(wx + 14, 42, ww - 28, 10, 1 - tLeft / WAVE_DURATION, '#48e0c2', '#5fb0ff');
     ctx.font = uiFont(10);
     ctx.fillStyle = palette.textLight;
     ctx.textAlign = 'center';
-    ctx.fillText(`${killed}/${state.waveTotal}`, VW/2, 76);
+    ctx.fillText(tStr, VW/2, 76);
     ctx.textAlign = 'start';
   } else {
     ctx.font = uiFont(11);

@@ -14,8 +14,8 @@ try{ essence = parseInt(localStorage.getItem(ESSENCE_KEY) || '0', 10) || 0; }cat
 try{ metaLevels = JSON.parse(localStorage.getItem(META_KEY) || '{}'); }catch(e){ metaLevels = {}; }
 
 const META_UPGRADES = [
-  {id:'vitality', name:'Vitality', desc:'+10 Max HP per level', glassjawDesc:'+4% Move Speed per level (Glassjaw: no HP to gain)', max:5, costs:[20,40,80,160,320],
-   apply:(p,l)=>{ if(isGlassjaw(p)){ p.baseSpeed = Math.floor(p.baseSpeed * (1 + 0.04*l)); return; } p.baseMaxHp += 10*l; p.hp = p.baseMaxHp; }},
+  {id:'vitality', name:'Vitality', desc:'+2 Max HP per level', glassjawDesc:'+4% Move Speed per level (Glassjaw: no HP to gain)', max:5, costs:[20,40,80,160,320],
+   apply:(p,l)=>{ if(isGlassjaw(p)){ p.baseSpeed = Math.floor(p.baseSpeed * (1 + 0.04*l)); return; } p.baseMaxHp += 2*l; p.hp = p.baseMaxHp; }},
   {id:'power', name:'Power', desc:'+4% Damage per level', max:5, costs:[30,60,120,240,480],
    apply:(p,l)=>{ p.damageMult *= (1 + 0.04*l); }},
   {id:'swiftness', name:'Swiftness', desc:'+3% Move Speed per level', max:5, costs:[20,40,80,160,320],
