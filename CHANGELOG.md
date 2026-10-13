@@ -1,3 +1,7 @@
+## v0.7.0.2 — file:// WebGL fallback fix
+- **Fixed blank canvas on file:// play**: when the game is opened directly from disk, browsers taint the canvas (local sprite images are opaque-origin), and WebGL refuses to upload tainted canvases — the old code threw every frame and killed the render loop, leaving an empty canvas behind a working menu. The compositor now catches the failure and permanently falls back to the plain Canvas2D renderer, so the game just works.
+- No gameplay or visual changes otherwise; http(s) play keeps the full WebGL lighting + bloom pipeline.
+
 ## v0.7.0.1 — Rarity borders
 - **Rarity-colored weapon borders**: the in-wave HUD arsenal slots and the menu weapon-select grid now draw borders in the weapon's rarity color (common grey / rare blue / epic purple / legendary red), matching the shop cards. Shared `RARITY_COLORS` map added.
 

@@ -1,8 +1,11 @@
-# Pressure Point — v0.7.0.1
+# Pressure Point — v0.7.0.2
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.7.0.1 — Rarity borders)
+## Latest Changes (v0.7.0.2 — file:// WebGL fallback fix)
+- Fixed: opening the game from disk (file://) left the canvas blank — the WebGL compositor now detects the tainted-canvas failure and falls back to Canvas2D automatically.
+
+## Previous (v0.7.0.1 — Rarity borders)
 - **Rarity-colored weapon borders** — the HUD arsenal and the menu weapon grid now show borders in the weapon's rarity color (grey/blue/purple/red).
 
 ## Previous Update (v0.7 — Graphics update 2)
