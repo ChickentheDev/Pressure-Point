@@ -1,3 +1,8 @@
+## v0.7.7 — Maps: 3 worlds, 8 backgrounds
+- **3 full maps**: Rustlands (standard), **Frosthold** (unlock: beat Danger 5 — new frost enemies, ~22% harder), **Abyssal Hollow** (unlock: beat Danger 5 on Frosthold — new void enemies, +50% harder). New map select screen in the menu flow.
+- **8 mini-map backgrounds**: each danger now has its own arena theme (Rust, Ashen, Mossy, Dune, Frost, Ember, Void, Storm) — the arena looks different every danger.
+- **5 new achievements**: one per map cleared, **Inferno Conquered** (Danger 5), and the special **Nightmare Cartographer** (all 3 maps on Nightmare).
+
 ## v0.7.6.1 — WebGL black-screen guard
 - **Auto-fallback**: on startup the game now renders a test pixel through the WebGL pipeline — if the GPU outputs black (silent driver failure, seen on some Chromebooks), it permanently falls back to Canvas2D instead of showing a black screen.
 - If you still see a black screen: Settings → uncheck **Lighting FX** to force the 2D renderer.

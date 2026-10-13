@@ -1,4 +1,4 @@
-# Pressure Point — v0.7.6.1
+# Pressure Point — v0.7.7
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
