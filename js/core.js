@@ -285,6 +285,40 @@ const state = {
 
 // settings
 const SETTINGS_KEY = 'brotato_settings_v1';
+// Dev code: PRESSURE unlocks everything + creative mode (god mode, free shop).
+let devMode = false;
+try{ devMode = localStorage.getItem('pp_devmode') === '1'; }catch(e){}
+const DEV_CODE = 'PRESSURE';
+function setDevMode(on){
+  devMode = on;
+  try{ localStorage.setItem('pp_devmode', on ? '1' : '0'); }catch(e){}
+  updateDevLabel();
+}
+function updateDevLabel(){
+  const label = document.getElementById('devModeLabel'), btn = document.getElementById('devCodeBtn');
+  if(label) label.textContent = devMode ? 'DEV MODE ACTIVE' : '';
+  if(btn) btn.textContent = devMode ? 'Disable' : 'Redeem';
+}
+function redeemDevCode(){
+  const input = document.getElementById('devCodeInput');
+  if(devMode){ setDevMode(false); if(typeof audio !== 'undefined') audio.click(); return; }
+  const v = ((input && input.value) || '').trim().toUpperCase();
+  if(v !== DEV_CODE){ if(typeof audio !== 'undefined') audio.deny(); return; }
+  // unlock everything: all achievements (unlocks all classes), max meta upgrades
+  let changed = false;
+  if(typeof ACHIEVEMENTS !== 'undefined' && typeof unlockedAchievements !== 'undefined'){
+    for(const a of ACHIEVEMENTS){ if(!unlockedAchievements[a.id]){ unlockedAchievements[a.id] = Date.now(); changed = true; } }
+    if(changed){ try{ localStorage.setItem(ACH_KEY, JSON.stringify(unlockedAchievements)); }catch(e){} }
+  }
+  if(typeof META_UPGRADES !== 'undefined' && typeof metaLevels !== 'undefined'){
+    for(const m of META_UPGRADES) metaLevels[m.id] = m.max;
+    try{ localStorage.setItem(META_KEY, JSON.stringify(metaLevels)); }catch(e){}
+    if(typeof applyMetaUpgrades !== 'undefined' && players[0]) applyMetaUpgrades(players[0]);
+  }
+  if(input) input.value = '';
+  setDevMode(true);
+  if(typeof audio !== 'undefined') audio.buy();
+}
 const settings = { screenShake: true, graphics: 'high', autoShoot: true, mouseAim: true, bgFx: true, particleFx: true, webgl: true, muted: false, volume: 100 };
 try{
   const savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
@@ -329,6 +363,8 @@ if(muteToggle){
   muteToggle.checked = !!settings.muted;
   muteToggle.addEventListener('change', ()=>{ settings.muted = !!muteToggle.checked; if(typeof audio !== 'undefined') audio.setMuted(settings.muted); saveSettings(); });
 }
+const devCodeBtn = document.getElementById('devCodeBtn');
+if(devCodeBtn){ devCodeBtn.addEventListener('click', redeemDevCode); updateDevLabel(); }
 if(volumeSlider){
   volumeSlider.value = settings.volume == null ? 100 : settings.volume;
   volumeSlider.addEventListener('input', ()=>{ settings.volume = +volumeSlider.value; if(typeof audio !== 'undefined') audio.setVolume(settings.volume); saveSettings(); });

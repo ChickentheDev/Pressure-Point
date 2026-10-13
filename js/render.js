@@ -394,6 +394,7 @@ function drawHUD(){
   ctx.fillStyle = palette.uiAccent;
   const isBoss = state.wave >= state.maxWave;
   ctx.fillText(isBoss ? `WAVE ${state.wave} — BOSS` : `WAVE ${state.wave} / ${state.maxWave}`, VW/2, 33);
+  if(typeof devMode !== 'undefined' && devMode){ ctx.fillStyle = '#7dff9a'; ctx.font = uiFont(11, 'bold'); ctx.fillText('DEV MODE', VW/2, 48); ctx.fillStyle = palette.uiAccent; }
   ctx.textAlign = 'start';
   // elite mini-boss / boss HP bar: show the toughest living elite or boss
   const boss = enemies.find(e=>e.isBoss);

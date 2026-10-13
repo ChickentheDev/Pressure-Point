@@ -270,8 +270,8 @@ function buildShop(){
 function rerollShop(){
   const cost = shop.rerollCost;
   const payer = players[0];
-  if(payer.currency < cost){ audio.deny(); return; }
-  payer.currency -= cost;
+  if(typeof devMode !== 'undefined' && devMode){ /* free */ }
+  else { if(payer.currency < cost){ audio.deny(); return; } payer.currency -= cost; }
   shop.rerollCost = Math.min(99, Math.floor(shop.rerollCost * 1.35 + 2));
   buildShop();
   audio.click();
@@ -575,7 +575,7 @@ function fireWeaponFor(player, time, target){
       const elemental = w.elemental || (w.explosive ? 'fire' : null);
       // px/py = previous position for the swept hit test. A new bullet starts its sweep at the player's
       // centre, so an enemy overlapping the player (inside the muzzle offset) still gets hit.
-      bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, px: player.x, py: player.y, fresh: true, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, pierce: (w.pierce||0) + (player.pierceBonus||0), rehit: !!w.rehit, dist: 0, maxDist: ((w.range || 900) + (player.rangeBonus || 0)) * (player.rangeMult || 1) });
+      bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, px: player.x, py: player.y, fresh: true, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, pierce: (w.pierce||0) + (player.pierceBonus||0), rehit: !!w.rehit, dist: 0, maxDist: ((w.range || 900) + (player.rangeBonus || 0)) * (player.rangeMult || 1), explosive: !!w.explosive, splashR: w.splashR || 110 });
     }
     addParticle({x:player.x + Math.cos(angle)*16, y:player.y + Math.sin(angle)*16, life:0.15, r: w.type==='heavy'?18:w.type==='shotgun'?14:10, color:w.color});
     if(audio.ctx && time - (w.lastSound||0) > 0.06){ w.lastSound = time; const freq = w.type==='heavy'?120:w.type==='shotgun'?180:w.type==='rifle'?240:320; audio.beep(freq,0.04,'square',0.03); }
@@ -618,6 +618,7 @@ function killEnemy(index, ownerId){
 // damage helper: armor applies, and no single hit can exceed 50% of max HP (no 1-shots)
 function hurtPlayer(p, raw){
   if(!p || p.dead) return;
+  if(typeof devMode !== 'undefined' && devMode) return;   // creative mode: invincible
   const cap = Math.max(1, (p.baseMaxHp || 100) * 0.5);
   p.hp -= Math.min(Math.max(1, raw - (p.armor || 0)), cap);
   p.hitFlash = 0.12;
@@ -645,6 +646,36 @@ function explodeEnemy(e, index){
   enemies.splice(index, 1);
 }
 
+// Player explosives (RPG, grenades, mortar...): AoE splash around the impact point.
+// skipEnemy already took the direct hit; victimIdx lets the caller fix its enemy-loop
+// index when splash kills shift enemies below it. Returns the index shift.
+function detonate(b, x, y, skipEnemy, victimIdx, ownerId){
+  const R = b.splashR || 110;
+  let shift = 0;
+  for(let k=enemies.length-1;k>=0;k--){
+    const en = enemies[k];
+    if(en === skipEnemy) continue;
+    const dx = en.x - x, dy = en.y - y;
+    if(dx*dx + dy*dy > (R + en.r)*(R + en.r)) continue;
+    const d = Math.sqrt(dx*dx + dy*dy);
+    const dmg = b.damage * (1 - 0.5 * Math.min(1, d / R));
+    en.hp -= dmg;
+    if(!en.status) en.status = {burn:0,burnDps:0,slow:0,shock:0};
+    en.status.burn = Math.max(en.status.burn, 3);
+    en.status.burnDps = Math.max(en.status.burnDps, dmg * 0.5);
+    en.hitFlash = 0.1;
+    applyKnockback(en, dx, dy, dmg);
+    floatingTexts.push({x:en.x, y:en.y-6, vx:rand(-12,12), vy:-40, life:0.7, text:Math.max(1, Math.round(dmg)), color:'#ffb066'});
+    if(en.hp <= 0){ killEnemy(k, ownerId); if(k < victimIdx) shift++; }
+  }
+  addParticle({x, y, life:0.35, r:R*0.55, color:'#ff8c42'});
+  addParticle({x, y, life:0.25, r:R*0.35, color:'#ffd166'});
+  addParticle({x, y, life:0.5, r:R*0.7, color:'#555555'});
+  addShake(5);
+  if(audio.ctx) audio.beep(70, 0.25, 'sawtooth', 0.12);
+  return shift;
+}
+
 function awardToPlayerById(id, xp, money){ const p = players.find(x=>x.id===id) || players[0]; p.xp += xp; p.currency += money; while(p.xp >= p.xpNext){ levelUp(p); } }
 
 function buyShopItemFor(player){
@@ -653,9 +684,11 @@ function buyShopItemFor(player){
   if(player.currency < item.price){ audio.deny(); return; }
   if(item.type === 'item' && player.items.length >= 6){ audio.deny(); return; }
   if(item.type === 'item' && item.data.category === 'unique' && playerOwnsUnique(player)){ audio.deny(); return; }
-  player.currency -= item.price;
-  runStats.spent += item.price;
-  if(runStats.spent >= 500) checkAchievements();
+  if(typeof devMode === 'undefined' || !devMode){
+    player.currency -= item.price;
+    runStats.spent += item.price;
+    if(runStats.spent >= 500) checkAchievements();
+  }
   if(item.type === 'weapon'){
     player.ownedWeapons.push(createWeaponInstance(item.data, item.rarity || item.data.rarity));
     refreshAmmoFor(player);
@@ -973,7 +1006,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
   }
 
   // bullets update
-  for(let i=bullets.length-1;i>=0;i--){ const b=bullets[i]; if(b.fresh){ b.fresh = false; } else { b.px = b.x; b.py = b.y; } const stepx = b.vx*dt, stepy = b.vy*dt; b.x += stepx; b.y += stepy; b.life -= dt; b.dist = (b.dist || 0) + Math.sqrt(stepx*stepx + stepy*stepy); if(b.life<=0 || (b.maxDist && b.dist >= b.maxDist) || b.x<-50 || b.x>W+50 || b.y<-50 || b.y>H+50 || bullets.length>MAX_BULLETS) bullets.splice(i,1); }
+  for(let i=bullets.length-1;i>=0;i--){ const b=bullets[i]; if(b.fresh){ b.fresh = false; } else { b.px = b.x; b.py = b.y; } const stepx = b.vx*dt, stepy = b.vy*dt; b.x += stepx; b.y += stepy; b.life -= dt; b.dist = (b.dist || 0) + Math.sqrt(stepx*stepx + stepy*stepy); if(b.life<=0 || (b.maxDist && b.dist >= b.maxDist) || b.x<-50 || b.x>W+50 || b.y<-50 || b.y>H+50 || bullets.length>MAX_BULLETS){ if(b.explosive && b.dist > 60) detonate(b, b.x, b.y, null, -1, b.ownerId); bullets.splice(i,1); } }
 
   // bullets vs trees (destructibles)
   for(let i=bullets.length-1;i>=0;i--){
@@ -1149,8 +1182,8 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
             addShake(b.crit ? 2 : 0.5);
             // elemental status
             if(b.elemental === 'fire'){
-              e.status.burn = Math.max(e.status.burn, 2.5);
-              e.status.burnDps = Math.max(e.status.burnDps, b.damage * 0.25);
+              e.status.burn = Math.max(e.status.burn, 4);
+              e.status.burnDps = Math.max(e.status.burnDps, b.damage * 0.6);
             } else if(b.elemental === 'ice'){
               e.status.slow = Math.max(e.status.slow, 2.0);
             } else if(b.elemental === 'shock'){
@@ -1164,7 +1197,8 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
               }
             }
             addParticle({x:e.x,y:e.y,life:0.2, r:8, color:'#ffd166'}); const ownerId = b.ownerId;
-            if(b.pierce > 0){ b.pierce--; if(b.rehit) b.lastHit = e; else (b.hits || (b.hits = [])).push(e); } else { bullets.splice(j,1); } if(e.hp <= 0){ // die
+            if(b.explosive){ i -= detonate(b, b.x, b.y, e, i, ownerId); bullets.splice(j,1); }
+            else if(b.pierce > 0){ b.pierce--; if(b.rehit) b.lastHit = e; else (b.hits || (b.hits = [])).push(e); } else { bullets.splice(j,1); } if(e.hp <= 0){ // die
             // reward to owner if available, else nearest player
             killEnemy(i, ownerId); killed = true; break; } }
     }
