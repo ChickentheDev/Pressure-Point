@@ -391,7 +391,7 @@
   }
   function drawItems(L, p){
     const b = L.itemsBox, T = b.T;
-    ctx.font = font(18); ctx.fillStyle = C.text; ctx.fillText(`Items (${p.items.length}/6)`, b.x + 2, b.y + 20);
+    ctx.font = font(18); ctx.fillStyle = C.text; ctx.fillText(`Items (${p.items.length})`, b.x + 2, b.y + 20);
     const stacks = [];
     for(const it of p.items){ const s = stacks.find(q => q.id === it.id && q.rarity === it.rarity); if(s) s.n++; else stacks.push({id: it.id, rarity: it.rarity, n: 1}); }
     const per = Math.max(1, Math.floor((b.w + 6) / (T + 6)));

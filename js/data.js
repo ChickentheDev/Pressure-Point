@@ -227,7 +227,8 @@ const items = [
   {id:"war_crown", name:"War Crown", rarity:"epic", category:"exclusive", price:145, desc:"+2 Luck, +6% Damage — worn with pride", effects:{luckAdd:2, damageMult:0.06}, cosmetic:"crown"},
   {id:'longbarrel', name:'Long Barrel', rarity:'common', category:'tech', price:32, desc:'+150 Bullet Range', effects:{rangeBonus:150}},
   {id:'scope', name:'Marksman Scope', rarity:'rare', category:'tech', price:58, desc:'+300 Bullet Range, +10% Accuracy', effects:{rangeBonus:300, accuracyMult:0.1}},
-  {id:'railgun', name:'Rail Amplifier', rarity:'epic', category:'tech', price:110, desc:'+35% Bullet Range, +8% Damage', effects:{rangeMult:0.35, damageMult:0.08}}
+  {id:'railgun', name:'Rail Amplifier', rarity:'epic', category:'tech', price:110, desc:'+35% Bullet Range, +8% Damage', effects:{rangeMult:0.35, damageMult:0.08}},
+  {id:'mirror', name:'Mirror', rarity:'epic', category:'arcane', price:105, desc:'The next item you buy comes in duplicate (not another Mirror)', effects:{}}
 ];
 
 // ---- WASM shop bridge ----------------------------------------------------------------------------

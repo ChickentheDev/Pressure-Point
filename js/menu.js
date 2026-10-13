@@ -312,6 +312,7 @@ function wireSummaryButtons(){
   on('wonRetryBtn', retry); on('wonNewRunBtn', newRun); on('wonMenuBtn', toMenu);
   on('overRetryBtn', retry); on('overNewRunBtn', newRun); on('overMenuBtn', toMenu);
   on('pauseResumeBtn', ()=>togglePause());
+  on('pauseSettingsBtn', ()=>{ if(pauseMenuEl) pauseMenuEl.style.display = 'none'; settingsReturnToPause = true; if(settingsPanel) settingsPanel.style.display = 'block'; });
   on('pauseQuitBtn', ()=>{ if(state.paused) togglePause(); hideSummaryOverlays(); resetRun(); });
 }
 
@@ -439,7 +440,12 @@ if(settingsBtn && settingsPanel){
     menuEl.style.display = 'none';
   });
 }
-function closeSettings(){ if(settingsPanel) settingsPanel.style.display = 'none'; if(menuEl) menuEl.style.display = 'block'; }
+let settingsReturnToPause = false;
+function closeSettings(){
+  if(settingsPanel) settingsPanel.style.display = 'none';
+  if(settingsReturnToPause){ settingsReturnToPause = false; if(pauseMenuEl) pauseMenuEl.style.display = 'block'; }
+  else if(menuEl) menuEl.style.display = 'block';
+}
 if(settingsCloseBtn && settingsPanel){ settingsCloseBtn.addEventListener('click', closeSettings); }
 if(settingsCloseIcon && settingsPanel){ settingsCloseIcon.addEventListener('click', closeSettings); }
 

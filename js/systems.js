@@ -63,7 +63,7 @@ function applyItemEffects(player, itemData, rarity, sign=1){
 }
 
 function addItemToPlayer(player, itemData, rarity){
-  if(player.items.length >= 6) return false;
+  // (no item cap: infinite slots)
   // Unique items: at most one per player, exempt from combining
   if(itemData.category === 'unique'){
     if(playerOwnsUnique(player)) return false;
@@ -192,11 +192,11 @@ function buildShop(){
   const poolItems = items.filter(it => !(ownsUnique && it.category === 'unique'));
 
   function rollRarity(luck){
-    const base = { common:50, rare:35, epic:10, legendary:5 };
-    const wCommon = base.common + luck * 5;
-    const wRare = base.rare + luck * 10;
-    const wEpic = base.epic + luck * 15;
-    const wLegendary = base.legendary + luck * 20;
+    const L = Math.max(0, luck || 0);
+    const wCommon = 55;
+    const wRare = 35 + L * 3;
+    const wEpic = 8 + L * 3.5;
+    const wLegendary = 2 + L * 4;
     const total = wCommon + wRare + wEpic + wLegendary;
     let r = Math.random() * total;
     if((r -= wCommon) <= 0) return 'common';
@@ -279,7 +279,7 @@ function rerollShop(){
 
 // Wave calculation: horde scaling — Wave 1 = 16 enemies, each wave +8.
 // Danger and co-op multipliers stack on top in startWave.
-function computeWaveTotal(wave){ return 16 + (Math.max(1, wave) - 1) * 8; }
+function computeWaveTotal(wave){ return 40 + (Math.max(1, wave) - 1) * 18; }
 
 // Elites: tougher enemy variants on danger-gated waves.
 // Wave 12 → danger 2-5, wave 16 → danger 4-5, wave 20 (boss) → danger 1-5.
@@ -545,10 +545,34 @@ function integrateEnemyKnockback(e, dt){
 function getNearestEnemyTo(x,y){ let best=null, bd=Infinity; for(const e of enemies){ const d=(e.x-x)**2 + (e.y-y)**2; if(d<bd){ bd=d; best=e; } } return best; }
 function getNearestTreeTo(x,y){ let best=null, bd=Infinity; for(const tr of trees){ const d=(tr.x-x)**2 + (tr.y-y)**2; if(d<bd){ bd=d; best=tr; } } return best; }
 
-function fireWeaponFor(player, time, target){
+// Per-weapon targeting: weapon wi aims at the wi-th nearest enemy, so the arsenal
+// spreads across targets instead of every gun focusing the same enemy.
+function pickAutoTarget(p, skipCount){
+  if(skipCount <= 0){
+    const n = getNearestEnemyTo(p.x, p.y) || getNearestTreeTo(p.x, p.y);
+    return n ? aimPointFor(p, n) : null;
+  }
+  const best = [];
+  for(const e of enemies){
+    const dx = e.x - p.x, dy = e.y - p.y, d2 = dx*dx + dy*dy;
+    if(best.length < skipCount + 1 || d2 < best[best.length-1].d2){
+      best.push({d2, e});
+      best.sort((a,b) => a.d2 - b.d2);
+      if(best.length > skipCount + 1) best.pop();
+    }
+  }
+  if(best.length > skipCount) return aimPointFor(p, best[skipCount].e);
+  const t = getNearestTreeTo(p.x, p.y);
+  return t ? aimPointFor(p, t) : null;
+}
+
+function fireWeaponFor(player, time, target, autoSpread){
   if(!target) return;
   // All owned weapons are equipped at once: each fires on its own cooldown, ammo and overheat.
-  for(const w of player.ownedWeapons){
+  // With auto-spread, each weapon independently targets the Nth-nearest enemy.
+  const owned = player.ownedWeapons;
+  for(let wi = 0; wi < owned.length; wi++){
+    const w = owned[wi];
     if(!w || w.reloading > 0 || w.overheated) continue;
     const fireRate = w.fireRate * player.reloadSpeed;
     if(time - (w.last||0) < fireRate) continue;
@@ -562,7 +586,9 @@ function fireWeaponFor(player, time, target){
         audio.deny();
       }
     }
-    const angle = Math.atan2(target.y - player.y, target.x - player.x);
+    const wTarget = autoSpread ? (pickAutoTarget(player, wi) || target) : target;
+    if(!wTarget) continue;
+    const angle = Math.atan2(wTarget.y - player.y, wTarget.x - player.x);
     const count = w.pellets || 1;
     for(let i=0;i<count;i++){
       const spread = (w.spread || 0) / player.accuracy;
@@ -683,7 +709,7 @@ function buyShopItemFor(player){
   const item = shop.items[shop.selection];
   if(!item || !item.data) return;
   if(player.currency < item.price){ audio.deny(); return; }
-  if(item.type === 'item' && player.items.length >= 6){ audio.deny(); return; }
+  if(false && item.type === 'item' && player.items.length >= 6){ audio.deny(); return; }
   if(item.type === 'item' && item.data.category === 'unique' && playerOwnsUnique(player)){ audio.deny(); return; }
   if(typeof devMode === 'undefined' || !devMode){
     player.currency -= item.price;
@@ -697,6 +723,16 @@ function buyShopItemFor(player){
   } else {
     if(!addItemToPlayer(player, item.data, item.rarity || item.data.rarity)){ player.currency += item.price; audio.deny(); return; }
     checkAchievements();
+  }
+  // Mirror: the next non-Mirror item bought comes in duplicate (a Mirror never duplicates itself).
+  if(item.type === 'item'){
+    if(item.data.id === 'mirror'){
+      if(!player.mirrorActive){ player.mirrorActive = true; floatingTexts.push({x:player.x, y:player.y-30, vx:0, vy:-40, life:1.2, text:'Mirror armed: next item x2', color:'#b67bff'}); }
+    } else if(player.mirrorActive){
+      player.mirrorActive = false;
+      addItemToPlayer(player, item.data, item.rarity || item.data.rarity);
+      floatingTexts.push({x:player.x, y:player.y-30, vx:0, vy:-40, life:1.2, text:'Mirrored!', color:'#b67bff'});
+    }
   }
   // Sold out: remove the bought offer from this shop's stock (restocks next wave).
   shop.items[shop.selection] = null;
@@ -1343,12 +1379,13 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     for(let i=0;i<players.length;i++){
       const p = players[i]; if(p.dead) continue;
       let target = null;
-      if(i===0 && settings.mouseAim && (mouseRecent || input.mouseDown)){ target = {x: input.mx, y: input.my}; }
+      const mouseAiming = i===0 && settings.mouseAim && (mouseRecent || input.mouseDown);
+      if(mouseAiming){ target = {x: input.mx, y: input.my}; }
       else { const nearest = getNearestEnemyTo(p.x,p.y) || getNearestTreeTo(p.x,p.y); if(nearest) target = aimPointFor(p, nearest); }
       if(!target) continue;
       p.angle = Math.atan2(target.y - p.y, target.x - p.x);
       const wantsFire = i !== 0 || settings.autoShoot || input.mouseDown || !!input.keys[' '];
-      if(wantsFire) fireWeaponFor(p, t, target);
+      if(wantsFire) fireWeaponFor(p, t, target, !mouseAiming);
     }
   }
 }
