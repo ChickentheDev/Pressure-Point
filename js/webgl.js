@@ -267,6 +267,10 @@ function init(canvas, ctx2d){
     glc.addEventListener('webglcontextlost', e => { e.preventDefault(); ready = false; }, false);
     glc.addEventListener('webglcontextrestored', () => { if(buildPipeline()){ sizeBloom(); ready = true; } }, false);
     ready = true;
+    // v0.7.6.1: self-test — some GPUs (notably Chromebook/Brave combos) silently
+    // output black frames with no exception. If we can't produce a blue pixel,
+    // fall back to Canvas2D instead of showing a black screen.
+    if(!glSelfTest()){ killGL(); return false; }
     return true;
   }catch(e){ gl = null; ready = false; return false; }
 }
@@ -354,6 +358,22 @@ function endWorld(){
     // tainted sources (SecurityError). Permanently fall back to plain Canvas2D.
     killGL();
   }
+}
+
+// Render one clear through the GL pipeline and verify pixels come out.
+// Catches GPUs/drivers that silently produce black frames.
+function glSelfTest(){
+  try{
+    const w = Math.max(2, glc.width), h = Math.max(2, glc.height);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, w, h);
+    gl.clearColor(0.2, 0.4, 0.8, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.finish();
+    const px = new Uint8Array(4);
+    gl.readPixels(w >> 1, h >> 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    return px[2] > 100 && px[0] < 150;
+  }catch(e){ return false; }
 }
 
 // Permanently disable the WebGL compositor; the game keeps running on Canvas2D.

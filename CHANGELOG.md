@@ -1,3 +1,7 @@
+## v0.7.6.1 — WebGL black-screen guard
+- **Auto-fallback**: on startup the game now renders a test pixel through the WebGL pipeline — if the GPU outputs black (silent driver failure, seen on some Chromebooks), it permanently falls back to Canvas2D instead of showing a black screen.
+- If you still see a black screen: Settings → uncheck **Lighting FX** to force the 2D renderer.
+
 ## v0.7.6 — Barrels, scaling, new main menu
 - **Gun barrels track targets**: each weapon's barrel now rotates to face its own enemy instead of all guns pointing one way.
 - **UI scaling**: menu and UI elements scale up with the viewport — no more tiny menu on big screens.
