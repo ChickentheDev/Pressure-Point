@@ -664,6 +664,10 @@ function buyShopItemFor(player){
     if(!addItemToPlayer(player, item.data, item.rarity || item.data.rarity)){ player.currency += item.price; audio.deny(); return; }
     checkAchievements();
   }
+  // Sold out: remove the bought offer from this shop's stock (restocks next wave).
+  shop.items[shop.selection] = null;
+  if(shop.locked) shop.locked[shop.selection] = null;
+  normalizeShopSelection();
   audio.buy();
 }
 
