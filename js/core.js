@@ -197,7 +197,7 @@ const audio = {
     if(!this.ctx || this.muted) return;
     const o=this.ctx.createOscillator(), g=this.ctx.createGain();
     o.type=type; o.frequency.value=freq;
-    g.gain.value=vol;
+    g.gain.value=vol * (this.volume == null ? 1 : this.volume / 100);
     o.connect(g); g.connect(this.ctx.destination);
     o.start(); o.stop(this.ctx.currentTime+dur);
   },
@@ -208,12 +208,19 @@ const audio = {
   dash(){ this.beep(360, 0.05, 'triangle', 0.05); },
   setMuted(flag){
     this.muted = flag;
-    if(this.bgm && this.bgm.master){ this.bgm.master.gain.value = flag ? 0 : 0.03; }
+    this.applyVolume();
+  },
+  setVolume(v){
+    this.volume = Math.max(0, Math.min(100, v));
+    this.applyVolume();
+  },
+  applyVolume(){
+    if(this.bgm && this.bgm.master){ this.bgm.master.gain.value = this.muted ? 0 : 0.03 * (this.volume == null ? 1 : this.volume / 100); }
   },
   startBgm(){
     if(!this.ctx || this.bgm) return;
     const master = this.ctx.createGain();
-    master.gain.value = this.muted ? 0 : 0.03;
+    master.gain.value = this.muted ? 0 : 0.03 * (this.volume == null ? 1 : this.volume / 100);
     master.connect(this.ctx.destination);
 
     const o1 = this.ctx.createOscillator();
@@ -278,7 +285,7 @@ const state = {
 
 // settings
 const SETTINGS_KEY = 'brotato_settings_v1';
-const settings = { screenShake: true, graphics: 'high', autoShoot: true, mouseAim: true, bgFx: true, particleFx: true, webgl: true };
+const settings = { screenShake: true, graphics: 'high', autoShoot: true, mouseAim: true, bgFx: true, particleFx: true, webgl: true, muted: false, volume: 100 };
 try{
   const savedSettings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
   if(typeof savedSettings.screenShake === 'boolean') settings.screenShake = savedSettings.screenShake;
@@ -288,6 +295,8 @@ try{
   if(typeof savedSettings.bgFx === 'boolean') settings.bgFx = savedSettings.bgFx;
   if(typeof savedSettings.particleFx === 'boolean') settings.particleFx = savedSettings.particleFx;
   if(typeof savedSettings.webgl === 'boolean') settings.webgl = savedSettings.webgl;
+  if(typeof savedSettings.muted === 'boolean') settings.muted = savedSettings.muted;
+  if(typeof savedSettings.volume === 'number') settings.volume = Math.max(0, Math.min(100, savedSettings.volume));
 }catch(e){}
 
 function saveSettings(){
@@ -312,6 +321,17 @@ if(autoShootToggle){
 if(mouseAimToggle){
   mouseAimToggle.checked = settings.mouseAim;
   mouseAimToggle.addEventListener('change', ()=>{ settings.mouseAim = !!mouseAimToggle.checked; saveSettings(); });
+}
+const muteToggle = document.getElementById('muteToggle');
+const volumeSlider = document.getElementById('volumeSlider');
+if(typeof audio !== 'undefined'){ audio.setMuted(!!settings.muted); audio.setVolume(settings.volume == null ? 100 : settings.volume); }
+if(muteToggle){
+  muteToggle.checked = !!settings.muted;
+  muteToggle.addEventListener('change', ()=>{ settings.muted = !!muteToggle.checked; if(typeof audio !== 'undefined') audio.setMuted(settings.muted); saveSettings(); });
+}
+if(volumeSlider){
+  volumeSlider.value = settings.volume == null ? 100 : settings.volume;
+  volumeSlider.addEventListener('input', ()=>{ settings.volume = +volumeSlider.value; if(typeof audio !== 'undefined') audio.setVolume(settings.volume); saveSettings(); });
 }
 if(gfxPreset){
   gfxPreset.value = settings.graphics;
