@@ -43,7 +43,7 @@ function dangerMods(d){ return DANGER_MODS[Math.max(1, Math.min(6, d|0))] || DAN
 const enemyTypes = [
   {id:'runner', name:'Runner', color:'#e85', r:10, hp:22, speed:120, dmg:10, xp:6, money:2,
    eliteName:'Swiftclaw', eliteTrait:'+50% speed'},
-  {id:'spitter', name:'Spitter', color:'#d94', r:12, hp:36, speed:95, dmg:12, xp:9, money:3,
+  {id:'spitter', name:'Spitter', color:'#d94', r:12, hp:36, speed:95, dmg:12, xp:9, money:3, ranged:true,
    eliteName:'Plaguewing', eliteTrait:'venomous touch (slow)'},
   {id:'bruiser', name:'Bruiser', color:'#c43', r:16, hp:60, speed:70, dmg:18, xp:14, money:4,
    eliteName:'Skullcrusher', eliteTrait:'shockwave slam'},

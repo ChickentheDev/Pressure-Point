@@ -301,6 +301,7 @@ function startWave(){
   state.phase = 'wave';
   state.waveSpawned = 0;
   state.waveTime = 0;
+  enemyBullets.length = 0;
   state.waveCompleteTimer = 0;
   runStats.tookDamage = false;
   state.waveTotal = Math.floor(computeWaveTotal(state.wave) * (state.coop ? 1.5 : 1) * (1 + (state.danger-1)*0.15) * dangerMods(state.danger).countMult);
@@ -379,7 +380,7 @@ function spawnEnemy(opts){
   const eliteHP = elite ? 3 : 1, eliteDmg = elite ? 1.4 : 1;
   const xp = Math.floor((t.xp + Math.floor(state.wave*0.6)*(state.danger)) * (elite ? 3 : 1));
   const money = Math.max(1, Math.floor((Math.floor(t.money * 0.7) + Math.floor(state.wave*0.2) * state.danger) * (elite ? 3 : 1)));
-  enemies.push({ id: t.id, x,y, r: Math.floor(t.r * (elite ? 1.35 : 1)), hp: Math.floor(t.hp * waveScale * dangerHP * eliteHP), maxHp: Math.floor(t.hp * waveScale * dangerHP * eliteHP), speed: Math.floor((t.speed + state.wave*2) * dangerSpeed * (elite && t.id === 'runner' ? 1.5 : 1)), dmg: Math.floor(t.dmg * dangerDmg * lateDmg * eliteDmg + state.wave*1.2), color: t.color, xp, money, explodes: !!t.explodes, splits: !!t.splits, dashes: !!t.dashes, shields: !!t.shields, spawns: !!t.spawns, elite, eliteName: elite ? t.eliteName : null, dashTimer: 2 + Math.random()*2, dashTime: 0, spawnTimer: 3 });
+  enemies.push({ id: t.id, x,y, r: Math.floor(t.r * (elite ? 1.35 : 1)), hp: Math.floor(t.hp * waveScale * dangerHP * eliteHP), maxHp: Math.floor(t.hp * waveScale * dangerHP * eliteHP), speed: Math.floor((t.speed + state.wave*2) * dangerSpeed * (elite && t.id === 'runner' ? 1.5 : 1)), dmg: Math.floor(t.dmg * dangerDmg * lateDmg * eliteDmg + state.wave*1.2), color: t.color, xp, money, explodes: !!t.explodes, splits: !!t.splits, dashes: !!t.dashes, shields: !!t.shields, spawns: !!t.spawns, ranged: !!t.ranged, elite, eliteName: elite ? t.eliteName : null, dashTimer: 2 + Math.random()*2, dashTime: 0, spawnTimer: 3 });
   if(enemies.length > 120){ enemies.shift(); }
   addParticle({x, y, life:0.35, r:18, color: elite ? '#ffd166' : palette.uiAccent});
 }
@@ -612,6 +613,15 @@ function killEnemy(index, ownerId){
   enemies.splice(index,1);
 }
 
+// damage helper: armor applies, and no single hit can exceed 50% of max HP (no 1-shots)
+function hurtPlayer(p, raw){
+  if(!p || p.dead) return;
+  const cap = Math.max(1, (p.baseMaxHp || 100) * 0.5);
+  p.hp -= Math.min(Math.max(1, raw - (p.armor || 0)), cap);
+  p.hitFlash = 0.12;
+  runStats.tookDamage = true;
+  if(p.hp <= 0){ p.hp = 0; p.dead = true; if(players.every(pl=>pl.dead)){ state.phase='gameover'; showRunOver(); } }
+}
 // burster: proximity-fused explosion. One AoE hit, then the enemy is gone (no contact DPS).
 function explodeEnemy(e, index){
   const R = e.elite ? 140 : 85, base = e.dmg * (e.elite ? 4 : 3);
@@ -619,9 +629,7 @@ function explodeEnemy(e, index){
     if(p.dead) continue;
     const d = Math.hypot(p.x - e.x, p.y - e.y);
     if(d < R + p.r){
-      p.hp -= Math.max(1, base * (1 - d / (R + p.r)) - p.armor);
-      runStats.tookDamage = true;
-      p.hitFlash = 0.12;
+      hurtPlayer(p, base * (1 - d / (R + p.r)));
       addShake(6);
       if(p.hp <= 0){
         p.hp = 0; p.dead = true; p.reviveProgress = 0; addShake(10);
@@ -888,6 +896,23 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
       spawnEnemy();
       state.waveSpawned++;
     }
+    // enemy bullets: move, hit players (capped by hurtPlayer), expire off-screen
+    for(let i = enemyBullets.length - 1; i >= 0; i--){
+      const b = enemyBullets[i];
+      b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt;
+      let consumed = b.life <= 0 || b.x < -40 || b.x > W + 40 || b.y < -40 || b.y > H + 40;
+      if(!consumed){
+        for(const p of players){
+          if(p.dead || p.iFrames > 0) continue;
+          if(Math.hypot(p.x - b.x, p.y - b.y) < p.r + b.r){
+            hurtPlayer(p, b.dmg);
+            addParticle({x:b.x, y:b.y, life:0.25, r:8, color:'#aaff66'});
+            consumed = true; break;
+          }
+        }
+      }
+      if(consumed) enemyBullets.splice(i, 1);
+    }
     const bossCleared = isBossWave(state.wave) && state.bossSpawned && enemies.length === 0;
     if(timeUp || bossCleared){ // wave complete
       if(timeUp && enemies.length){ for(const e of enemies){ addParticle({x:e.x, y:e.y, life:0.4, r:e.r || 12, color:'#aab0c4'}); } enemies.length = 0; }
@@ -999,6 +1024,19 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
         addParticle({x:e.x,y:e.y,life:0.3,r:16,color:'#9b59b6'});
       }
     }
+    // spitter: keeps its distance and spits projectiles
+    if(e.ranged && !e.dead){
+      e.shootTimer = (e.shootTimer == null ? 1.2 + Math.random() : e.shootTimer) - dt;
+      const sDist = Math.hypot(target.x - e.x, target.y - e.y);
+      if(e.shootTimer <= 0 && sDist < 560){
+        e.shootTimer = 2.1 + Math.random() * 0.9;
+        const sa = Math.atan2(target.y - e.y, target.x - e.x), spd = 330;
+        enemyBullets.push({x:e.x, y:e.y, vx:Math.cos(sa)*spd, vy:Math.sin(sa)*spd, r:6,
+          dmg:Math.max(4, Math.floor(e.dmg * 0.7)), color:'#aaff66', life:3.2});
+        addParticle({x:e.x, y:e.y, life:0.2, r:10, color:'#aaff66'});
+        audio.beep(300, 0.07, 'square', 0.03);
+      }
+    }
     // boss abilities
     if(e.isBoss && e.bossAbility){
       const ab = e.bossAbility;
@@ -1034,11 +1072,9 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
             if(p.dead) continue;
             const d = Math.hypot(p.x-e.x, p.y-e.y);
             if(d < R + p.r){
-              p.hp -= Math.max(1, e.dmg * 1.5 - p.armor);
-              runStats.tookDamage = true;
+              hurtPlayer(p, e.dmg * 1.5);
               const ka = Math.atan2(p.y-e.y, p.x-e.x);
               p.vx += Math.cos(ka)*500; p.vy += Math.sin(ka)*500;
-              p.hitFlash = 0.12;
               if(p.hp <= 0){ p.hp = 0; p.dead = true; if(players.every(pl=>pl.dead)){ state.phase='gameover'; showRunOver(); } }
             }
           }
@@ -1054,8 +1090,17 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     // visual only: facing + hit flash timer
     e.face = Math.cos(ang) < 0 ? -1 : 1;
     if(e.hitFlash > 0) e.hitFlash -= dt;
-    e.vx = Math.cos(ang) * e.speed * slowMult * dashMult;   // kept for auto-aim lead
-    e.vy = Math.sin(ang) * e.speed * slowMult * dashMult;
+    let mvAng = ang;
+    if(e.ranged){
+      const rDist = Math.hypot(target.x - e.x, target.y - e.y);
+      if(rDist < 220) mvAng = ang + Math.PI;              // too close: back away
+      else if(rDist < 340){                                // sweet spot: strafe
+        if(e.strafeDir == null || Math.random() < dt * 0.4) e.strafeDir = Math.random() < 0.5 ? 1 : -1;
+        mvAng = ang + e.strafeDir * Math.PI / 2;
+      }
+    }
+    e.vx = Math.cos(mvAng) * e.speed * slowMult * dashMult;   // kept for auto-aim lead
+    e.vy = Math.sin(mvAng) * e.speed * slowMult * dashMult;
     e.x += e.vx * dt;
     e.y += e.vy * dt;
     integrateEnemyKnockback(e, dt);

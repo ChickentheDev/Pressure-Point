@@ -113,6 +113,7 @@ const players = [ createPlayer(W/2, H/2) ];
 let player = players[0];
 
 const bullets = [];
+const enemyBullets = [];
 const enemies = [];
 const moneyDrops = [];
 const particles = [];

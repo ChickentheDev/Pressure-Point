@@ -287,6 +287,19 @@
   function drawOver(){
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
+    // enemy bullets: venomous green globs
+    if(typeof enemyBullets !== 'undefined'){
+      for(const b of enemyBullets){
+        const g2 = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r * 2.4);
+        g2.addColorStop(0, 'rgba(200,255,140,0.9)');
+        g2.addColorStop(0.5, 'rgba(150,255,90,0.45)');
+        g2.addColorStop(1, 'rgba(150,255,90,0)');
+        ctx.fillStyle = g2;
+        ctx.beginPath(); ctx.arc(b.x, b.y, b.r * 2.4, 0, 6.29); ctx.fill();
+        ctx.fillStyle = '#d6ff9e';
+        ctx.beginPath(); ctx.arc(b.x, b.y, b.r * 0.7, 0, 6.29); ctx.fill();
+      }
+    }
     if(settings.graphics !== 'low'){
       ctx.lineCap = 'round';
       for(const b of bullets){
