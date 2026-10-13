@@ -2,6 +2,7 @@
 // (moved from core.js: restartBtn wiring needs resetRun from state.js)
 if(typeof restartBtn !== 'undefined' && restartBtn){ restartBtn.addEventListener('click', resetRun); }
 const menuStepLandingEl = document.getElementById('menuStepLanding');
+const menuStepMapEl = document.getElementById('menuStepMap');
 const menuStepClassEl = document.getElementById('menuStepClass');
 const menuStepWeaponEl = document.getElementById('menuStepWeapon');
 const menuStepDangerEl = document.getElementById('menuStepDanger');
@@ -17,9 +18,11 @@ function setMenuStep(step){
   state.menuStep = step;
   if(menuStepLandingEl) menuStepLandingEl.style.display = step === 'landing' ? 'block' : 'none';
   if(menuEl) menuEl.classList.toggle('landing-mode', step === 'landing');
+  if(menuStepMapEl) menuStepMapEl.style.display = step === 'map' ? 'block' : 'none';
   if(menuStepClassEl) menuStepClassEl.style.display = step === 'class' ? 'block' : 'none';
   if(menuStepWeaponEl) menuStepWeaponEl.style.display = step === 'weapon' ? 'block' : 'none';
   if(menuStepDangerEl) menuStepDangerEl.style.display = step === 'danger' ? 'block' : 'none';
+  if(step === 'map') renderMapButtons();
   if(step === 'class') renderClassButtons();
   if(step === 'weapon') renderWeaponButtons();
   if(step === 'danger') renderDangerButtons();
@@ -111,6 +114,33 @@ function classStatLines(c){
   return lines.join('') || '<div class="stat-line neutral">Balanced stats.</div>';
 }
 
+function renderMapButtons(){
+  const listEl = document.getElementById('mapList');
+  const detailEl = document.getElementById('mapDetail');
+  if(!listEl) return;
+  listEl.innerHTML = '';
+  for(const m of MAPS){
+    const unlocked = isMapUnlocked(m.id);
+    const btn = document.createElement('div');
+    btn.className = 'map-btn' + (unlocked ? '' : ' locked');
+    if(m.id === state.mapId) btn.classList.add('active');
+    const lockTxt = unlocked ? '' : ' 🔒';
+    btn.innerHTML = `<span>${unlocked ? m.name : '???'}${lockTxt}</span><span class="tag">${unlocked ? (m.diffMult > 1 ? '+' + Math.round((m.diffMult-1)*100) + '%' : 'Standard') : 'Clear Danger 5'}</span>`;
+    btn.addEventListener('click', ()=>{
+      if(!unlocked){ audio.deny(); return; }
+      state.mapId = m.id;
+      audio.click();
+      renderMapButtons();
+    });
+    listEl.appendChild(btn);
+  }
+  if(!isMapUnlocked(state.mapId)) state.mapId = 'rustlands';
+  const m = mapDef(state.mapId);
+  if(detailEl) detailEl.innerHTML =
+    `<div class="detail-title">${m.name}</div>` +
+    `<div class="sub">${m.tag}</div>` +
+    `<div class="sub">Enemies: ${m.set === 'standard' ? 'Standard horde' : m.set === 'frost' ? 'Frost horde (new)' : 'Void horde (new)'}</div>`;
+}
 function renderClassButtons(){
   if(!classListEl) return;
   classListEl.innerHTML = '';
@@ -334,7 +364,8 @@ if(pauseBtn){
 // Menu step navigation
 function wireMenuNav(){
   const on = (id, fn)=>{ const el = document.getElementById(id); if(el) el.addEventListener('click', ()=>{ audio.click(); fn(); }); };
-  on('landingStartBtn', ()=>setMenuStep('class'));
+  on('landingStartBtn', ()=>setMenuStep('map'));
+  on('toClassBtn', ()=>setMenuStep('class'));
   on('landingAchBtn', ()=>{ const b = document.getElementById('achievementsBtn'); if(b) b.click(); });
   on('landingUpgBtn', ()=>{ const b = document.getElementById('metaBtn'); if(b) b.click(); });
   on('landingSetBtn', ()=>{ if(settingsPanel){ settingsPanel.style.display = 'block'; } });
