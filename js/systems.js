@@ -709,7 +709,6 @@ function buyShopItemFor(player){
   const item = shop.items[shop.selection];
   if(!item || !item.data) return;
   if(player.currency < item.price){ audio.deny(); return; }
-  if(false && item.type === 'item' && player.items.length >= 6){ audio.deny(); return; }
   if(item.type === 'item' && item.data.category === 'unique' && playerOwnsUnique(player)){ audio.deny(); return; }
   if(typeof devMode === 'undefined' || !devMode){
     player.currency -= item.price;
