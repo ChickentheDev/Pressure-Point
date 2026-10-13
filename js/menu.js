@@ -148,8 +148,12 @@ function selectedWeaponId(){
 function renderWeaponButtons(){
   if(!weaponListEl) return;
   weaponListEl.innerHTML = '';
-  const cur = selectedWeaponId();
+  const cls = classes.find(x=>x.id === state.classId) || classes[0];
+  const pool = (cls.pool && cls.pool.length) ? cls.pool : weapons.map(w=>w.id);
+  let cur = selectedWeaponId();
+  if(!pool.includes(cur)){ state.weaponId = cls.weapon; cur = cls.weapon; }
   for(const w of weapons){
+    if(!pool.includes(w.id)) continue;
     const b = document.createElement('div');
     b.className = 'weapon-btn' + (w.id === cur ? ' active' : '');
     const rc = (typeof RARITY_COLORS !== 'undefined' && RARITY_COLORS[w.rarity]) || '#a7b3c4';
@@ -334,6 +338,11 @@ function wireMenuNav(){
 function startRun(){
   hideSummaryOverlays();
   resetRunStats();
+  // retry wipes the field and drops everyone at map center
+  enemies.length = 0; bullets.length = 0; moneyDrops.length = 0;
+  if(typeof particles !== 'undefined') particles.length = 0;
+  if(typeof floatingTexts !== 'undefined') floatingTexts.length = 0;
+  for(const p of players){ p.x = W/2; p.y = H/2; p.vx = 0; p.vy = 0; p.dead = false; }
   state.coop = coopToggle.checked;
   // create or remove second player
   if(state.coop && players.length < 2){ players[1] = createPlayer(W/2+40, H/2+20); players[1].currency = 0; players[1].xp = 0; }
