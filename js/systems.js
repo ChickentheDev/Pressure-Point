@@ -41,6 +41,7 @@ function createWeaponInstance(base, rarity){
     // every owned weapon is equipped and fires on its own: each tracks its own ammo/reload
     ammoInMag: Math.max(1, Math.round(base.mag * mult)),
     reloading: 0,
+    aimAngle: 0,
   };
 }
 
@@ -1386,6 +1387,14 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
       else { const nearest = getNearestEnemyTo(p.x,p.y) || getNearestTreeTo(p.x,p.y); if(nearest) target = aimPointFor(p, nearest); }
       if(!target) continue;
       p.angle = Math.atan2(target.y - p.y, target.x - p.x);
+      // Each gun's barrel tracks its own target (for rendering).
+      const pOwned = p.ownedWeapons || [];
+      for(let wi = 0; wi < pOwned.length; wi++){
+        const pw = pOwned[wi]; if(!pw) continue;
+        if(mouseAiming){ pw.aimAngle = p.angle; continue; }
+        const wt = pickAutoTarget(p, wi);
+        if(wt) pw.aimAngle = Math.atan2(wt.y - p.y, wt.x - p.x);
+      }
       const wantsFire = i !== 0 || settings.autoShoot || input.mouseDown || !!input.keys[' '];
       if(wantsFire) fireWeaponFor(p, t, target, !mouseAiming);
     }

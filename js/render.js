@@ -177,17 +177,18 @@ function wrapText(text, x, y, maxWidth, lineHeight, maxLines){
 }
 
 function drawPlayerWeapon(p){
-  // All owned weapons are equipped at once: draw them fanned around the aim direction.
+  // All owned weapons are equipped at once: each barrel points at its own target.
   const ws = p.ownedWeapons.filter(Boolean);
   const n = ws.length;
   ws.forEach((w, i) => {
     const len = weaponHandLength[w.id] || 26;
-    const off = n > 1 ? (i - (n - 1) / 2) * 0.16 : 0;   // fan spread
-    const facingLeft = Math.cos(p.angle) < 0;
+    const ang = (typeof w.aimAngle === 'number') ? w.aimAngle : p.angle;
+    const facingLeft = Math.cos(ang) < 0;
+    const stack = n > 1 ? (i - (n - 1) / 2) * 4 : 0;   // slight vertical offset so guns don't fully overlap
     ctx.save();
     ctx.translate(0, 4);
-    ctx.rotate(p.angle + off);
-    ctx.translate(12 + len*0.35 - (i === 0 ? p.kick*30 : 0), 0);
+    ctx.rotate(ang);
+    ctx.translate(12 + len*0.35 - (i === 0 ? p.kick*30 : 0), stack * 0.35);
     if(facingLeft) ctx.scale(1, -1);        // keep the gun upright when aiming left
     if(!drawSprite('w_' + w.id, len, null)) drawWeaponFallback(w, len);
     ctx.restore();

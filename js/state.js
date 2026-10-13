@@ -147,5 +147,5 @@ function resetRun(){
   menuEl.style.display = 'block';
   restartBtn.style.display = 'none';
   hideSummaryOverlays();
-  setMenuStep('class');
+  setMenuStep('landing');
 }

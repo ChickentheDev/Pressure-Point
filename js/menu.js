@@ -1,6 +1,7 @@
 // Pressure Point — menu.js (split from game.js for v0.6.1)
 // (moved from core.js: restartBtn wiring needs resetRun from state.js)
 if(typeof restartBtn !== 'undefined' && restartBtn){ restartBtn.addEventListener('click', resetRun); }
+const menuStepLandingEl = document.getElementById('menuStepLanding');
 const menuStepClassEl = document.getElementById('menuStepClass');
 const menuStepWeaponEl = document.getElementById('menuStepWeapon');
 const menuStepDangerEl = document.getElementById('menuStepDanger');
@@ -14,6 +15,8 @@ const pauseMenuEl = document.getElementById('pauseMenu');
 
 function setMenuStep(step){
   state.menuStep = step;
+  if(menuStepLandingEl) menuStepLandingEl.style.display = step === 'landing' ? 'block' : 'none';
+  if(menuEl) menuEl.classList.toggle('landing-mode', step === 'landing');
   if(menuStepClassEl) menuStepClassEl.style.display = step === 'class' ? 'block' : 'none';
   if(menuStepWeaponEl) menuStepWeaponEl.style.display = step === 'weapon' ? 'block' : 'none';
   if(menuStepDangerEl) menuStepDangerEl.style.display = step === 'danger' ? 'block' : 'none';
@@ -22,6 +25,8 @@ function setMenuStep(step){
   if(step === 'danger') renderDangerButtons();
   const me = document.getElementById('menuEssence');
   if(me) me.textContent = essence;
+  const le = document.getElementById('landingEssence');
+  if(le) le.textContent = essence;
 }
 
 // Weapon icon art (PNGs that exist); others fall back to a colored tile.
@@ -305,7 +310,7 @@ function hidePauseMenu(){ if(pauseMenuEl) pauseMenuEl.style.display = 'none'; }
 function wireSummaryButtons(){
   const on = (id, fn)=>{ const el = document.getElementById(id); if(el) el.addEventListener('click', ()=>{ audio.click(); fn(); }); };
   const retry = ()=>{ startRun(); };
-  const newRun = ()=>{ hideSummaryOverlays(); resetRun(); setMenuStep('class'); };
+  const newRun = ()=>{ hideSummaryOverlays(); resetRun(); setMenuStep('landing'); };
   const toMenu = ()=>{ hideSummaryOverlays(); resetRun(); };
   const endless = ()=>{ hideSummaryOverlays(); startEndless(); };
   on('wonEndlessBtn', endless);
@@ -329,6 +334,10 @@ if(pauseBtn){
 // Menu step navigation
 function wireMenuNav(){
   const on = (id, fn)=>{ const el = document.getElementById(id); if(el) el.addEventListener('click', ()=>{ audio.click(); fn(); }); };
+  on('landingStartBtn', ()=>setMenuStep('class'));
+  on('landingAchBtn', ()=>{ const b = document.getElementById('achievementsBtn'); if(b) b.click(); });
+  on('landingUpgBtn', ()=>{ const b = document.getElementById('metaBtn'); if(b) b.click(); });
+  on('landingSetBtn', ()=>{ if(settingsPanel){ settingsPanel.style.display = 'block'; } });
   on('toWeaponBtn', ()=>setMenuStep('weapon'));
   on('backToClassBtn', ()=>setMenuStep('class'));
   on('toDangerBtn', ()=>setMenuStep('danger'));

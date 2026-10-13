@@ -1,3 +1,8 @@
+## v0.7.6 — Barrels, scaling, new main menu
+- **Gun barrels track targets**: each weapon's barrel now rotates to face its own enemy instead of all guns pointing one way.
+- **UI scaling**: menu and UI elements scale up with the viewport — no more tiny menu on big screens.
+- **Brotato-style main menu**: full-screen illustrated arena background, giant PRESSURE POINT logo, big Start button on the left, Achievements/Upgrades/Settings on the right. Class/weapon/danger select now follows Start.
+
 ## v0.7.5 — New UI: DOM shop + HUD
 - **Shop and HUD rebuilt as DOM UI** from Sam's new design: card-based shop with rarity borders, real weapon sprites + item icons, money pill, reroll, lock buttons, items/weapons grids, stats sidebar, elite notice and Go button.
 - **In-game HUD**: HP/XP bars, money + item counts, wave + countdown timer, weapon slots, pause button — all in the new card style. The old canvas shop/HUD is retired (level-up picker and banners stay on canvas).
