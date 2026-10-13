@@ -288,6 +288,7 @@ function beginWorld(){
 function endWorld(){
   ctx = sctx;
   if(!ready || !gl) return;
+  try{
   const now = performance.now() / 1000;
 
   gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -347,6 +348,21 @@ function endWorld(){
   sctx.setTransform(1, 0, 0, 1, 0, 0);
   sctx.drawImage(glc, 0, 0);
   sctx.restore();
+  }catch(err){
+    // v0.7.0.2: the world canvas could not be uploaded as a GL texture.
+    // On file:// play, local sprite images taint the canvas and WebGL refuses
+    // tainted sources (SecurityError). Permanently fall back to plain Canvas2D.
+    killGL();
+  }
+}
+
+// Permanently disable the WebGL compositor; the game keeps running on Canvas2D.
+function killGL(){
+  ready = false;
+  if(gl){
+    try{ const ext = gl.getExtension('WEBGL_lose_context'); if(ext) ext.loseContext(); }catch(_){}
+    gl = null;
+  }
 }
 
 function active(){ return ready && enabled; }
