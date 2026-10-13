@@ -225,7 +225,6 @@ const items = [
   {id:"eye_of_storm", name:"Eye of the Storm", rarity:"legendary", category:"exclusive", price:240, desc:"+15% Fire Rate, +15% Accuracy, +15% Move Speed", effects:{reloadMult:-0.15, speedMult:0.15, accuracyMult:0.15}},
   {id:"soul_of_titan", name:"Soul of the Titan", rarity:"legendary", category:"exclusive", price:250, desc:"+15% Damage, +12% Life Steal, +2 Pierce", effects:{lifestealAdd:0.12, damageMult:0.15, pierceAdd:2}},
   {id:"war_crown", name:"War Crown", rarity:"epic", category:"exclusive", price:145, desc:"+2 Luck, +6% Damage — worn with pride", effects:{luckAdd:2, damageMult:0.06}, cosmetic:"crown"},
-,
   {id:'longbarrel', name:'Long Barrel', rarity:'common', category:'tech', price:32, desc:'+150 Bullet Range', effects:{rangeBonus:150}},
   {id:'scope', name:'Marksman Scope', rarity:'rare', category:'tech', price:58, desc:'+300 Bullet Range, +10% Accuracy', effects:{rangeBonus:300, accuracyMult:0.1}},
   {id:'railgun', name:'Rail Amplifier', rarity:'epic', category:'tech', price:110, desc:'+35% Bullet Range, +8% Damage', effects:{rangeMult:0.35, damageMult:0.08}}
