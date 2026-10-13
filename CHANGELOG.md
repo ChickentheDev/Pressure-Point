@@ -1,3 +1,7 @@
+## v0.7.1 — Brotato-style arena
+- **New map**: the flat brown ground is now a Brotato-style stone-tile arena — cool blue-grey tiles with grout lines and per-tile variation, an ornate bronze border with diamond studs framing the play area, and much denser floor detail (pebbles, crystal shards, cracks) plus the legacy doodle decals. Still pre-rendered once per resize, so zero per-frame cost.
+- No gameplay changes; the border is decorative at the screen edge.
+
 ## v0.7.0.2 — file:// WebGL fallback fix
 - **Fixed blank canvas on file:// play**: when the game is opened directly from disk, browsers taint the canvas (local sprite images are opaque-origin), and WebGL refuses to upload tainted canvases — the old code threw every frame and killed the render loop, leaving an empty canvas behind a working menu. The compositor now catches the failure and permanently falls back to the plain Canvas2D renderer, so the game just works.
 - No gameplay or visual changes otherwise; http(s) play keeps the full WebGL lighting + bloom pipeline.
