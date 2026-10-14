@@ -1,20 +1,18 @@
-# Pressure Point — v0.7.7
+# Pressure Point — v0.7.8
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.7.6 — Barrels, scaling, main menu)
+## Latest Changes (v0.7.8 — Blood & tracers)
+- **Blood particles** in each enemy's color, **tracer bullets** with white-hot cores, **ground-impact puffs** when bullets expire.
+- **3 maps** (Rustlands / Frosthold / Abyssal Hollow), **8 arena backgrounds**, 5 new achievements.
+- Fresh menu art (frozen cavern).
+
+## Previous (v0.7.6 — Barrels, scaling, main menu)
 - **Gun barrels** rotate to face each weapon's own target.
 - **UI scaling** for big screens + **Brotato-style main menu** with illustrated background and giant logo.
 
 ## Previous (v0.7.5 — New UI)
 - **DOM shop + HUD** rebuilt from the new design: card shop with rarity borders, real sprites, stats sidebar; crisp HUD with HP/XP bars, wave timer, weapon slots.
-
-## Previous (v0.7.4 — Targeting, hordes, Mirror)
-- **Per-weapon targeting**: each gun locks its own enemy; mouse-aim still focuses all guns.
-- **Way more enemies**: wave sizes ~3x, faster spawning.
-- **Rarity rebalance**: luck no longer floods legendaries.
-- **Infinite item slots** + new **Mirror** item (next item x2).
-- **Pause menu Settings**: tweak settings mid-run.
 
 ## Previous (v0.7.3 — Boss buffs)
 - **Bosses buffed**: ~2x HP, +50% damage, faster; Overlord's burrow is a real ability now (dive, chase, AoE erupt); bigger/faster shockwaves, 3-at-a-time spawns, earlier Nightmare enrage, Ironclad 50% damage block, endless HP scaling.

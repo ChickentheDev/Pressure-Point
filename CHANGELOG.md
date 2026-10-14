@@ -1,3 +1,9 @@
+## v0.7.8 — Blood, tracers, impact FX
+- **Blood particles**: enemies bleed their own color — small droplets on hit, bigger burst on kill (bosses gush). Droplets fly with gravity and fade.
+- **Tracer bullets**: bullets are now directional tracers with a white-hot core, colored body and glow, aligned to their flight path (crits are bigger/gold).
+- **Bullet drop-off impacts**: when a bullet reaches the end of its range it kicks up a small ground-impact puff + sparks where it lands.
+- **New menu art**: frozen crystal cavern with aurora (fresh art per the every-update rule).
+
 ## v0.7.7 — Maps: 3 worlds, 8 backgrounds
 - **3 full maps**: Rustlands (standard), **Frosthold** (unlock: beat Danger 5 — new frost enemies, ~22% harder), **Abyssal Hollow** (unlock: beat Danger 5 on Frosthold — new void enemies, +50% harder). New map select screen in the menu flow.
 - **8 mini-map backgrounds**: each danger now has its own arena theme (Rust, Ashen, Mossy, Dune, Frost, Ember, Void, Storm) — the arena looks different every danger.
