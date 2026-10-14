@@ -58,6 +58,7 @@ function applyItemEffects(player, itemData, rarity, sign=1){
   if(e.damageBonus) player.damageBonus += Math.round(e.damageBonus * m);
   if(e.damageMult) player.damageMult = Math.max(0.5, player.damageMult * (1 + e.damageMult * m));
   if(e.luckAdd) player.luck += Math.round(e.luckAdd * m);
+  if(itemData.category === 'arcane') player.darkBonus = Math.max(0, (player.darkBonus || 0) + 0.06 * m); // arcane items feed black magic only
   if(e.fireSpreadAdd) player.fireSpread = Math.max(0, (player.fireSpread || 0) + e.fireSpreadAdd * m);
   if(e.pierceAdd) player.pierceBonus = Math.max(0, player.pierceBonus + Math.round(e.pierceAdd * m));
   if(e.rangeBonus) player.rangeBonus = (player.rangeBonus || 0) + Math.round(e.rangeBonus * m);
@@ -166,6 +167,7 @@ function applyClassToPlayer(player, classData, weaponId){
   player.critChance = 0.05;
   player.critMult = 1.5;
   player.elementalBonus = 0;
+  player.darkBonus = 0;
   player.items = [];
   player.damageMult = 1;
   player.dead = false;
@@ -334,6 +336,16 @@ function startWave(){
   const treeCount = Math.max(1, Math.floor(1 + state.wave*0.2));
   for(let i=0;i<treeCount;i++){ spawnTree(); }
   state.treeWave = state.wave;
+  // debt: last wave's uncollected loot drops around you — grab it before new money flows
+  if(state.debt > 0){
+    const n = Math.min(state.debt, 150);
+    for(let k=0;k<n;k++){
+      const a = Math.random()*Math.PI*2, d = 70 + Math.random()*130;
+      moneyDrops.push({x: Math.max(20, Math.min(W-20, W/2 + Math.cos(a)*d)), y: Math.max(20, Math.min(H-20, H/2 + Math.sin(a)*d)), r:5, life:6, t:0, debt:true});
+    }
+    floatingTexts.push({x:W/2, y:H/2-90, vx:0, vy:-30, life:2.2, text:'Recover your lost loot first!', color:'#ffd166'});
+    state.debt = 0;
+  }
   // respawn dead players at wave start
   for(let i=0;i<players.length;i++){
     const p = players[i];
@@ -607,6 +619,7 @@ function fireWeaponFor(player, time, target, autoSpread){
       if(isCrit) dmg *= (player.critMult || 1.5);
       const elementalBonus = (w.elemental || w.explosive) ? (player.elementalBonus || 0) : 0;
       dmg *= (1 + elementalBonus);
+      if(w.elemental === 'dark') dmg *= (1 + (player.darkBonus || 0));
       const elemental = w.elemental || (w.explosive ? 'fire' : null);
       // px/py = previous position for the swept hit test. A new bullet starts its sweep at the player's
       // centre, so an enemy overlapping the player (inside the muzzle offset) still gets hit.
@@ -617,6 +630,12 @@ function fireWeaponFor(player, time, target, autoSpread){
   }
 }
 
+// money drops respect debt: while last wave's lost loot is still on the ground,
+// new kill money is banked and released once the debt is fully collected
+function dropMoney(x, y, n){
+  if(moneyDrops.some(m => m.debt)){ state.debtBank = (state.debtBank || 0) + n; return; }
+  for(let k=0;k<n;k++){ moneyDrops.push({x:x+rand(-10,10), y:y+rand(-10,10), r:5, life:6, t:0}); }
+}
 function killEnemy(index, ownerId){
   const e = enemies[index];
   if(!e) return;
@@ -630,7 +649,7 @@ function killEnemy(index, ownerId){
   awardToPlayerById(ownerId, cxp, cmoney);
   // elites drop bonus loot: extra money shower + floating text
   if(e.elite){
-    for(let k=0;k<8;k++){ moneyDrops.push({x:e.x+rand(-16,16), y:e.y+rand(-16,16), r:5, life:6, t:0}); }
+    dropMoney(e.x, e.y, 8);
     floatingTexts.push({x:e.x, y:e.y-20, vx:0, vy:-50, life:1.5, text: `${e.eliteName} slain!`, color:'#ffd166'});
     addShake(6);
   }
@@ -651,7 +670,7 @@ function killEnemy(index, ownerId){
     }
   }
   // drop money pickups
-  for(let k=0;k<e.money;k++){ moneyDrops.push({x:e.x+rand(-10,10), y:e.y+rand(-10,10), r:5, life:6, t:0}); }
+  dropMoney(e.x, e.y, e.money);
   enemies.splice(index,1);
 }
 
@@ -700,7 +719,7 @@ function detonate(b, x, y, skipEnemy, victimIdx, ownerId){
     const d = Math.sqrt(dx*dx + dy*dy);
     const dmg = b.damage * (1 - 0.5 * Math.min(1, d / R));
     en.hp -= dmg;
-    if(!en.status) en.status = {burn:0,burnDps:0,slow:0,shock:0};
+    if(!en.status) en.status = {burn:0,burnDps:0,slow:0,shock:0,hex:0};
     en.status.burn = Math.max(en.status.burn, 3);
     en.status.burnDps = Math.max(en.status.burnDps, dmg * 0.5);
     en.hitFlash = 0.1;
@@ -885,6 +904,20 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
   // players movement
   for(let idx=0; idx<players.length; idx++){
     const p = players[idx]; if(p.dead) continue; let dx=0, dy=0;
+    // parachute drop-in (wave 1): descend from the sky, invulnerable until landing
+    if(p.dropT > 0){
+      p.dropT -= dt;
+      const t = Math.min(1, 1 - p.dropT / 1.8);
+      const ease = 1 - Math.pow(1 - t, 2);
+      p.y = -110 + ((p.dropTargetY || H/2) + 110) * ease;
+      p.x = (p.dropTargetX || W/2);
+      p.iFrames = Math.max(p.iFrames, 0.15);
+      if(p.dropT <= 0){
+        for(let k=0;k<12;k++){ const a=Math.random()*6.28, s=40+Math.random()*100; addParticle({x:p.x, y:p.y+14, vx:Math.cos(a)*s, vy:Math.sin(a)*s, life:0.4, r:4, color:'#c9bfa8'}); }
+        addShake(4); audio.beep(150, 0.15, 'sine', 0.06);
+      }
+      continue;
+    }
     if(idx===0){ 
       if(input.keys['w']) dy-=1; 
       if(input.keys['s']) dy+=1; 
@@ -1025,6 +1058,14 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     if(timeUp || bossCleared){ // wave complete
       if(timeUp && enemies.length){ for(const e of enemies){ addParticle({x:e.x, y:e.y, life:0.4, r:e.r || 12, color:'#aab0c4'}); } enemies.length = 0; }
       state.waveCompleteTimer += dt;
+      // vacuum: uncollected loot becomes next wave's debt — collect it before new money flows
+      const lost = moneyDrops.length;
+      if(lost > 0){
+        state.debt = (state.debt || 0) + lost;
+        for(const m of moneyDrops) addParticle({x:m.x, y:m.y, life:0.35, r:7, color:palette.uiGreen});
+        floatingTexts.push({x:W/2, y:H*0.35, vx:0, vy:-30, life:1.8, text: lost + ' loot banked as debt', color:'#ffd166'});
+        audio.pickup();
+      }
       moneyDrops.length = 0;
       if(!runStats.tookDamage && state.wave > 1) unlockAchievement('untouchable');
       checkAchievements();
@@ -1119,10 +1160,11 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     if(waveAlive.length === 0) continue;
     let target = waveAlive[0]; let bd = (e.x-waveAlive[0].x)**2 + (e.y-waveAlive[0].y)**2; for(const p of waveAlive){ const d=(e.x-p.x)**2 + (e.y-p.y)**2; if(d<bd){ bd=d; target=p; } }
     // apply status effects
-    if(!e.status) e.status = {burn:0,burnDps:0,slow:0,shock:0};
+    if(!e.status) e.status = {burn:0,burnDps:0,slow:0,shock:0,hex:0};
     if(e.status.burn > 0){
       e.status.burn -= dt;
       e.hp -= e.status.burnDps * dt;
+      if(e.status.hex > 0){ e.status.hex -= dt; if(Math.random() < 0.25) addParticle({x:e.x+rand(-8,8), y:e.y+rand(-8,8), life:0.3, r:3, color:'#a855f7'}); }
       addParticle({x:e.x, y:e.y, life:0.08, r:4, color:'#ff8c42'});
     }
     if(e.status.slow > 0){ e.status.slow -= dt; }
@@ -1366,6 +1408,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
             // aegis shield aura: nearby enemies take 30% less damage (elite: wider aura)
             let dmgMult = 1;
             for(const o of enemies){ if(o.shields && o !== e){ const auraR = o.elite ? 220 : 150; const dx=o.x-e.x, dy=o.y-e.y; if(dx*dx+dy*dy < auraR*auraR){ dmgMult = 0.7; break; } } }
+            if(e.status && e.status.hex > 0) dmgMult *= 1.2; // hexed: takes +20% damage
             const finalDmg = b.damage * dmgMult;
             // Ironclad boss: 40% damage reduction
             const bossDR = (e.isBoss && e.bossAbility === 'fortress') ? 0.5 : 1;
@@ -1396,7 +1439,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
                   if(ne === e || ne.hp <= 0) continue;
                   const sdx = ne.x - e.x, sdy = ne.y - e.y;
                   if(sdx*sdx + sdy*sdy < 150*150){
-                    if(!ne.status) ne.status = {burn:0,burnDps:0,slow:0,shock:0};
+                    if(!ne.status) ne.status = {burn:0,burnDps:0,slow:0,shock:0,hex:0};
                     ne.status.burn = Math.max(ne.status.burn, 4);
                     ne.status.burnDps = Math.max(ne.status.burnDps, b.damage * 0.6);
                     ne.lastHitBy = b.ownerId;
@@ -1407,6 +1450,10 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
               }
             } else if(b.elemental === 'ice'){
               e.status.slow = Math.max(e.status.slow, b.slowTime || 2.0);
+            } else if(b.elemental === 'dark'){
+              e.status.hex = Math.max(e.status.hex || 0, 4);
+              addParticle({x:e.x, y:e.y, life:0.3, r:10, color:'#a855f7'});
+              floatingTexts.push({x:e.x, y:e.y-10, vx:0, vy:-25, life:0.6, text:'HEX', color:'#a855f7'});
             } else if(b.elemental === 'shock'){
               // chain shock: jumps to nearby enemies (Stormcaller chains up to 5)
               let jumps = b.chain || 1, fromX = e.x, fromY = e.y;
@@ -1510,9 +1557,19 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
       nearest.currency += 1;
       addParticle({x:m.x, y:m.y, life:0.25, r:10, color:palette.uiGreen});
       audio.pickup();
+      const wasDebt = !!m.debt;
       moneyDrops.splice(i,1);
+      if(wasDebt && !moneyDrops.some(x => x.debt) && (state.debtBank || 0) > 0){
+        const nb = Math.min(state.debtBank, 150); state.debtBank -= nb;
+        for(let k=0;k<nb;k++){ const a=Math.random()*6.28, d=50+Math.random()*100; moneyDrops.push({x:nearest.x+Math.cos(a)*d, y:nearest.y+Math.sin(a)*d, r:5, life:6, t:0}); }
+        floatingTexts.push({x:nearest.x, y:nearest.y-20, vx:0, vy:-30, life:1.5, text:'Debt cleared!', color:'#6ef2b1'});
+      }
     }
-    if(moneyDrops.length > MAX_MONEY_DROPS){ moneyDrops.splice(0, moneyDrops.length - MAX_MONEY_DROPS); break; }
+    if(moneyDrops.length > MAX_MONEY_DROPS){
+      let over = moneyDrops.length - MAX_MONEY_DROPS;
+      for(let ci=0; ci<moneyDrops.length && over>0; ci++){ if(!moneyDrops[ci].debt){ moneyDrops.splice(ci,1); ci--; over--; } }
+      if(over>0) moneyDrops.splice(0, over);
+      break; }
   }
   // particles
   if(state.comboT > 0){ state.comboT -= dt; if(state.comboT <= 0) state.combo = 0; }
