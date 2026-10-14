@@ -1,15 +1,16 @@
-# Pressure Point — v0.7.8
+# Pressure Point — v0.8.0
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.7.8 — Blood & tracers)
+## Latest Changes (v0.8.0 — Mechanics sprint)
+- **Killstreak combo** (up to 2x money/XP), **dash damage**, **heart/magnet pickups**.
+- **3 new weapons**: Frostbite, Hornet Swarm, Stormcaller. **2 new enemies**: Mender, Charger.
+- Fresh menu art (volcanic ember arena).
+
+## Previous (v0.7.8 — Blood & tracers)
 - **Blood particles** in each enemy's color, **tracer bullets** with white-hot cores, **ground-impact puffs** when bullets expire.
 - **3 maps** (Rustlands / Frosthold / Abyssal Hollow), **8 arena backgrounds**, 5 new achievements.
 - Fresh menu art (frozen cavern).
-
-## Previous (v0.7.6 — Barrels, scaling, main menu)
-- **Gun barrels** rotate to face each weapon's own target.
-- **UI scaling** for big screens + **Brotato-style main menu** with illustrated background and giant logo.
 
 ## Previous (v0.7.5 — New UI)
 - **DOM shop + HUD** rebuilt from the new design: card shop with rarity borders, real sprites, stats sidebar; crisp HUD with HP/XP bars, wave timer, weapon slots.

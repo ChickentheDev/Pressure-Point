@@ -1,3 +1,11 @@
+## v0.8.0 — Mechanics sprint
+- **Killstreak combo**: chained kills (3s window) build a money/XP multiplier up to 2x at 40 kills, shown as a HUD badge.
+- **Dash damage**: dashing through enemies now deals damage (15 + 60% of your damage), with blood and knockback.
+- **Pickup drops**: enemies drop hearts (+25 HP) and magnets (vacuum all money for 6s); bosses/elites always drop hearts.
+- **3 new weapons**: Frostbite (epic, long 4.5s slow), Hornet Swarm (rare, homing missiles), Stormcaller (legendary, chains lightning to 5 enemies).
+- **2 new enemies**: Mender (heals nearby allies 12% max HP), Charger (0.7s flashing telegraph, then a 3.5x-speed charge).
+- **New menu art**: volcanic ember arena (fresh art per the every-update rule).
+
 ## v0.7.8 — Blood, tracers, impact FX
 - **Blood particles**: enemies bleed their own color — small droplets on hit, bigger burst on kill (bosses gush). Droplets fly with gravity and fade.
 - **Tracer bullets**: bullets are now directional tracers with a white-hot core, colored body and glow, aligned to their flight path (crits are bigger/gold).
