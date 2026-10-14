@@ -383,10 +383,10 @@ function startRun(){
   enemies.length = 0; bullets.length = 0; moneyDrops.length = 0;
   if(typeof particles !== 'undefined') particles.length = 0;
   if(typeof floatingTexts !== 'undefined') floatingTexts.length = 0;
-  for(const p of players){ p.x = W/2; p.y = H/2; p.vx = 0; p.vy = 0; p.dead = false; }
+  for(const p of players){ p.x = WW/2; p.y = WH/2; p.vx = 0; p.vy = 0; p.dead = false; }
   state.coop = coopToggle.checked;
   // create or remove second player
-  if(state.coop && players.length < 2){ players[1] = createPlayer(W/2+40, H/2+20); players[1].currency = 0; players[1].xp = 0; }
+  if(state.coop && players.length < 2){ players[1] = createPlayer(WW/2+40, WH/2+20); players[1].currency = 0; players[1].xp = 0; }
   if(!state.coop && players.length>1){ players.splice(1,1); }
   player = players[0];
   const chosenClass = classes.find(x=>x.id === state.classId) || classes[0];
