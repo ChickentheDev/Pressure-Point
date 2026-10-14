@@ -779,6 +779,7 @@ function drawEffects(){
     }
     ctx.restore();
   }
+  ctx.globalAlpha = 1;
 
   // vortex wells: swirling gravity rings
   for(const v of vortices){
