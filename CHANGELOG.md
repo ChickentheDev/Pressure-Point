@@ -1,4 +1,9 @@
 ## Unreleased
+- **Bug fix**: kills awarded XP/currency twice (duplicate `awardToPlayerById` call in `killEnemy`) — now awarded exactly once.
+- **Bug fix**: shock-chain kills could splice the enemy array mid-loop and kill the wrong enemy — chain kills now resolve through the normal death check.
+- **Boss loot**: bosses always drop a free random item plus a money shower, with a gold shockwave ring.
+- **Mid-wave elite events**: waves 3+ get a warning banner halfway through, then an elite pack (2 + wave/6) drops in.
+- **Graphics**: muzzle flash (white-hot core + colored glow), melee swing arcs, crit damage numbers, expanding shockwave rings on explosions and boss deaths.
 - **New weapon art**: replaced 23 weapon sprites with Sam's cartoon-style art (transparent-background cutouts from his reference sheets) — sniper, sprayer, tesla, e-sword, flak, flamethrower, grenade, katana, mine, mortar, plasma, railgun, scattergun, cobalt pistol, grav shotgun, harpoon gun, longshot DMR, minigun, pulse rifle, RPG, shotgun, titan cannon, viper SMG. Shop/HUD icons render smooth (no more pixelated upscaling) for the new art.
 
 ## v0.9 — Elemental reactions, Engineer class

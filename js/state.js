@@ -139,6 +139,8 @@ const moneyDrops = [];
 const vortices = []; // vortex cannon gravity wells
 const turrets = []; // v0.8.3: deployed sentry turrets {x,y,t,fireT,ownerId,dmg,angle}
 const particles = [];
+const swings = []; // v0.9.1: melee swing arcs {x,y,angle,t,life,color}
+const rings = []; // v0.9.1: expanding shockwave rings {x,y,r,t,life,maxR,color,width}
 const trees = [];
 const fruits = [];
 
@@ -176,6 +178,8 @@ function resetRun(){
   trees.length = 0;
   fruits.length = 0;
   floatingTexts.length = 0;
+  swings.length = 0;
+  rings.length = 0;
   state.wave = 1;
   state.endless = false;
   state.waveSpawned = 0;

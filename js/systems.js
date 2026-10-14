@@ -343,6 +343,8 @@ function startWave(){
     audio.beep(174, 0.22, 'sawtooth', 0.07);
   }
   state.waveBanner = 2.2;
+  // v0.9.1 mid-wave elite event state
+  state.midEventDone = false; state.midEventWarn = false; state.midEventT = 0;
   buildShop();
   audio.beep(520,0.06,'triangle',0.04);
   // spawn at least one tree each wave
@@ -672,7 +674,13 @@ function fireWeaponFor(player, time, target, autoSpread){
       // centre, so an enemy overlapping the player (inside the muzzle offset) still gets hit.
       bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, px: player.x, py: player.y, fresh: true, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, tiers, pierce: (w.pierce||0) + (player.pierceBonus||0), rehit: !!w.rehit, dist: 0, homing: !!w.homing, chain: w.chain||0, slowTime: w.slowTime||0, bounce: w.bounce||0, vortex: !!w.vortex, maxDist: ((w.range || 900) + (player.rangeBonus || 0)) * (player.rangeMult || 1), explosive: !!w.explosive, splashR: w.splashR || 110 });
     }
-    addParticle({x:player.x + Math.cos(angle)*16, y:player.y + Math.sin(angle)*16, life:0.15, r: w.type==='heavy'?18:w.type==='shotgun'?14:10, color:w.color});
+    // v0.9.1 muzzle flash: white-hot core + colored glow, bigger for heavy/shotgun
+    const mzx = player.x + Math.cos(angle)*18, mzy = player.y + Math.sin(angle)*18;
+    const mrz = w.type==='heavy' ? 16 : w.type==='shotgun' ? 12 : 8;
+    addParticle({x:mzx, y:mzy, life:0.09, r:mrz*0.55, color:'#ffffff'});
+    addParticle({x:mzx, y:mzy, life:0.14, r:mrz, color:w.color});
+    // v0.9.1 melee swing arc
+    if(w.melee) swings.push({x:player.x, y:player.y, angle, t:0, life:0.18, color:w.color});
     if(audio.ctx && time - (w.lastSound||0) > 0.06){ w.lastSound = time; const freq = w.type==='heavy'?120:w.type==='shotgun'?180:w.type==='rifle'?240:320; audio.beep(freq,0.04,'square',0.03); }
   }
 }
@@ -705,7 +713,19 @@ function killEnemy(index, ownerId){
     floatingTexts.push({x:e.x, y:e.y-20, vx:0, vy:-50, life:1.5, text: `${e.eliteName} slain!`, color:'#ffd166'});
     addShake(6);
   }
-  awardToPlayerById(ownerId, cxp, cmoney);
+  // v0.9.1 boss loot: a boss always drops a free random item + a money shower
+  if(e.isBoss){
+    const owner = (ownerId != null && players.find(pl=>pl.id===ownerId)) || players[0];
+    const pool = items.filter(it=>!it.noCombine);
+    if(owner && pool.length){
+      const gift = pool[Math.floor(Math.random()*pool.length)];
+      addItemToPlayer(owner, gift, gift.rarity);
+      floatingTexts.push({x:e.x, y:e.y-44, vx:0, vy:-50, life:2.2, text:`BOSS LOOT: ${gift.name}`, color:'#ffd166'});
+    }
+    dropMoney(e.x, e.y, 12);
+    rings.push({x:e.x, y:e.y, r:10, t:0, life:0.5, maxR:170, color:'#ffd166', width:5});
+    addShake(8);
+  }
   addParticle({x:e.x,y:e.y,life:0.35,r:16,color:'#ff5d5d'});
   spawnBlood(e.x, e.y, e.color, e.isBoss ? 24 : 10);
   addShake(e.isBoss ? 12 : 3);
@@ -788,6 +808,7 @@ function reactionBlast(x, y, dmg, ownerId, color, skipEn){
   }
   addParticle({x, y, life:0.35, r:R*0.8, color});
   addParticle({x, y, life:0.22, r:R*0.45, color:'#ffffff'});
+  rings.push({x, y, r:10, t:0, life:0.3, maxR:R, color, width:3}); // v0.9.1 shockwave
   addShake(6);
 }
 
@@ -874,6 +895,7 @@ function detonate(b, x, y, skipEnemy, victimIdx, ownerId){
   addParticle({x, y, life:0.35, r:R*0.55, color:'#ff8c42'});
   addParticle({x, y, life:0.25, r:R*0.35, color:'#ffd166'});
   addParticle({x, y, life:0.5, r:R*0.7, color:'#555555'});
+  rings.push({x, y, r:12, t:0, life:0.35, maxR:R, color:'#ffd166', width:4}); // v0.9.1 shockwave
   addShake(5);
   if(audio.ctx) audio.beep(70, 0.25, 'sawtooth', 0.12);
   return shift;
@@ -1239,6 +1261,25 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     } else if(state.waveSpawned < state.waveTotal && Math.random() < dt / spawnInterval){
       spawnEnemy();
       state.waveSpawned++;
+    }
+    // v0.9.1 mid-wave elite event: waves 3+, halfway through a warning sounds and an elite pack drops in
+    if(!isBossWave(state.wave) && state.wave >= 3 && state.waveTime >= WAVE_DURATION/2 && !state.midEventDone){
+      if(!state.midEventWarn){
+        state.midEventWarn = true;
+        state.eliteBanner = 2.6;
+        state.midEventT = 2.5;
+        audio.beep(220, 0.18, 'sawtooth', 0.07);
+        audio.beep(174, 0.22, 'sawtooth', 0.07);
+      } else {
+        state.midEventT -= dt;
+        if(state.midEventT <= 0){
+          state.midEventDone = true;
+          const n = 2 + Math.floor(state.wave / 6);
+          for(let k=0;k<n;k++) spawnEnemy({elite:true});
+          floatingTexts.push({x:W/2, y:H*0.32, vx:0, vy:-30, life:1.6, text:'ELITE PACK!', color:'#ffd166'});
+          addShake(5);
+        }
+      }
     }
     // enemy bullets: move, hit players (capped by hurtPlayer), expire off-screen
     for(let i = enemyBullets.length - 1; i >= 0; i--){
@@ -1629,6 +1670,10 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
             applyKnockback(e, b.vx, b.vy, b.damage);
             e.hitFlash = 0.1; // visual only
             spawnBlood(e.x, e.y, e.color, 3);
+            // v0.9.1 crit damage numbers: meaningful crits pop their number
+            if(b.crit && finalDmg >= 15){
+              floatingTexts.push({x:e.x+rand(-8,8), y:e.y-18, vx:rand(-15,15), vy:-55, life:0.8, text:Math.round(finalDmg), color:'#ffd166'});
+            }
             if(b.vortex && !b.vortexSpawned){ b.vortexSpawned = true; vortices.push({x:e.x, y:e.y, t:2.5, r:130}); addShake(3); }
             const dealt = Math.max(1, Math.round(Math.min(b.damage, b.damage + e.hp)));
             floatingTexts.push({x:e.x, y:e.y-6, vx:rand(-12,12), vy:-40, life:0.8, text: dealt, color: b.crit ? '#ffd166' : palette.textLight});
@@ -1667,7 +1712,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
               let jumps = (b.chain || 1) + ((b.tiers && b.tiers.shock) || 0), fromX = e.x, fromY = e.y;
               const hitSet = new Set([e]);
               for(let jn=0; jn<jumps; jn++){
-                const chain = enemies.find(en => !hitSet.has(en) && Math.hypot(en.x-fromX, en.y-fromY) < 110);
+                const chain = enemies.find(en => en.hp > 0 && !hitSet.has(en) && Math.hypot(en.x-fromX, en.y-fromY) < 110);
                 if(!chain) break;
                 hitSet.add(chain);
                 chain.hp -= b.damage * 0.6;
@@ -1677,7 +1722,8 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
                 addParticle({x:chain.x,y:chain.y,life:0.2, r:8, color:'#c9b6ff'});
                 floatingTexts.push({x:(fromX+chain.x)/2, y:(fromY+chain.y)/2, vx:0, vy:-20, life:0.4, text:'⚡', color:'#c9b6ff'});
                 fromX = chain.x; fromY = chain.y;
-                if(chain.hp <= 0){ const ci = enemies.indexOf(chain); if(ci >= 0) killEnemy(ci, b.ownerId); }
+                // chain kills are deferred to the normal hp<=0 death check (correct index,
+                // no mid-loop splice hazard); lastHitBy is already set for kill credit
               }
             }
             addParticle({x:e.x,y:e.y,life:0.2, r:8, color:'#ffd166'}); const ownerId = b.ownerId;
@@ -1849,6 +1895,9 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     if(ft.life <= 0) floatingTexts.splice(i,1);
   }
   if(floatingTexts.length > MAX_FLOATING_TEXTS){ floatingTexts.splice(0, floatingTexts.length - MAX_FLOATING_TEXTS); }
+  // v0.9.1 melee swings + shockwave rings
+  for(let i=swings.length-1;i>=0;i--){ const s = swings[i]; s.t += dt; if(s.t >= s.life) swings.splice(i,1); }
+  for(let i=rings.length-1;i>=0;i--){ const r = rings[i]; r.t += dt; if(r.t >= r.life) rings.splice(i,1); }
 
   // Player firing.
   //  Auto Shoot on: fire whenever there is a target. Auto Shoot off (P1): fire only while the mouse button

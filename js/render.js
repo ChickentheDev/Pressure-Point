@@ -700,6 +700,29 @@ function drawEffects(){
   ctx.globalAlpha = 1;
   ctx.textAlign = 'start';
 
+  // v0.9.1 melee swing arcs: crescent slashes that sweep and fade
+  for(const s of swings){
+    const p = s.t / s.life, alpha = 1 - p;
+    const sweep = 0.6 + p * 1.6;
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.9;
+    ctx.strokeStyle = s.color; ctx.lineWidth = 7 * (1 - p*0.5); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(s.x, s.y, 34, s.angle - sweep, s.angle + 0.5); ctx.stroke();
+    ctx.globalAlpha = alpha * 0.5;
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(s.x, s.y, 30, s.angle - sweep, s.angle + 0.5); ctx.stroke();
+    ctx.restore();
+  }
+  // v0.9.1 shockwave rings: expanding stroked circles
+  for(const r of rings){
+    const p = r.t / r.life, rad = r.r + (r.maxR - r.r) * (1 - Math.pow(1-p, 2));
+    ctx.save();
+    ctx.globalAlpha = (1 - p) * 0.85;
+    ctx.strokeStyle = r.color; ctx.lineWidth = Math.max(1, r.width * (1 - p));
+    ctx.beginPath(); ctx.arc(r.x, r.y, rad, 0, Math.PI*2); ctx.stroke();
+    ctx.restore();
+  }
+
   // trees (draw)
   for(const tr of trees){
     drawGroundShadow(tr.x, tr.y + 22, 18, 6);
