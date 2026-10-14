@@ -251,7 +251,7 @@ function drawCritters(){
 }
 // v0.9.2 minimap: the world is 3x the viewport, so show where everything is
 function drawMinimap(){
-  const mw = 168, mh = Math.round(mw * WH / WW), mx = W - mw - 12, my = H - mh - 12;
+  const mw = Math.max(84, Math.min(168, Math.round(W * 0.30))), mh = Math.round(mw * WH / WW), mx = W - mw - 12, my = H - mh - 12;
   const sx = mw / WW, sy = mh / WH;
   ctx.save();
   ctx.globalAlpha = 0.85;

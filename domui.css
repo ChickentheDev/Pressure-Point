@@ -90,6 +90,14 @@
 .pp-wpns .pp-slot img { width:30px; height:30px; object-fit:contain; image-rendering:auto; }
 .pp-wpns .pp-slot.cur { border-color:var(--accent); }
 
+/* portrait phones: wave label/timer would collide with the HP/XP bars — drop it below them */
+@media (max-width:640px){
+  .pp-wave{ top:64px; }
+  .pp-wave small{ font-size:12px; }
+  .pp-wave strong{ font-size:26px; }
+  .pp-hpbox{ width:min(200px,44%); }
+}
+
 /* v0.8.3 arsenal upgrades */
 .pp-upgrades { margin-top:14px; }
 .pp-upgrades h2 { margin:0 0 8px; font-size:15px; letter-spacing:.5px; color:var(--muted, #8aa0b8); text-transform:uppercase; }

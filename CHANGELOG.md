@@ -1,3 +1,9 @@
+## v1.0.1 — Mobile layout fixes
+- **Portrait phone layout**: the landing menu buttons now stack vertically instead of overlapping, the wave label/timer drops below the HP/XP bars instead of colliding with them, and the minimap scales with screen width (was a fixed 168px — nearly half the screen on phones).
+- **iOS Safari**: viewport now locks zoom (`user-scalable=no`, `viewport-fit=cover`) so double-taps don't zoom mid-game; layout uses `100dvh` so the canvas doesn't slide under the toolbar.
+- **Touch devices**: keyboard control hints hidden on touch screens (they were overlapping the version text and useless on phones).
+- **New menu art**: abyssal pressure rift — bioluminescent currents spiraling into a glowing trench rift (fresh procedural art per the every-update rule).
+
 ## v1.0 — Full release
 - **Dust everywhere**: new expanding dust-puff particles kicked up by dashes, parachute landings, every explosion and elemental reaction, enemy deaths (big burst for bosses), leaper slams, Overlord burrow erupts, burster blasts, charger charges, turret deploy/expire, Second Wind revives, and hopping birds.
 - **Ambient birds**: little animated birds hop around the arena — they scatter (with a chirp and a dust puff) when players, enemies, or explosions get close, then flutter back in from the edges.
