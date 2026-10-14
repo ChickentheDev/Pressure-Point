@@ -387,7 +387,7 @@ function spawnEnemy(opts){
   const eliteHP = elite ? 3 : 1, eliteDmg = elite ? 1.4 : 1;
   const xp = Math.floor((t.xp + Math.floor(state.wave*0.6)*(state.danger)) * (elite ? 3 : 1));
   const money = Math.max(1, Math.floor((Math.floor(t.money * 0.7) + Math.floor(state.wave*0.2) * state.danger) * (elite ? 3 : 1)));
-  enemies.push({ id: t.id, x,y, r: Math.floor(t.r * (elite ? 1.35 : 1)), hp: Math.floor(t.hp * waveScale * dangerHP * eliteHP * mapMult), maxHp: Math.floor(t.hp * waveScale * dangerHP * eliteHP * mapMult), speed: Math.floor((t.speed + state.wave*2) * dangerSpeed * (elite && t.id === 'runner' ? 1.5 : 1)), dmg: Math.floor(t.dmg * dangerDmg * lateDmg * eliteDmg * mapMult + state.wave*1.2), color: t.color, xp, money, explodes: !!t.explodes, splits: !!t.splits, dashes: !!t.dashes, shields: !!t.shields, spawns: !!t.spawns, ranged: !!t.ranged, elite, eliteName: elite ? t.eliteName : null, dashTimer: 2 + Math.random()*2, dashTime: 0, spawnTimer: 3 });
+  enemies.push({ id: t.id, x,y, r: Math.floor(t.r * (elite ? 1.35 : 1)), hp: Math.floor(t.hp * waveScale * dangerHP * eliteHP * mapMult), maxHp: Math.floor(t.hp * waveScale * dangerHP * eliteHP * mapMult), speed: Math.floor((t.speed + state.wave*2) * dangerSpeed * (elite && t.id === 'runner' ? 1.5 : 1)), dmg: Math.floor(t.dmg * dangerDmg * lateDmg * eliteDmg * mapMult + state.wave*1.2), color: t.color, xp, money, explodes: !!t.explodes, splits: !!t.splits, dashes: !!t.dashes, shields: !!t.shields, spawns: !!t.spawns, ranged: !!t.ranged, heals: !!t.heals, charges: !!t.charges, healTimer: 2, chargeState: 0, chargeTimer: 2 + Math.random()*2, chargeDir: 0, elite, eliteName: elite ? t.eliteName : null, dashTimer: 2 + Math.random()*2, dashTime: 0, spawnTimer: 3 });
   if(enemies.length > 120){ enemies.shift(); }
   addParticle({x, y, life:0.35, r:18, color: elite ? '#ffd166' : palette.uiAccent});
 }
@@ -607,7 +607,7 @@ function fireWeaponFor(player, time, target, autoSpread){
       const elemental = w.elemental || (w.explosive ? 'fire' : null);
       // px/py = previous position for the swept hit test. A new bullet starts its sweep at the player's
       // centre, so an enemy overlapping the player (inside the muzzle offset) still gets hit.
-      bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, px: player.x, py: player.y, fresh: true, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, pierce: (w.pierce||0) + (player.pierceBonus||0), rehit: !!w.rehit, dist: 0, maxDist: ((w.range || 900) + (player.rangeBonus || 0)) * (player.rangeMult || 1), explosive: !!w.explosive, splashR: w.splashR || 110 });
+      bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, px: player.x, py: player.y, fresh: true, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, pierce: (w.pierce||0) + (player.pierceBonus||0), rehit: !!w.rehit, dist: 0, homing: !!w.homing, chain: w.chain||0, slowTime: w.slowTime||0, maxDist: ((w.range || 900) + (player.rangeBonus || 0)) * (player.rangeMult || 1), explosive: !!w.explosive, splashR: w.splashR || 110 });
     }
     addParticle({x:player.x + Math.cos(angle)*16, y:player.y + Math.sin(angle)*16, life:0.15, r: w.type==='heavy'?18:w.type==='shotgun'?14:10, color:w.color});
     if(audio.ctx && time - (w.lastSound||0) > 0.06){ w.lastSound = time; const freq = w.type==='heavy'?120:w.type==='shotgun'?180:w.type==='rifle'?240:320; audio.beep(freq,0.04,'square',0.03); }
@@ -1076,7 +1076,16 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
   }
 
   // bullets update
-  for(let i=bullets.length-1;i>=0;i--){ const b=bullets[i]; if(b.fresh){ b.fresh = false; } else { b.px = b.x; b.py = b.y; } const stepx = b.vx*dt, stepy = b.vy*dt; b.x += stepx; b.y += stepy; b.life -= dt; b.dist = (b.dist || 0) + Math.sqrt(stepx*stepx + stepy*stepy); if(b.life<=0 || (b.maxDist && b.dist >= b.maxDist) || b.x<-50 || b.x>W+50 || b.y<-50 || b.y>H+50 || bullets.length>MAX_BULLETS){ const dropped = b.life<=0 || (b.maxDist && b.dist >= b.maxDist); if(dropped && b.x>0 && b.x<W && b.y>0 && b.y<H){ addParticle({x:b.x, y:b.y, life:0.22, r:5, color:b.color||'#ffeeaa'}); for(let sk=0; sk<3; sk++){ const sa=Math.random()*6.28, ss=30+Math.random()*70; addParticle({x:b.x, y:b.y, vx:Math.cos(sa)*ss, vy:Math.sin(sa)*ss-30, grav:300, life:0.25, r:1.5, color:b.color||'#ffeeaa'}); } } if(b.explosive && b.dist > 60) detonate(b, b.x, b.y, null, -1, b.ownerId); bullets.splice(i,1); } }
+  for(let i=bullets.length-1;i>=0;i--){ const b=bullets[i]; if(b.fresh){ b.fresh = false; } else { b.px = b.x; b.py = b.y; }
+    if(b.homing && enemies.length){
+      let ne = null, nbd = 520*520;
+      for(const he of enemies){ const hdx=he.x-b.x, hdy=he.y-b.y, hd=hdx*hdx+hdy*hdy; if(hd<nbd){ nbd=hd; ne=he; } }
+      if(ne){ const sp = Math.hypot(b.vx,b.vy)||1, ta = Math.atan2(ne.y-b.y, ne.x-b.x), ca = Math.atan2(b.vy,b.vx);
+        let da = ta-ca; while(da>Math.PI) da-=Math.PI*2; while(da<-Math.PI) da+=Math.PI*2;
+        const na = ca + Math.max(-6*dt, Math.min(6*dt, da));
+        b.vx = Math.cos(na)*sp; b.vy = Math.sin(na)*sp; }
+    }
+    const stepx = b.vx*dt, stepy = b.vy*dt; b.x += stepx; b.y += stepy; b.life -= dt; b.dist = (b.dist || 0) + Math.sqrt(stepx*stepx + stepy*stepy); if(b.life<=0 || (b.maxDist && b.dist >= b.maxDist) || b.x<-50 || b.x>W+50 || b.y<-50 || b.y>H+50 || bullets.length>MAX_BULLETS){ const dropped = b.life<=0 || (b.maxDist && b.dist >= b.maxDist); if(dropped && b.x>0 && b.x<W && b.y>0 && b.y<H){ addParticle({x:b.x, y:b.y, life:0.22, r:5, color:b.color||'#ffeeaa'}); for(let sk=0; sk<3; sk++){ const sa=Math.random()*6.28, ss=30+Math.random()*70; addParticle({x:b.x, y:b.y, vx:Math.cos(sa)*ss, vy:Math.sin(sa)*ss-30, grav:300, life:0.25, r:1.5, color:b.color||'#ffeeaa'}); } } if(b.explosive && b.dist > 60) detonate(b, b.x, b.y, null, -1, b.ownerId); bullets.splice(i,1); } }
 
   // bullets vs trees (destructibles)
   for(let i=bullets.length-1;i>=0;i--){
@@ -1116,7 +1125,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     if(e.hp <= 0){ killEnemy(i, e.lastHitBy); continue; }
 
     const slowMult = e.status.slow > 0 ? 0.6 : 1;
-    const ang = Math.atan2(target.y - e.y, target.x - e.x);
+    const ang = (e.charges && e.chargeState === 2 && e._chargeAng != null) ? e._chargeAng : Math.atan2(target.y - e.y, target.x - e.x);
     // dasher: periodic burst toward the player (elite: relentless)
     let dashMult = 1;
     if(e.dashes){
@@ -1132,6 +1141,46 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
         const rt = enemySetFor(state.mapId)[0];
         enemies.push({ id: rt.id, x:e.x+rand(-20,20), y:e.y+rand(-20,20), r:rt.r, hp:Math.floor(rt.hp*(1+state.wave*0.12)), maxHp:Math.floor(rt.hp*(1+state.wave*0.12)), speed:rt.speed, dmg:Math.floor(rt.dmg+state.wave*1.2), color:rt.color, xp:rt.xp, money:rt.money });
         addParticle({x:e.x,y:e.y,life:0.3,r:16,color:'#9b59b6'});
+      }
+    }
+    // mender: heals nearby allies periodically
+    if(e.heals){
+      e.healTimer -= dt;
+      if(e.healTimer <= 0){
+        e.healTimer = e.elite ? 2 : 3.5;
+        for(const al of enemies){
+          if(al === e || al.hp <= 0) continue;
+          const hdx = al.x-e.x, hdy = al.y-e.y;
+          if(hdx*hdx + hdy*hdy < 200*200 && al.hp < al.maxHp){
+            al.hp = Math.min(al.maxHp, al.hp + al.maxHp * 0.12);
+            addParticle({x:al.x, y:al.y-8, life:0.4, r:6, color:'#7dff9b'});
+          }
+        }
+        addParticle({x:e.x, y:e.y, life:0.4, r:14, color:'#7dff9b'});
+      }
+    }
+    // charger: telegraphs (0.7s flash) then charges at 3.5x speed
+    if(e.charges){
+      if(e.chargeState === 0){
+        e.chargeTimer -= dt;
+        if(e.chargeTimer <= 0){
+          e.chargeState = 1; e.chargeTimer = 0.7;
+          e.chargeDir = Math.atan2(target.y - e.y, target.x - e.x);
+          addShake(2); audio.beep(220, 0.15, 'sawtooth', 0.05);
+        }
+      } else if(e.chargeState === 1){
+        e.chargeTimer -= dt;
+        e.hitFlash = Math.max(e.hitFlash, 0.05); // flashing telegraph
+        if(e.chargeTimer <= 0){ e.chargeState = 2; e.chargeTimer = 0.55; }
+      } else {
+        e.chargeTimer -= dt;
+        dashMult = 3.5;
+        // steer slightly during charge
+        const want = Math.atan2(target.y - e.y, target.x - e.x);
+        let dd = want - e.chargeDir; while(dd > Math.PI) dd -= Math.PI*2; while(dd < -Math.PI) dd += Math.PI*2;
+        e.chargeDir += Math.max(-2*dt, Math.min(2*dt, dd));
+        e._chargeAng = e.chargeDir;
+        if(e.chargeTimer <= 0){ e.chargeState = 0; e.chargeTimer = e.elite ? 1.5 : 2.5 + Math.random()*1.5; }
       }
     }
     // spitter: keeps its distance and spits projectiles
@@ -1289,15 +1338,23 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
               e.status.burn = Math.max(e.status.burn, 4);
               e.status.burnDps = Math.max(e.status.burnDps, b.damage * 0.6);
             } else if(b.elemental === 'ice'){
-              e.status.slow = Math.max(e.status.slow, 2.0);
+              e.status.slow = Math.max(e.status.slow, b.slowTime || 2.0);
             } else if(b.elemental === 'shock'){
-              // chain shock to nearby enemy
-              const chain = enemies.find(en => en !== e && Math.hypot(en.x - e.x, en.y - e.y) < 80);
-              if(chain){
+              // chain shock: jumps to nearby enemies (Stormcaller chains up to 5)
+              let jumps = b.chain || 1, fromX = e.x, fromY = e.y;
+              const hitSet = new Set([e]);
+              for(let jn=0; jn<jumps; jn++){
+                const chain = enemies.find(en => !hitSet.has(en) && Math.hypot(en.x-fromX, en.y-fromY) < 110);
+                if(!chain) break;
+                hitSet.add(chain);
                 chain.hp -= b.damage * 0.6;
-                chain.lastHitBy = b.ownerId;   // so a chain kill credits the shooter (co-op)
+                chain.lastHitBy = b.ownerId;
                 chain.hitFlash = 0.1;
-                addParticle({x:chain.x,y:chain.y,life:0.2, r:8, color:'#b27bff'});
+                spawnBlood(chain.x, chain.y, chain.color, 2);
+                addParticle({x:chain.x,y:chain.y,life:0.2, r:8, color:'#c9b6ff'});
+                floatingTexts.push({x:(fromX+chain.x)/2, y:(fromY+chain.y)/2, vx:0, vy:-20, life:0.4, text:'⚡', color:'#c9b6ff'});
+                fromX = chain.x; fromY = chain.y;
+                if(chain.hp <= 0){ const ci = enemies.indexOf(chain); if(ci >= 0) killEnemy(ci, b.ownerId); }
               }
             }
             addParticle({x:e.x,y:e.y,life:0.2, r:8, color:'#ffd166'}); const ownerId = b.ownerId;
