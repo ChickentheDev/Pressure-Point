@@ -344,7 +344,7 @@ function startWave(){
   }
 }
 
-function openShop(){ moneyDrops.length = 0; pickups.length = 0; state.phase='shop'; state.shopAnim=0; buildShop(); audio.beep(660,0.08,'triangle',0.05); }
+function openShop(){ moneyDrops.length = 0; state.phase='shop'; state.shopAnim=0; buildShop(); audio.beep(660,0.08,'triangle',0.05); }
 
 function levelUp(player){ player.level += 1; player.xp -= player.xpNext; player.xpNext = Math.floor(player.xpNext * 1.2 + 15); if(!isGlassjaw(player)){ player.baseMaxHp += 6; player.hp = player.baseMaxHp; } }
 
@@ -387,7 +387,7 @@ function spawnEnemy(opts){
   const eliteHP = elite ? 3 : 1, eliteDmg = elite ? 1.4 : 1;
   const xp = Math.floor((t.xp + Math.floor(state.wave*0.6)*(state.danger)) * (elite ? 3 : 1));
   const money = Math.max(1, Math.floor((Math.floor(t.money * 0.7) + Math.floor(state.wave*0.2) * state.danger) * (elite ? 3 : 1)));
-  enemies.push({ id: t.id, x,y, r: Math.floor(t.r * (elite ? 1.35 : 1)), hp: Math.floor(t.hp * waveScale * dangerHP * eliteHP * mapMult), maxHp: Math.floor(t.hp * waveScale * dangerHP * eliteHP * mapMult), speed: Math.floor((t.speed + state.wave*2) * dangerSpeed * (elite && t.id === 'runner' ? 1.5 : 1)), dmg: Math.floor(t.dmg * dangerDmg * lateDmg * eliteDmg * mapMult + state.wave*1.2), color: t.color, xp, money, explodes: !!t.explodes, splits: !!t.splits, dashes: !!t.dashes, shields: !!t.shields, spawns: !!t.spawns, ranged: !!t.ranged, heals: !!t.heals, charges: !!t.charges, healTimer: 2, chargeState: 0, chargeTimer: 2 + Math.random()*2, chargeDir: 0, elite, eliteName: elite ? t.eliteName : null, dashTimer: 2 + Math.random()*2, dashTime: 0, spawnTimer: 3 });
+  enemies.push({ id: t.id, x,y, r: Math.floor(t.r * (elite ? 1.35 : 1)), hp: Math.floor(t.hp * waveScale * dangerHP * eliteHP * mapMult), maxHp: Math.floor(t.hp * waveScale * dangerHP * eliteHP * mapMult), speed: Math.floor((t.speed + state.wave*2) * dangerSpeed * (elite && t.id === 'runner' ? 1.5 : 1)), dmg: Math.floor(t.dmg * dangerDmg * lateDmg * eliteDmg * mapMult + state.wave*1.2), color: t.color, xp, money, explodes: !!t.explodes, splits: !!t.splits, dashes: !!t.dashes, shields: !!t.shields, spawns: !!t.spawns, ranged: !!t.ranged, heals: !!t.heals, charges: !!t.charges, healTimer: 2, chargeState: 0, chargeTimer: 2 + Math.random()*2, chargeDir: 0, phases: !!t.phases, phaseTimer: 3 + Math.random()*2, phased: false, leaps: !!t.leaps, leapState: 0, leapTimer: 2 + Math.random()*2, leapFromX: 0, leapFromY: 0, leapToX: 0, leapToY: 0, elite, eliteName: elite ? t.eliteName : null, dashTimer: 2 + Math.random()*2, dashTime: 0, spawnTimer: 3 });
   if(enemies.length > 120){ enemies.shift(); }
   addParticle({x, y, life:0.35, r:18, color: elite ? '#ffd166' : palette.uiAccent});
 }
@@ -517,7 +517,8 @@ function repairNonFinite(){
 const PLAYER_ACCEL = 12, PLAYER_DECEL = 16;    // 1/s: higher = snappier (95% of target in ~0.25s / ~0.19s)
 function updatePlayerVelocity(p, dx, dy, dt){
   const slowed = (p.slowUntil || 0) > state.animTime ? 0.6 : 1;
-  const tx = dx * p.baseSpeed * slowed, ty = dy * p.baseSpeed * slowed;
+  const adren = p.adrenaline ? 1.2 : 1;
+  const tx = dx * p.baseSpeed * slowed * adren, ty = dy * p.baseSpeed * slowed * adren;
   const k = 1 - Math.exp(-((dx || dy) ? PLAYER_ACCEL : PLAYER_DECEL) * dt);
   p.vx = (p.vx || 0) + (tx - (p.vx || 0)) * k;
   p.vy = (p.vy || 0) + (ty - (p.vy || 0)) * k;
@@ -579,7 +580,7 @@ function fireWeaponFor(player, time, target, autoSpread){
   for(let wi = 0; wi < owned.length; wi++){
     const w = owned[wi];
     if(!w || w.reloading > 0 || w.overheated) continue;
-    const fireRate = w.fireRate * player.reloadSpeed;
+    const fireRate = w.fireRate * player.reloadSpeed * (player.adrenaline ? 0.65 : 1);
     if(time - (w.last||0) < fireRate) continue;
     if(w.ammoInMag <= 0){ w.reloading = w.reload * player.reloadSpeed; audio.beep(240,0.08,'sawtooth',0.04); continue; }
     w.last = time; w.ammoInMag -= 1; player.kick = Math.max(player.kick, 0.08 * w.recoil);
@@ -607,7 +608,7 @@ function fireWeaponFor(player, time, target, autoSpread){
       const elemental = w.elemental || (w.explosive ? 'fire' : null);
       // px/py = previous position for the swept hit test. A new bullet starts its sweep at the player's
       // centre, so an enemy overlapping the player (inside the muzzle offset) still gets hit.
-      bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, px: player.x, py: player.y, fresh: true, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, pierce: (w.pierce||0) + (player.pierceBonus||0), rehit: !!w.rehit, dist: 0, homing: !!w.homing, chain: w.chain||0, slowTime: w.slowTime||0, maxDist: ((w.range || 900) + (player.rangeBonus || 0)) * (player.rangeMult || 1), explosive: !!w.explosive, splashR: w.splashR || 110 });
+      bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, px: player.x, py: player.y, fresh: true, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, pierce: (w.pierce||0) + (player.pierceBonus||0), rehit: !!w.rehit, dist: 0, homing: !!w.homing, chain: w.chain||0, slowTime: w.slowTime||0, bounce: w.bounce||0, vortex: !!w.vortex, maxDist: ((w.range || 900) + (player.rangeBonus || 0)) * (player.rangeMult || 1), explosive: !!w.explosive, splashR: w.splashR || 110 });
     }
     addParticle({x:player.x + Math.cos(angle)*16, y:player.y + Math.sin(angle)*16, life:0.15, r: w.type==='heavy'?18:w.type==='shotgun'?14:10, color:w.color});
     if(audio.ctx && time - (w.lastSound||0) > 0.06){ w.lastSound = time; const freq = w.type==='heavy'?120:w.type==='shotgun'?180:w.type==='rifle'?240:320; audio.beep(freq,0.04,'square',0.03); }
@@ -632,11 +633,6 @@ function killEnemy(index, ownerId){
     addShake(6);
   }
   awardToPlayerById(ownerId, cxp, cmoney);
-  // pickup drops: hearts heal, magnets vacuum money
-  const pr = Math.random();
-  if(e.isBoss || e.elite) pickups.push({x:e.x, y:e.y, r:7, kind:'heart', life:25, t:0});
-  else if(pr < 0.035) pickups.push({x:e.x+rand(-8,8), y:e.y+rand(-8,8), r:7, kind:'heart', life:20, t:0});
-  else if(pr < 0.06) pickups.push({x:e.x+rand(-8,8), y:e.y+rand(-8,8), r:7, kind:'magnet', life:20, t:0});
   addParticle({x:e.x,y:e.y,life:0.35,r:16,color:'#ff5d5d'});
   spawnBlood(e.x, e.y, e.color, e.isBoss ? 24 : 10);
   addShake(e.isBoss ? 12 : 3);
@@ -803,7 +799,6 @@ canvas.addEventListener('click', (e)=>{
         applyUpgradeChoice(upgradeChoices.items[i]);
         // open shop after upgrade
         moneyDrops.length = 0;
-      pickups.length = 0;
         state.phase = 'shop';
         state.shopAnim = 0;
         buildShop();
@@ -904,6 +899,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     if(dx||dy){ const len = Math.hypot(dx,dy); dx/=len; dy/=len; }
     if(p.dashCooldown > 0) p.dashCooldown -= dt;
     if(p.iFrames > 0) p.iFrames -= dt;
+    p.adrenaline = !p.dead && p.hp < p.baseMaxHp * 0.3;
     // Co-op dash: P1 uses Left Shift, P2 uses Right Shift (U kept as a P2 alternate).
     const dashInput = (idx===0 && input.shiftL) || (idx===1 && (input.shiftR || input.keys['u']));
     if(dashInput && p.dashCooldown <= 0){
@@ -1027,7 +1023,6 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
       if(timeUp && enemies.length){ for(const e of enemies){ addParticle({x:e.x, y:e.y, life:0.4, r:e.r || 12, color:'#aab0c4'}); } enemies.length = 0; }
       state.waveCompleteTimer += dt;
       moneyDrops.length = 0;
-      pickups.length = 0;
       if(!runStats.tookDamage && state.wave > 1) unlockAchievement('untouchable');
       checkAchievements();
       if(state.wave >= state.maxWave && !state.endless){
@@ -1085,7 +1080,14 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
         const na = ca + Math.max(-6*dt, Math.min(6*dt, da));
         b.vx = Math.cos(na)*sp; b.vy = Math.sin(na)*sp; }
     }
-    const stepx = b.vx*dt, stepy = b.vy*dt; b.x += stepx; b.y += stepy; b.life -= dt; b.dist = (b.dist || 0) + Math.sqrt(stepx*stepx + stepy*stepy); if(b.life<=0 || (b.maxDist && b.dist >= b.maxDist) || b.x<-50 || b.x>W+50 || b.y<-50 || b.y>H+50 || bullets.length>MAX_BULLETS){ const dropped = b.life<=0 || (b.maxDist && b.dist >= b.maxDist); if(dropped && b.x>0 && b.x<W && b.y>0 && b.y<H){ addParticle({x:b.x, y:b.y, life:0.22, r:5, color:b.color||'#ffeeaa'}); for(let sk=0; sk<3; sk++){ const sa=Math.random()*6.28, ss=30+Math.random()*70; addParticle({x:b.x, y:b.y, vx:Math.cos(sa)*ss, vy:Math.sin(sa)*ss-30, grav:300, life:0.25, r:1.5, color:b.color||'#ffeeaa'}); } } if(b.explosive && b.dist > 60) detonate(b, b.x, b.y, null, -1, b.ownerId); bullets.splice(i,1); } }
+    const stepx = b.vx*dt, stepy = b.vy*dt; b.x += stepx; b.y += stepy; b.life -= dt;
+    if(b.bounce > 0 && (b.x < 4 || b.x > W-4 || b.y < 4 || b.y > H-4)){
+      if(b.x < 4){ b.x = 4; b.vx = Math.abs(b.vx); } else if(b.x > W-4){ b.x = W-4; b.vx = -Math.abs(b.vx); }
+      if(b.y < 4){ b.y = 4; b.vy = Math.abs(b.vy); } else if(b.y > H-4){ b.y = H-4; b.vy = -Math.abs(b.vy); }
+      b.bounce--;
+      addParticle({x:b.x, y:b.y, life:0.2, r:6, color:'#ffe066'});
+      audio.beep(880, 0.03, 'square', 0.02);
+    } b.dist = (b.dist || 0) + Math.sqrt(stepx*stepx + stepy*stepy); if(b.life<=0 || (b.maxDist && b.dist >= b.maxDist) || b.x<-50 || b.x>W+50 || b.y<-50 || b.y>H+50 || bullets.length>MAX_BULLETS){ const dropped = b.life<=0 || (b.maxDist && b.dist >= b.maxDist); if(dropped && b.x>0 && b.x<W && b.y>0 && b.y<H){ addParticle({x:b.x, y:b.y, life:0.22, r:5, color:b.color||'#ffeeaa'}); for(let sk=0; sk<3; sk++){ const sa=Math.random()*6.28, ss=30+Math.random()*70; addParticle({x:b.x, y:b.y, vx:Math.cos(sa)*ss, vy:Math.sin(sa)*ss-30, grav:300, life:0.25, r:1.5, color:b.color||'#ffeeaa'}); } } if(b.explosive && b.dist > 60) detonate(b, b.x, b.y, null, -1, b.ownerId); bullets.splice(i,1); } }
 
   // bullets vs trees (destructibles)
   for(let i=bullets.length-1;i>=0;i--){
@@ -1124,7 +1126,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     // burn ticks and shock chains can drop hp to <= 0 without a bullet hit; kill the enemy here
     if(e.hp <= 0){ killEnemy(i, e.lastHitBy); continue; }
 
-    const slowMult = e.status.slow > 0 ? 0.6 : 1;
+    const slowMult = (e.status.slow > 0 ? 0.6 : 1) * (e.phased ? 1.6 : 1);
     const ang = (e.charges && e.chargeState === 2 && e._chargeAng != null) ? e._chargeAng : Math.atan2(target.y - e.y, target.x - e.x);
     // dasher: periodic burst toward the player (elite: relentless)
     let dashMult = 1;
@@ -1181,6 +1183,50 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
         e.chargeDir += Math.max(-2*dt, Math.min(2*dt, dd));
         e._chargeAng = e.chargeDir;
         if(e.chargeTimer <= 0){ e.chargeState = 0; e.chargeTimer = e.elite ? 1.5 : 2.5 + Math.random()*1.5; }
+      }
+    }
+    // phantom: phases in/out — untargetable and faster while phased
+    if(e.phases){
+      e.phaseTimer -= dt;
+      if(e.phaseTimer <= 0){
+        e.phased = !e.phased;
+        e.phaseTimer = e.phased ? (e.elite ? 2.5 : 1.8) : 2.5 + Math.random()*1.5;
+        addParticle({x:e.x, y:e.y, life:0.3, r:12, color:'#b8c4d4'});
+      }
+    }
+    // leaper: telegraphs then leaps onto the player, AoE slam on landing
+    if(e.leaps){
+      if(e.leapState === 0){
+        e.leapTimer -= dt;
+        if(e.leapTimer <= 0){
+          e.leapState = 1; e.leapTimer = 0.5;
+          e.leapFromX = e.x; e.leapFromY = e.y;
+          e.leapToX = target.x; e.leapToY = target.y;
+          audio.beep(180, 0.2, 'sawtooth', 0.05);
+        }
+      } else if(e.leapState === 1){
+        e.leapTimer -= dt;
+        e.hitFlash = Math.max(e.hitFlash, 0.05);
+        if(e.leapTimer <= 0){ e.leapState = 2; e.leapTimer = 0.45; }
+      } else {
+        e.leapTimer -= dt;
+        const lp = 1 - Math.max(0, e.leapTimer / 0.45);
+        e.x = e.leapFromX + (e.leapToX - e.leapFromX) * lp;
+        e.y = e.leapFromY + (e.leapToY - e.leapFromY) * lp;
+        dashMult = 0;
+        if(e.leapTimer <= 0){
+          e.leapState = 0; e.leapTimer = e.elite ? 1.8 : 2.5 + Math.random()*1.5;
+          const slamR = e.elite ? 130 : 100;
+          for(const p of players){
+            if(p.dead || p.iFrames > 0) continue;
+            const pdx = p.x-e.x, pdy = p.y-e.y;
+            if(pdx*pdx + pdy*pdy < slamR*slamR){
+              p.hp -= Math.max(1, e.dmg * 1.5 - (p.armor||0)); runStats.tookDamage = true; p.hitFlash = 0.12;
+            }
+          }
+          for(let sk=0; sk<10; sk++){ const sa=Math.random()*6.28, ss=60+Math.random()*120; addParticle({x:e.x, y:e.y, vx:Math.cos(sa)*ss, vy:Math.sin(sa)*ss, life:0.3, r:4, color:'#ff8c42'}); }
+          addShake(5); audio.beep(90, 0.2, 'sine', 0.08);
+        }
       }
     }
     // spitter: keeps its distance and spits projectiles
@@ -1307,6 +1353,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     // bullets collision (swept: previous -> current bullet position vs enemy radius + bullet radius)
     let killed = false;
     for(let j=bullets.length-1;j>=0;j--){ const b = bullets[j];
+          if(e.phased) continue;   // phantom: can't be hit while phased
           if(b.hits && b.hits.includes(e)) continue;   // a piercing bullet hits each enemy once
           // rehit weapons (Harpoon): hitting the same enemy again needs the bullet to still be inside it
           // (the pre-v0.54 point test), so its single-target damage matches the old behaviour.
@@ -1330,6 +1377,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
             applyKnockback(e, b.vx, b.vy, b.damage);
             e.hitFlash = 0.1; // visual only
             spawnBlood(e.x, e.y, e.color, 3);
+            if(b.vortex && !b.vortexSpawned){ b.vortexSpawned = true; vortices.push({x:e.x, y:e.y, t:2.5, r:130}); addShake(3); }
             const dealt = Math.max(1, Math.round(Math.min(b.damage, b.damage + e.hp)));
             floatingTexts.push({x:e.x, y:e.y-6, vx:rand(-12,12), vy:-40, life:0.8, text: dealt, color: b.crit ? '#ffd166' : palette.textLight});
             addShake(b.crit ? 2 : 0.5);
@@ -1370,7 +1418,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
       if(p.dead) continue;
       if(p.iFrames > 0) continue;
       const d = Math.hypot(p.x - e.x, p.y - e.y);
-      if(d < p.r + e.r){
+      if(d < p.r + e.r && !e.phased){
         p.hp -= Math.max(1, (e.dmg - p.armor) * dt);
         runStats.tookDamage = true;
         // elite spitter (Plaguewing): venomous touch slows the player
@@ -1423,7 +1471,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
   }
 
   // money pickups
-  const pickupRange = (state.magnetT > 0) ? 2000 : 80;
+  const pickupRange = 80;
   for(let i=moneyDrops.length-1;i>=0;i--){
     const m = moneyDrops[i];
     // no despawn: keep money drops on ground
@@ -1446,34 +1494,20 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     }
     if(moneyDrops.length > MAX_MONEY_DROPS){ moneyDrops.splice(0, moneyDrops.length - MAX_MONEY_DROPS); break; }
   }
-  // heart/magnet pickups
-  for(let i=pickups.length-1;i>=0;i--){
-    const k = pickups[i]; k.t += dt; k.life -= dt;
-    if(k.life <= 0){ pickups.splice(i,1); continue; }
-    if(alivePlayers.length === 0) continue;
-    let nearest = alivePlayers[0]; let bd = (alivePlayers[0].x-k.x)**2 + (alivePlayers[0].y-k.y)**2;
-    for(const p of alivePlayers){ const d=(p.x-k.x)**2 + (p.y-k.y)**2; if(d<bd){ bd=d; nearest=p; } }
-    const dist = Math.sqrt(bd);
-    const pr2 = 90;
-    if(dist < pr2){ const pull = Math.min(1, (pr2-dist)/pr2); k.x += (nearest.x-k.x)*pull*dt*12; k.y += (nearest.y-k.y)*pull*dt*12; }
-    if(dist < nearest.r + k.r){
-      if(k.kind === 'heart'){
-        nearest.hp = Math.min(nearest.baseMaxHp, nearest.hp + 25);
-        floatingTexts.push({x:k.x, y:k.y-10, vx:0, vy:-40, life:1, text:'+25 HP', color:'#7dff9b'});
-        addParticle({x:k.x, y:k.y, life:0.3, r:12, color:'#7dff9b'});
-      } else {
-        state.magnetT = 6;
-        floatingTexts.push({x:k.x, y:k.y-10, vx:0, vy:-40, life:1.2, text:'MAGNET!', color:'#6cd6ff'});
-        addParticle({x:k.x, y:k.y, life:0.3, r:12, color:'#6cd6ff'});
-      }
-      audio.pickup();
-      pickups.splice(i,1);
-    }
-  }
-
   // particles
   if(state.comboT > 0){ state.comboT -= dt; if(state.comboT <= 0) state.combo = 0; }
-  if(state.magnetT > 0) state.magnetT -= dt;
+  for(let i=vortices.length-1;i>=0;i--){ const v = vortices[i]; v.t -= dt;
+    if(v.t <= 0){ vortices.splice(i,1); continue; }
+    for(let ei=enemies.length-1; ei>=0; ei--){ const ve = enemies[ei];
+      const vdx = v.x-ve.x, vdy = v.y-ve.y, vd = Math.hypot(vdx, vdy);
+      if(vd < v.r && vd > 4){
+        ve.x += vdx/vd * 260 * dt; ve.y += vdy/vd * 260 * dt;
+        ve.hp -= 30 * dt;
+        if(Math.random() < 0.3) addParticle({x:ve.x, y:ve.y, life:0.2, r:3, color:'#c77bff'});
+        if(ve.hp <= 0) killEnemy(ei, ve.lastHitBy || 0);
+      }
+    }
+  }
   for(let i=particles.length-1;i>=0;i--){ const pt = particles[i]; pt.life -= dt;
     if(pt.vx || pt.vy){ pt.x += (pt.vx||0)*dt; pt.y += (pt.vy||0)*dt; if(pt.grav) pt.vy += pt.grav*dt;
       const fr = Math.max(0, 1 - 2.2*dt); pt.vx *= fr; pt.vy *= fr; }
