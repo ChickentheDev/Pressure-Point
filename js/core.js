@@ -27,10 +27,17 @@ const pauseBtn = document.getElementById('pauseBtn');
 const restartBtn = document.getElementById('restartBtn');
 
 let W = 800, H = 600;
+// v0.9.2: the arena is 3x the viewport. W/H stay the viewport (screen-space UI);
+// WW/WH are the world bounds (fixed for the session at 3x the boot viewport).
+let WW = 2400, WH = 1800;
+let worldSized = false;
+let DPR = 1; // device pixel ratio, set by resize()
 function resize(){
   const ratio = window.devicePixelRatio || 1;
+  DPR = ratio;
   W = canvas.clientWidth || innerWidth;
   H = canvas.clientHeight || innerHeight;
+  if(!worldSized){ WW = Math.round(W * 3); WH = Math.round(H * 3); worldSized = true; }
   canvas.width = Math.floor(W * ratio);
   canvas.height = Math.floor(H * ratio);
   ctx.setTransform(ratio,0,0,ratio,0,0);
@@ -40,7 +47,69 @@ window.addEventListener('resize', resize);
 resize();
 
 // Input handling (keyboard + mouse)
-const input = {keys:{}, mx: W/2, my: H/2, mouseDown:false, lastMove:0};
+const input = {keys:{}, mx: W/2, my: H/2, mouseDown:false, lastMove:0,
+  touchMove:{active:false,x:0,y:0}, touchAim:{active:false,x:0,y:0}, touchDash:false, touchSeen:false};
+// v0.9.2 touch controls: left-half stick moves, right-half stick aims+fires, dash button on the right edge
+const IS_TOUCH_DEVICE = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+const touchSticks = {
+  move:{id:null, ox:0, oy:0},
+  aim:{id:null, ox:0, oy:0},
+};
+const DASH_BTN = {r: 36};
+function dashBtnPos(){ return {x: W - 76, y: H / 2}; }
+function touchPos(t){ const r = canvas.getBoundingClientRect(); return {x: t.clientX - r.left, y: t.clientY - r.top}; }
+function stickVec(ox, oy, x, y){
+  const R = 55;
+  let dx = x - ox, dy = y - oy;
+  const d = Math.hypot(dx, dy);
+  if(d > R){ dx = dx/d*R; dy = dy/d*R; }
+  return {x: dx/R, y: dy/R, kx: dx, ky: dy};
+}
+if(IS_TOUCH_DEVICE){
+  canvas.style.touchAction = 'none';
+  canvas.addEventListener('touchstart', (e)=>{
+    e.preventDefault();
+    input.touchSeen = true;
+    if(typeof audio !== 'undefined'){ audio.init(); if(audio.ctx && audio.ctx.state === 'suspended') audio.ctx.resume(); }
+    for(const t of e.changedTouches){
+      const pos = touchPos(t);
+      const db = dashBtnPos();
+      if(Math.hypot(pos.x-db.x, pos.y-db.y) < DASH_BTN.r + 14){ input.touchDash = true; continue; }
+      if(pos.x < W/2 && touchSticks.move.id === null){
+        touchSticks.move.id = t.identifier; touchSticks.move.ox = pos.x; touchSticks.move.oy = pos.y;
+        input.touchMove.active = true; input.touchMove.x = 0; input.touchMove.y = 0;
+      } else if(touchSticks.aim.id === null){
+        touchSticks.aim.id = t.identifier; touchSticks.aim.ox = pos.x; touchSticks.aim.oy = pos.y;
+        input.touchAim.active = true; input.touchAim.x = 0; input.touchAim.y = 0;
+      }
+    }
+  }, {passive:false});
+  canvas.addEventListener('touchmove', (e)=>{
+    e.preventDefault();
+    for(const t of e.changedTouches){
+      const pos = touchPos(t);
+      if(t.identifier === touchSticks.move.id){
+        const v = stickVec(touchSticks.move.ox, touchSticks.move.oy, pos.x, pos.y);
+        input.touchMove.x = Math.abs(v.x) < 0.18 ? 0 : v.x;
+        input.touchMove.y = Math.abs(v.y) < 0.18 ? 0 : v.y;
+        touchSticks.move.kx = v.kx; touchSticks.move.ky = v.ky;
+      } else if(t.identifier === touchSticks.aim.id){
+        const v = stickVec(touchSticks.aim.ox, touchSticks.aim.oy, pos.x, pos.y);
+        input.touchAim.x = v.x; input.touchAim.y = v.y;
+        touchSticks.aim.kx = v.kx; touchSticks.aim.ky = v.ky;
+      }
+    }
+  }, {passive:false});
+  const endTouch = (e)=>{
+    e.preventDefault();
+    for(const t of e.changedTouches){
+      if(t.identifier === touchSticks.move.id){ touchSticks.move.id = null; input.touchMove.active = false; input.touchMove.x = 0; input.touchMove.y = 0; }
+      if(t.identifier === touchSticks.aim.id){ touchSticks.aim.id = null; input.touchAim.active = false; input.touchAim.x = 0; input.touchAim.y = 0; }
+    }
+  };
+  canvas.addEventListener('touchend', endTouch, {passive:false});
+  canvas.addEventListener('touchcancel', endTouch, {passive:false});
+}
 // Space is the fire key in game: stop it from scrolling or activating a focused button (e.g. Pause)
 const inGame = () => typeof state !== 'undefined' && state.phase !== 'menu' && (!menuEl || menuEl.style.display === 'none');
 window.addEventListener('keydown', e=>{ if(e.key === 'Tab' || (e.key === ' ' && inGame())) e.preventDefault(); input.keys[e.key.toLowerCase()] = true; if(e.code==='ShiftLeft') input.shiftL = true; if(e.code==='ShiftRight') input.shiftR = true; });
@@ -67,7 +136,7 @@ const MAX_MONEY_DROPS = 150;
 const MAX_BULLETS = 320;
 
 const floatingTexts = [];
-const camera = {shake:0, x:0, y:0};
+const camera = {shake:0, x:0, y:0, fx:0, fy:0, sx:0, sy:0}; // fx/fy = follow, sx/sy = shake
 
 // Perf: draw() runs every frame and used to write canvas.style.cursor and button style.display
 // unconditionally, plus hudP2CardY() forced layout (getBoundingClientRect) per frame. Cursor and
@@ -418,14 +487,24 @@ function addShake(amount){
 }
 
 function updateCamera(dt){
+  // v0.9.2: camera follows the midpoint of living players, clamped to the world
+  if(typeof state !== 'undefined' && (state.phase === 'wave' || state.phase === 'shop' || state.phase === 'upgrade' || state.phase === 'gameover' || state.phase === 'victory')){
+    let cx = 0, cy = 0, n = 0;
+    if(typeof players !== 'undefined') for(const p of players){ if(!p.dead){ cx += p.x; cy += p.y; n++; } }
+    if(n > 0){
+      cx /= n; cy /= n;
+      camera.fx = Math.max(W - WW, Math.min(0, W/2 - cx));
+      camera.fy = Math.max(H - WH, Math.min(0, H/2 - cy));
+    }
+  } else { camera.fx = 0; camera.fy = 0; }
   if(!settings.screenShake){
-    camera.shake = 0; camera.x = 0; camera.y = 0;
+    camera.shake = 0; camera.sx = 0; camera.sy = 0;
     return;
   }
   camera.shake = Math.max(0, camera.shake - dt * SHAKE_DECAY);
   const a = Math.random() * Math.PI * 2;
   const m = camera.shake * SHAKE_PX_PER_UNIT;
-  camera.x = Math.cos(a) * m;
-  camera.y = Math.sin(a) * m;
+  camera.sx = Math.cos(a) * m;
+  camera.sy = Math.sin(a) * m;
 }
 

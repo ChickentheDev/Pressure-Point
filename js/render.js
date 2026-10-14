@@ -197,8 +197,108 @@ function drawPlayerWeapon(p){
 
 // v0.6.0 paper-doll anchors: [dx, dy] in screen px relative to player centre
 const COSMETIC_ANCHOR = { crown:[0,-23], armor:[0,-2], belt:[0,7] };
-function drawPlayers(){
-  for(let i=0;i<players.length;i++){
+// v0.9.2 ambient birds: tiny procedural birds with flapping wings
+function drawCritters(){
+  for(const c of critters){
+    if(c.mode === 'gone') continue;
+    const flying = c.mode === 'fly';
+    const dir = c.dir || 1;
+    const hopLift = c.mode === 'hop' ? Math.sin((1 - Math.max(0, c.hopT2)/0.28) * Math.PI) * 8 : 0;
+    const y = c.y - (flying ? 14 : 0) - hopLift;
+    ctx.save();
+    ctx.translate(c.x, y);
+    // shadow
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(0, (flying ? 14 : 0) + hopLift + 6, flying ? 5 : 7, 2.5, 0, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.scale(dir, 1);
+    const flap = flying ? Math.sin(c.flap) : 0;
+    // wings (behind body)
+    ctx.fillStyle = '#5a4f44';
+    if(flying){
+      const wAng = flap * 0.9;
+      for(const s of [-1, 1]){
+        ctx.save();
+        ctx.rotate(s * (0.5 + wAng * 0.6));
+        ctx.beginPath(); ctx.ellipse(s * 7, -4, 7, 2.8, s * 0.5, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+      }
+    } else {
+      ctx.beginPath(); ctx.ellipse(-1, -3, 6, 2.4, -0.4, 0, Math.PI*2); ctx.fill(); // folded wing
+    }
+    // body
+    ctx.fillStyle = '#4a4038';
+    ctx.beginPath(); ctx.ellipse(0, 0, 6.5, 4.5, 0, 0, Math.PI*2); ctx.fill();
+    // tail
+    ctx.beginPath(); ctx.moveTo(-6, -1); ctx.lineTo(-11, -4 + (flying ? flap*2 : 0)); ctx.lineTo(-6, 2); ctx.closePath(); ctx.fill();
+    // head
+    ctx.fillStyle = '#54493e';
+    ctx.beginPath(); ctx.arc(5, -3.5, 3.4, 0, Math.PI*2); ctx.fill();
+    // beak
+    ctx.fillStyle = '#d8a24a';
+    ctx.beginPath(); ctx.moveTo(8, -4); ctx.lineTo(11.5, -2.8); ctx.lineTo(8, -1.8); ctx.closePath(); ctx.fill();
+    // eye
+    ctx.fillStyle = '#1a1512';
+    ctx.beginPath(); ctx.arc(6, -4.2, 0.9, 0, Math.PI*2); ctx.fill();
+    // little feet when perched
+    if(!flying){
+      ctx.strokeStyle = '#d8a24a'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(-2, 4); ctx.lineTo(-2, 7); ctx.moveTo(2, 4); ctx.lineTo(2, 7); ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+// v0.9.2 minimap: the world is 3x the viewport, so show where everything is
+function drawMinimap(){
+  const mw = 168, mh = Math.round(mw * WH / WW), mx = W - mw - 12, my = H - mh - 12;
+  const sx = mw / WW, sy = mh / WH;
+  ctx.save();
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = 'rgba(10,14,20,0.85)';
+  ctx.strokeStyle = 'rgba(120,200,255,0.35)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.rect(mx, my, mw, mh); ctx.fill(); ctx.stroke();
+  ctx.globalAlpha = 1;
+  const dot = (x, y, r, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(mx + x*sx, my + y*sy, r, 0, Math.PI*2); ctx.fill(); };
+  for(const m of moneyDrops) dot(m.x, m.y, 1.2, '#ffd166');
+  for(const t of turrets) dot(t.x, t.y, 2, '#6ef2b1');
+  for(const e of enemies) dot(e.x, e.y, e.isBoss ? 3.5 : e.elite ? 2.2 : 1.5, e.isBoss ? '#ff4444' : e.elite ? '#ff9f1c' : '#ff6b6b');
+  for(const p of players) if(!p.dead) dot(p.x, p.y, 2.5, '#6cd6ff');
+  // viewport rect
+  ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(mx + (-camera.fx)*sx, my + (-camera.fy)*sy, W*sx, H*sy);
+  ctx.restore();
+}
+// v0.9.2 touch controls: twin virtual sticks + dash button, drawn in screen space
+function drawTouchControls(){
+  if(!input.touchSeen) return;
+  ctx.save();
+  const stick = (s) => {
+    if(s.id === null) return;
+    ctx.globalAlpha = 0.28;
+    ctx.fillStyle = '#8fb8d8';
+    ctx.beginPath(); ctx.arc(s.ox, s.oy, 55, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = '#d8ecff';
+    ctx.beginPath(); ctx.arc(s.ox + (s.kx||0), s.oy + (s.ky||0), 24, 0, Math.PI*2); ctx.fill();
+  };
+  stick(touchSticks.move);
+  stick(touchSticks.aim);
+  // dash button
+  const db = dashBtnPos();
+  ctx.globalAlpha = 0.35;
+  ctx.fillStyle = input.touchDash ? '#ffd166' : '#8fb8d8';
+  ctx.beginPath(); ctx.arc(db.x, db.y, DASH_BTN.r, 0, Math.PI*2); ctx.fill();
+  ctx.globalAlpha = 0.8;
+  ctx.fillStyle = '#0a0e14';
+  ctx.font = 'bold 13px "Trebuchet MS", system-ui, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('DASH', db.x, db.y);
+  ctx.restore();
+}
+function drawPlayers(){  for(let i=0;i<players.length;i++){
     const p = players[i];
     if(p.dead){
       // downed marker with revive progress ring (co-op)
@@ -861,12 +961,15 @@ function drawEffects(){
   // adrenaline vignette: pulsing red edges when a player is under 30% HP
   const adrenP = (typeof players !== 'undefined') && players.some(p => p.adrenaline && !p.dead);
   if(adrenP){
+    ctx.save();
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0); // v0.9.2: screen space, not camera space
     const pulse = 0.25 + Math.sin(state.animTime * 6) * 0.1;
     const vg = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*0.35, W/2, H/2, Math.max(W,H)*0.7);
     vg.addColorStop(0, 'rgba(255,30,30,0)');
     vg.addColorStop(1, `rgba(255,30,30,${pulse})`);
     ctx.fillStyle = vg;
     ctx.fillRect(0, 0, W, H);
+    ctx.restore();
   }
 }
 
@@ -971,8 +1074,8 @@ function draw(){
   // through the lighting shader; HUD/menus draw directly to the screen after.
   const glOn = window.WebGLFX && WebGLFX.active();
   if(glOn) WebGLFX.beginWorld(); else ctx.clearRect(0,0,W,H);
-  drawBackground();
   if(state.phase === 'menu'){
+    drawBackground();
     // menu is DOM; don't paint the in-game HUD behind it
     if(glOn) WebGLFX.endWorld();
     setDisplay(restartBtn, 'none');
@@ -982,9 +1085,16 @@ function draw(){
   }
   if(state.phase === 'wave' || state.phase === 'gameover') setCursor('crosshair');
   ctx.save();
-  ctx.translate(camera.x, camera.y);
+  ctx.translate(camera.fx + camera.sx, camera.fy + camera.sy); // v0.9.2 follow + shake
+  // v0.9.2: world ground scrolls with the camera (3x viewport world)
+  if(!(window.FX && FX.drawWorldGround())){
+    const grad = ctx.createLinearGradient(0,0,WW,WH);
+    grad.addColorStop(0, palette.bg1); grad.addColorStop(0.55, palette.bg3); grad.addColorStop(1, palette.bg2);
+    ctx.fillStyle = grad; ctx.fillRect(0,0,WW,WH);
+  }
   drawEffects();
   if(window.FX) FX.drawUnder();   // [brad-fx] dash trail
+  drawCritters(); // v0.9.2 ambient birds (on the ground, under players)
   drawPlayers();
   drawTurrets(); // v0.8.3 sentry turrets
   if(window.FX) FX.drawOver();    // [brad-fx] particles, glows, muzzle flash, tracers
@@ -992,6 +1102,8 @@ function draw(){
   if(glOn) WebGLFX.endWorld();   // world composited with lighting; ctx is the screen again
   // [brad-ui] the HUD is hidden behind the shop (it shows wallet/stats itself) and the game-over screen
   if(state.phase !== 'shop' && state.phase !== 'gameover'){ if(typeof USE_DOM_UI === 'undefined' || !USE_DOM_UI) drawHUD(); drawWaveBanner(); drawSecondWind(); }
+  if(state.phase === 'wave') drawMinimap(); // v0.9.2
+  if(state.phase === 'wave') drawTouchControls(); // v0.9.2 on-screen joystick
   if(state.phase === 'victory') drawVictory();
   drawUpgradeSelector();
   drawShop();

@@ -1,4 +1,8 @@
 ## Unreleased
+- **Dust everywhere**: new expanding dust-puff particles kicked up by dashes, parachute landings, every explosion and elemental reaction, enemy deaths (big burst for bosses), leaper slams, Overlord burrow erupts, burster blasts, charger charges, turret deploy/expire, Second Wind revives, and hopping birds.
+- **Ambient birds**: little animated birds hop around the arena — they scatter (with a chirp and a dust puff) when players, enemies, or explosions get close, then flutter back in from the edges.
+- **Map is 3x bigger**: the arena is now 3x the viewport in each dimension with a camera that follows the player midpoint (clamped to the world), enemies and bosses spawn just off-view near players, the stone-tile ground renders at world scale, and a live minimap (players, enemies, elites, bosses, loot, turrets + viewport rect) sits in the corner.
+- **Touch controls**: phones/tablets are auto-detected — twin virtual sticks appear (left moves, right aims and fires; auto-fire with auto-aim when the right stick is idle) plus a dash button. Audio unlocks on first touch.
 - **Bug fix**: kills awarded XP/currency twice (duplicate `awardToPlayerById` call in `killEnemy`) — now awarded exactly once.
 - **Bug fix**: shock-chain kills could splice the enemy array mid-loop and kill the wrong enemy — chain kills now resolve through the normal death check.
 - **Boss loot**: bosses always drop a free random item plus a money shower, with a gold shockwave ring.

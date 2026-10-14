@@ -375,26 +375,27 @@
     const themeId = (typeof mapBg !== 'undefined' && typeof state !== 'undefined') ? mapBg(state.mapId, state.danger) : 'rust';
     const TH = (typeof MINI_MAPS !== 'undefined' && MINI_MAPS[themeId]) || MINI_MAPS.rust;
     const TR = TH.tile;
-    // Perf: size the offscreen canvas to the real backing store (canvas.width/height), not
-    // Math.round(W*dpr) — resize() uses Math.floor, so this avoids a 1px resample every frame.
-    const cw = Math.max(1, canvas.width), ch = Math.max(1, canvas.height);
+    // v0.9.2: the world is 3x the viewport — bake the ground at half world resolution
+    // (full-res would be ~150MB at hidpi) and upscale on draw; it's a background.
+    const GS = 0.5;
+    const cw = Math.max(1, Math.ceil(WW * GS)), ch = Math.max(1, Math.ceil(WH * GS));
     const c = document.createElement('canvas');
     c.width = cw; c.height = ch;
     const g = c.getContext('2d');
-    g.scale(cw / W, ch / H);
+    g.scale(cw / WW, ch / WH);
     let seed = 20261013;                             // fixed seed: arena stays put between frames and runs
     const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
 
     // 1. dark void outside the arena
-    g.fillStyle = TH.void; g.fillRect(0, 0, W, H);
+    g.fillStyle = TH.void; g.fillRect(0, 0, WW, WH);
     for(let i = 0; i < 260; i++){
       g.fillStyle = rnd() < 0.5 ? 'rgba(255,255,255,0.015)' : 'rgba(0,0,0,0.06)';
-      g.fillRect(rnd() * W, rnd() * H, 2 + rnd() * 3, 2 + rnd() * 3);
+      g.fillRect(rnd() * WW, rnd() * WH, 2 + rnd() * 3, 2 + rnd() * 3);
     }
 
     // 2. arena rect, inset for the border frame
-    const bw = Math.max(20, Math.min(34, Math.round(Math.min(W, H) * 0.035)));
-    const ax = bw, ay = bw, aw = W - bw * 2, ah = H - bw * 2;
+    const bw = Math.max(20, Math.min(34, Math.round(Math.min(WW, WH) * 0.035)));
+    const ax = bw, ay = bw, aw = WW - bw * 2, ah = WH - bw * 2;
 
     // 3. stone tile floor with per-tile variation
     const TILE = 96;
@@ -462,45 +463,52 @@
 
     // 5. ornate border frame: dark rim, bronze diamond-studded band, light stone lip
     g.fillStyle = TH.rim;
-    g.fillRect(0, 0, W, bw); g.fillRect(0, H - bw, W, bw); g.fillRect(0, 0, bw, H); g.fillRect(W - bw, 0, bw, H);
+    g.fillRect(0, 0, WW, bw); g.fillRect(0, WH - bw, WW, bw); g.fillRect(0, 0, bw, WH); g.fillRect(WW - bw, 0, bw, WH);
     const bandW = Math.round(bw * 0.52), bandOff = Math.round((bw - bandW) / 2);
     g.fillStyle = TH.band;
-    g.fillRect(bandOff, bandOff, W - bandOff * 2, bandW);
-    g.fillRect(bandOff, H - bandOff - bandW, W - bandOff * 2, bandW);
-    g.fillRect(bandOff, bandOff, bandW, H - bandOff * 2);
-    g.fillRect(W - bandOff - bandW, bandOff, bandW, H - bandOff * 2);
+    g.fillRect(bandOff, bandOff, WW - bandOff * 2, bandW);
+    g.fillRect(bandOff, WH - bandOff - bandW, WW - bandOff * 2, bandW);
+    g.fillRect(bandOff, bandOff, bandW, WH - bandOff * 2);
+    g.fillRect(WW - bandOff - bandW, bandOff, bandW, WH - bandOff * 2);
     g.fillStyle = '#a8764f';
     const step = 46;
     const diamond = (x, y, s) => { g.beginPath(); g.moveTo(x, y - s); g.lineTo(x + s, y); g.lineTo(x, y + s); g.lineTo(x - s, y); g.closePath(); g.fill(); };
-    for(let x = bandOff + step / 2; x < W - bandOff; x += step){ diamond(x, bandOff + bandW / 2, 5); diamond(x, H - bandOff - bandW / 2, 5); }
-    for(let y = bandOff + step / 2; y < H - bandOff; y += step){ diamond(bandOff + bandW / 2, y, 5); diamond(W - bandOff - bandW / 2, y, 5); }
+    for(let x = bandOff + step / 2; x < WW - bandOff; x += step){ diamond(x, bandOff + bandW / 2, 5); diamond(x, WH - bandOff - bandW / 2, 5); }
+    for(let y = bandOff + step / 2; y < WH - bandOff; y += step){ diamond(bandOff + bandW / 2, y, 5); diamond(WW - bandOff - bandW / 2, y, 5); }
     g.strokeStyle = TH.lip; g.lineWidth = 3;
     g.strokeRect(ax - 1.5, ay - 1.5, aw + 3, ah + 3);
     g.strokeStyle = 'rgba(0,0,0,0.45)'; g.lineWidth = 2;
-    g.strokeRect(1, 1, W - 2, H - 2);
+    g.strokeRect(1, 1, WW - 2, WH - 2);
 
     // 6. soft inner shadow so the arena sits in the void
-    const vig = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.42, W / 2, H / 2, Math.max(W, H) * 0.72);
+    const vig = g.createRadialGradient(WW / 2, WH / 2, Math.min(WW, WH) * 0.42, WW / 2, WH / 2, Math.max(WW, WH) * 0.72);
     vig.addColorStop(0, 'rgba(0,0,0,0)'); vig.addColorStop(1, 'rgba(8,6,12,0.38)');
-    g.fillStyle = vig; g.fillRect(0, 0, W, H);
+    g.fillStyle = vig; g.fillRect(0, 0, WW, WH);
     return c;
   }
 
   // draws the whole background; false = not ready yet (game.js then draws its old background)
   function drawGround(){
     if(!ready('decals')) return false;
-    const _th = (typeof mapBg !== 'undefined' && typeof state !== 'undefined') ? mapBg(state.mapId, state.danger) : 'rust';
-    const key = W + 'x' + H + '@' + canvas.width + 'x' + canvas.height + '#' + _th;
-    if(key !== groundKey){ groundCv = buildGround(); groundKey = key; }
-    // Perf: true 1:1 blit of the backing-store-sized canvas. The CTM is DPR-scaled
-    // (resize()), so blit under identity — drawImage(cv,0,0) under the scaled CTM
-    // zoomed the ground by DPR and pushed the baked vignette center off screen-center
-    // on hidpi displays ("map off center"). save/restore keeps the DPR transform intact.
+    ensureGround();
+    // menu backdrop: stretch the world ground over the viewport
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(groundCv, 0, 0);
+    ctx.drawImage(groundCv, 0, 0, canvas.width, canvas.height);
     ctx.restore();
     return true;
+  }
+  // v0.9.2: world-space ground, drawn inside the camera transform during waves
+  function drawWorldGround(){
+    if(!ready('decals')) return false;
+    ensureGround();
+    ctx.drawImage(groundCv, 0, 0, WW, WH);
+    return true;
+  }
+  function ensureGround(){
+    const _th = (typeof mapBg !== 'undefined' && typeof state !== 'undefined') ? mapBg(state.mapId, state.danger) : 'rust';
+    const key = WW + 'x' + WH + '#' + _th;
+    if(key !== groundKey){ groundCv = buildGround(); groundKey = key; }
   }
   function drawTree(){                              // called with the tree's transform already applied
     if(!ready('tree')) return false;
@@ -591,5 +599,5 @@
     for(const r of rings) out.push({kind:'ring', x:r.x, y:r.y, life:r.life, max:0.32, color:r.color, big:true});
     return out;
   }
-  window.FX = { glow, drawGround, drawTree, drawMoney, drawMaterialIcon, frame, drawPlayer, drawCosmetic, drawEnemy, drawUnder, drawOver, ready, stats, getLights, SHEETS };
+  window.FX = { glow, drawGround, drawWorldGround, drawTree, drawMoney, drawMaterialIcon, frame, drawPlayer, drawCosmetic, drawEnemy, drawUnder, drawOver, ready, stats, getLights, SHEETS };
 })();

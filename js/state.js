@@ -129,7 +129,7 @@ function createPlayer(x,y){ return {
   downed:false, downT:0, secondWindUsed:false,
   turretCharges:0, turretMax:0,
 }; }
-const players = [ createPlayer(W/2, H/2) ];
+const players = [ createPlayer(WW/2, WH/2) ];
 let player = players[0];
 
 const bullets = [];
@@ -161,6 +161,28 @@ function spawnBlood(x, y, color, n){
       grav:520, life:0.3+Math.random()*0.3, r:1.5+Math.random()*2.5, color:c});
   }
 }
+// v0.9.2 dust: soft tan puffs that drift, expand and fade — kicked up by dashes,
+// landings, explosions, slams and deaths
+function spawnDust(x, y, n, opts){
+  opts = opts || {};
+  const col = opts.color || '#c9bfa8';
+  for(let k=0;k<n;k++){
+    const a = Math.random()*Math.PI*2, sp = (opts.speed || 90) * (0.4 + Math.random()*0.8);
+    addParticle({x:x+rand(-6,6), y:y+rand(-4,4), vx:Math.cos(a)*sp, vy:Math.sin(a)*sp - (opts.up || 45),
+      life:0.4+Math.random()*0.4, r:(opts.r || 4)*(0.7+Math.random()*0.7), grow:(opts.grow || 14),
+      color:col});
+  }
+}
+// v0.9.2 ambient birds: harmless critters that hop around and scatter from danger
+const critters = [];
+function spawnCritters(){
+  critters.length = 0;
+  const n = 4 + Math.floor(Math.random()*3);
+  for(let k=0;k<n;k++){
+    critters.push({x:rand(60, WW-60), y:rand(60, WH-60), vx:0, vy:0, mode:'perch',
+      t:rand(0,10), hopT:rand(1,4), dir:Math.random()<0.5?-1:1, flap:Math.random()*6.28, respawn:0});
+  }
+}
 
 // Shop
 const shop = { items: [], selection: 0, rerollCost: 6, locked: [] };
@@ -180,6 +202,7 @@ function resetRun(){
   floatingTexts.length = 0;
   swings.length = 0;
   rings.length = 0;
+  critters.length = 0;
   state.wave = 1;
   state.endless = false;
   state.waveSpawned = 0;
