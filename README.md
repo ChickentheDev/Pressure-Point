@@ -1,24 +1,26 @@
-# Pressure Point — v0.9
+# Pressure Point — v1.0
 
 **[Play online](https://chickenthedev.github.io/Pressure-Point/)** — no download, full lighting and effects.
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.9 — Elemental reactions, Engineer class)
-- **Elemental reactions**: cross-element combos consume statuses — **Detonate** (shock on burning: AoE blast), **Melt** (ice on burning: burst), **Shatter** (shock on slowed: bonus damage + stun), **Hex Spread** (dark on afflicted: hex jumps to 2 nearby enemies).
-- **Engineer class** (unlock: Turret Master achievement): starts with a free Sentry Turret, turrets +50% damage and +50% uptime.
-- **New achievement**: Turret Master (25 turret kills in one run). Fresh menu art (elemental cataclysm).
+## Latest Changes (v1.0 — Full release)
+- **Map is 3x bigger**: the arena is 3x the viewport in each dimension, with a camera that follows you, enemies spawning just off-screen, and a live minimap (players, enemies, elites, bosses, loot, turrets).
+- **Touch controls**: phones and tablets are auto-detected — twin virtual sticks (left moves, right aims and fires, auto-fire when idle) plus a dash button.
+- **Dust everywhere**: expanding dust puffs on dashes, landings, explosions, kills, slams, and revives.
+- **Ambient birds**: little birds hop around the arena and scatter when danger gets close.
+- **Bug fixes**: kills no longer award double XP/currency; shock-chain kills can't delete the wrong enemy.
+- **Boss loot + mid-wave elites**: bosses drop a free item and a money shower; waves 3+ get an elite pack event.
+- **Graphics juice**: white-hot muzzle flashes, melee swing arcs, crit damage numbers, shockwave rings on every explosion.
+- **Fresh weapon art**: 23 weapons now use Sam's cartoon-style sprites with smooth (non-pixelated) icons.
+- **Fresh menu art**: elemental convergence — fire, ice, storm, and void spiraling into one core.
+
+## Previous (v0.9 — Elemental reactions, Engineer class)
+- **Elemental reactions**: Detonate, Melt, Shatter, Hex Spread cross-element combos.
+- **Engineer class** (unlock: Turret Master): free Sentry Turret, +50% turret damage/uptime.
 
 ## Previous (v0.8.3 — Turrets, second wind, elemental sets, upgrades)
-- **Elemental set bonuses**: 2 same-element weapons = tier I, 3+ = tier II (Inferno/Glacier/Storm/Hex sets, HUD badges).
-- **Weapon upgrades**: Arsenal Upgrades shop section — MK II (+30% dmg) and MK III (+25% more, +1 pierce).
-- **Second Wind** (solo): lethal damage downs you — kill within 6s to revive at 40% HP, once per run.
-- **Sentry Turret** item (epic): press T to deploy (25s, 60% of your damage, 1 charge/wave).
-
-## Previous (v0.8.2 — Parachute, debt, dark magic)
-- **Parachute drop-in** on wave 1, **loot debt** (recover last wave's loot before new money flows).
-- **Wildfire Rounds** item, **5 new weapons** (Ember Wand, Glacier Lance, Storm Rod, Void Tome, Soul Siphon).
-- **Black magic** element (hex) — arcane items now boost it.
+- **Elemental set bonuses** (Inferno/Glacier/Storm/Hex), **weapon MK II/III upgrades**, **Second Wind** revives, **Sentry Turret** item.
 
 
 

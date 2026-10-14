@@ -1,4 +1,4 @@
-## Unreleased
+## v1.0 — Full release
 - **Dust everywhere**: new expanding dust-puff particles kicked up by dashes, parachute landings, every explosion and elemental reaction, enemy deaths (big burst for bosses), leaper slams, Overlord burrow erupts, burster blasts, charger charges, turret deploy/expire, Second Wind revives, and hopping birds.
 - **Ambient birds**: little animated birds hop around the arena — they scatter (with a chirp and a dust puff) when players, enemies, or explosions get close, then flutter back in from the edges.
 - **Map is 3x bigger**: the arena is now 3x the viewport in each dimension with a camera that follows the player midpoint (clamped to the world), enemies and bosses spawn just off-view near players, the stone-tile ground renders at world scale, and a live minimap (players, enemies, elites, bosses, loot, turrets + viewport rect) sits in the corner.
@@ -9,6 +9,7 @@
 - **Mid-wave elite events**: waves 3+ get a warning banner halfway through, then an elite pack (2 + wave/6) drops in.
 - **Graphics**: muzzle flash (white-hot core + colored glow), melee swing arcs, crit damage numbers, expanding shockwave rings on explosions and boss deaths.
 - **New weapon art**: replaced 23 weapon sprites with Sam's cartoon-style art (transparent-background cutouts from his reference sheets) — sniper, sprayer, tesla, e-sword, flak, flamethrower, grenade, katana, mine, mortar, plasma, railgun, scattergun, cobalt pistol, grav shotgun, harpoon gun, longshot DMR, minigun, pulse rifle, RPG, shotgun, titan cannon, viper SMG. Shop/HUD icons render smooth (no more pixelated upscaling) for the new art.
+- **New menu art**: elemental convergence — fire, ice, storm, and void streams spiraling into a bright core (fresh procedural art for the v1.0 release).
 
 ## v0.9 — Elemental reactions, Engineer class
 - **Elemental reactions**: cross-element combos consume existing statuses — **Detonate** (shock on burning: AoE blast), **Melt** (ice on burning: burst damage), **Shatter** (shock on slowed: bonus damage + 0.9s stun), **Hex Spread** (dark on any afflicted enemy: hex jumps to 2 nearby enemies).
