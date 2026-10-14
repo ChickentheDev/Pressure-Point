@@ -102,6 +102,11 @@ if(IS_TOUCH_DEVICE){
   }, {passive:false});
   const endTouch = (e)=>{
     e.preventDefault();
+    // level-up screen: touchstart preventDefault kills click events, so handle taps here
+    if(typeof state !== 'undefined' && state.phase === 'upgrade' && e.changedTouches.length){
+      const pos = touchPos(e.changedTouches[0]);
+      if(typeof tapUpgrade === 'function') tapUpgrade(pos.x, pos.y);
+    }
     for(const t of e.changedTouches){
       if(t.identifier === touchSticks.move.id){ touchSticks.move.id = null; input.touchMove.active = false; input.touchMove.x = 0; input.touchMove.y = 0; }
       if(t.identifier === touchSticks.aim.id){ touchSticks.aim.id = null; input.touchAim.active = false; input.touchAim.x = 0; input.touchAim.y = 0; }

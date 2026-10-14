@@ -1095,25 +1095,29 @@ canvas.addEventListener('contextmenu', (e)=>{
   }
 });
 
+// shared by mouse clicks and touch taps (touchstart preventDefault kills click events on iOS)
+function tapUpgrade(mx, my){
+  if(state.phase !== 'upgrade') return false;
+  const L = getUpgradeLayout();
+  for(let i=0;i<upgradeChoices.items.length;i++){
+    if(inRect(mx, my, L.cards[i])){
+      upgradeChoices.selection = i;
+      audio.click();
+      applyUpgradeChoice(upgradeChoices.items[i]);
+      // open shop after upgrade
+      moneyDrops.length = 0;
+      state.phase = 'shop';
+      state.shopAnim = 0;
+      buildShop();
+      return true;
+    }
+  }
+  return false;
+}
+
 canvas.addEventListener('click', (e)=>{
   const r = canvas.getBoundingClientRect(); const mx = e.clientX - r.left, my = e.clientY - r.top;
-  if(state.phase === 'upgrade'){
-    const L = getUpgradeLayout();
-    for(let i=0;i<upgradeChoices.items.length;i++){
-      if(inRect(mx, my, L.cards[i])){
-        upgradeChoices.selection = i;
-        audio.click();
-        applyUpgradeChoice(upgradeChoices.items[i]);
-        // open shop after upgrade
-        moneyDrops.length = 0;
-        state.phase = 'shop';
-        state.shopAnim = 0;
-        buildShop();
-        return;
-      }
-    }
-    return;
-  }
+  if(tapUpgrade(mx, my)) return;
   if(state.phase !== 'shop' || state.shopView === 'stats') return;
   const B = getShopButtons();
   if(inRect(mx, my, B.reroll)){ rerollShop(); return; }
