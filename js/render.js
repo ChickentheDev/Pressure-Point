@@ -716,7 +716,9 @@ function drawEffects(){
   }
 
   // enemies
+  ctx.globalAlpha = 1;
   for(const e of enemies){
+    ctx.globalAlpha = e.phased ? 0.35 : 1;
     const wob = 1 + Math.sin(state.animTime * 5 + e.x * 0.02 + e.y * 0.01) * 0.03;
     const flash = e.hitFlash > 0 ? e.hitFlash / 0.1 : 0;
     drawGroundShadow(e.x, e.y + e.r * 0.9 + 2, e.r * 0.95, e.r * 0.35);
@@ -778,20 +780,17 @@ function drawEffects(){
     ctx.restore();
   }
 
-  // pickups: hearts + magnets
-  for(const k of pickups){
-    const bob = Math.sin(state.animTime * 4 + k.x * 0.1) * 3;
-    drawGroundShadow(k.x, k.y + 6, 8, 3);
-    if(k.kind === 'heart'){
-      ctx.fillStyle = '#ff5d7a';
-      ctx.beginPath(); ctx.arc(k.x - 3, k.y + bob - 2, 4.5, 0, Math.PI*2); ctx.arc(k.x + 3, k.y + bob - 2, 4.5, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(k.x - 7, k.y + bob); ctx.lineTo(k.x, k.y + bob + 7); ctx.lineTo(k.x + 7, k.y + bob); ctx.fill();
-    } else {
-      ctx.strokeStyle = '#6cd6ff'; ctx.lineWidth = 4; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.arc(k.x, k.y + bob, 7, Math.PI * 0.9, Math.PI * 2.1); ctx.stroke();
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(k.x - 9.5, k.y + bob - 8.5, 5, 5); ctx.fillRect(k.x + 4.5, k.y + bob - 8.5, 5, 5);
+  // vortex wells: swirling gravity rings
+  for(const v of vortices){
+    const va = Math.min(1, v.t);
+    ctx.save();
+    ctx.globalAlpha = 0.7 * va;
+    ctx.strokeStyle = '#c77bff'; ctx.lineWidth = 3;
+    for(let ring=0; ring<3; ring++){
+      const rr = (state.animTime * 60 + ring * 40) % v.r;
+      ctx.beginPath(); ctx.arc(v.x, v.y, Math.max(4, v.r - rr), 0, Math.PI*2); ctx.stroke();
     }
+    ctx.restore();
   }
 
   // particles ([brad-fx] v0.56: soft additive glows instead of flat discs; fx.js adds the sparks)
@@ -806,6 +805,16 @@ function drawEffects(){
     ctx.globalAlpha = 1;
   }
   ctx.restore();
+  // adrenaline vignette: pulsing red edges when a player is under 30% HP
+  const adrenP = (typeof players !== 'undefined') && players.some(p => p.adrenaline && !p.dead);
+  if(adrenP){
+    const pulse = 0.25 + Math.sin(state.animTime * 6) * 0.1;
+    const vg = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*0.35, W/2, H/2, Math.max(W,H)*0.7);
+    vg.addColorStop(0, 'rgba(255,30,30,0)');
+    vg.addColorStop(1, `rgba(255,30,30,${pulse})`);
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, W, H);
+  }
 }
 
 function drawWaveBanner(){
