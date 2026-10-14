@@ -110,21 +110,34 @@ function bulletSprite(color, crit){
   const key = color + '|' + (crit ? 1 : 0);
   let s = bulletSpriteCache.get(key);
   if(!s){
-    const half = crit ? 22 : 18;
+    // directional tracer pointing +x: soft glow, colored body, white-hot core
+    const half = 24, len = crit ? 15 : 11, wid = crit ? 5 : 3.5;
     const c = document.createElement('canvas');
     c.width = c.height = half * 2;
     const g = c.getContext('2d');
-    const glowR = crit ? 13 : 10;
-    const gr = g.createRadialGradient(half, half, 0, half, half, glowR);
-    // same glow hues/alphas the old shadowBlur pass used
-    const gc = crit ? '255,209,102' : '255,255,255';
-    const ga = crit ? 0.7 : 0.35;
-    gr.addColorStop(0, `rgba(${gc},${ga})`);
+    g.translate(half, half);
+    const gr = g.createRadialGradient(0, 0, 0, 0, 0, half - 6);
+    const gc = crit ? '255,209,102' : '255,240,200';
+    gr.addColorStop(0, `rgba(${gc},0.5)`);
     gr.addColorStop(1, `rgba(${gc},0)`);
     g.fillStyle = gr;
-    g.beginPath(); g.arc(half, half, glowR, 0, Math.PI*2); g.fill();
-    g.fillStyle = color;
-    g.beginPath(); g.arc(half, half, crit ? 4 : 3, 0, Math.PI*2); g.fill();
+    g.beginPath(); g.arc(0, 0, half - 6, 0, Math.PI*2); g.fill();
+    // tail fading behind (-x)
+    const tail = g.createLinearGradient(len, 0, -len, 0);
+    tail.addColorStop(0, color);
+    tail.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = tail;
+    g.beginPath();
+    g.ellipse(0, 0, len, wid, 0, 0, Math.PI*2);
+    g.fill();
+    // white-hot core
+    g.fillStyle = 'rgba(255,255,255,0.95)';
+    g.beginPath();
+    g.ellipse(len*0.25, 0, len*0.55, wid*0.45, 0, 0, Math.PI*2);
+    g.fill();
+    // bright head
+    g.fillStyle = '#fff';
+    g.beginPath(); g.arc(len*0.7, 0, wid*0.55, 0, Math.PI*2); g.fill();
     s = {c, half};
     if(bulletSpriteCache.size > 64) bulletSpriteCache.clear();
     bulletSpriteCache.set(key, s);

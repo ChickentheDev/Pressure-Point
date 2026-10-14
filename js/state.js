@@ -137,6 +137,22 @@ const trees = [];
 const fruits = [];
 
 function addParticle(p){ if(!settings.particleFx) return; if(particles.length < MAX_PARTICLES) particles.push(p); }
+// darken a hex color for blood (each enemy bleeds its own color)
+function shadeHex(hex, f){
+  let h = String(hex||'#ff5d5d').replace('#','');
+  if(h.length === 3) h = h.split('').map(c=>c+c).join('');
+  const n = parseInt(h.slice(0,6), 16) || 0xff5d5d;
+  const r = Math.round(((n>>16)&255)*f), g = Math.round(((n>>8)&255)*f), b = Math.round((n&255)*f);
+  return `rgb(${r},${g},${b})`;
+}
+function spawnBlood(x, y, color, n){
+  const c = shadeHex(color, 0.55);
+  for(let k=0;k<n;k++){
+    const a = Math.random()*Math.PI*2, sp = 50+Math.random()*150;
+    addParticle({x:x+rand(-4,4), y:y+rand(-4,4), vx:Math.cos(a)*sp, vy:Math.sin(a)*sp-50,
+      grav:520, life:0.3+Math.random()*0.3, r:1.5+Math.random()*2.5, color:c});
+  }
+}
 
 // Shop
 const shop = { items: [], selection: 0, rerollCost: 6, locked: [] };

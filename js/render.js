@@ -708,7 +708,11 @@ function drawEffects(){
   // colors/sizes and a matching soft glow, so the look is unchanged.
   for(const b of bullets){
     const s = bulletSprite(b.crit ? '#ffd166' : (b.color || '#fffa'), b.crit);
-    ctx.drawImage(s.c, b.x - s.half, b.y - s.half);
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.rotate(Math.atan2(b.vy, b.vx));
+    ctx.drawImage(s.c, -s.half, -s.half);
+    ctx.restore();
   }
 
   // enemies

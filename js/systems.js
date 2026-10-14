@@ -629,6 +629,7 @@ function killEnemy(index, ownerId){
   }
   awardToPlayerById(ownerId, e.xp, e.money);
   addParticle({x:e.x,y:e.y,life:0.35,r:16,color:'#ff5d5d'});
+  spawnBlood(e.x, e.y, e.color, e.isBoss ? 24 : 10);
   addShake(e.isBoss ? 12 : 3);
   audio.beep(140,0.06,'triangle',0.04);
   // splitter: bursts into runners on death (elite: 4 instead of 2)
@@ -1048,7 +1049,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
   }
 
   // bullets update
-  for(let i=bullets.length-1;i>=0;i--){ const b=bullets[i]; if(b.fresh){ b.fresh = false; } else { b.px = b.x; b.py = b.y; } const stepx = b.vx*dt, stepy = b.vy*dt; b.x += stepx; b.y += stepy; b.life -= dt; b.dist = (b.dist || 0) + Math.sqrt(stepx*stepx + stepy*stepy); if(b.life<=0 || (b.maxDist && b.dist >= b.maxDist) || b.x<-50 || b.x>W+50 || b.y<-50 || b.y>H+50 || bullets.length>MAX_BULLETS){ if(b.explosive && b.dist > 60) detonate(b, b.x, b.y, null, -1, b.ownerId); bullets.splice(i,1); } }
+  for(let i=bullets.length-1;i>=0;i--){ const b=bullets[i]; if(b.fresh){ b.fresh = false; } else { b.px = b.x; b.py = b.y; } const stepx = b.vx*dt, stepy = b.vy*dt; b.x += stepx; b.y += stepy; b.life -= dt; b.dist = (b.dist || 0) + Math.sqrt(stepx*stepx + stepy*stepy); if(b.life<=0 || (b.maxDist && b.dist >= b.maxDist) || b.x<-50 || b.x>W+50 || b.y<-50 || b.y>H+50 || bullets.length>MAX_BULLETS){ const dropped = b.life<=0 || (b.maxDist && b.dist >= b.maxDist); if(dropped && b.x>0 && b.x<W && b.y>0 && b.y<H){ addParticle({x:b.x, y:b.y, life:0.22, r:5, color:b.color||'#ffeeaa'}); for(let sk=0; sk<3; sk++){ const sa=Math.random()*6.28, ss=30+Math.random()*70; addParticle({x:b.x, y:b.y, vx:Math.cos(sa)*ss, vy:Math.sin(sa)*ss-30, grav:300, life:0.25, r:1.5, color:b.color||'#ffeeaa'}); } } if(b.explosive && b.dist > 60) detonate(b, b.x, b.y, null, -1, b.ownerId); bullets.splice(i,1); } }
 
   // bullets vs trees (destructibles)
   for(let i=bullets.length-1;i>=0;i--){
@@ -1252,6 +1253,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
             e.lastHitBy = b.ownerId;
             applyKnockback(e, b.vx, b.vy, b.damage);
             e.hitFlash = 0.1; // visual only
+            spawnBlood(e.x, e.y, e.color, 3);
             const dealt = Math.max(1, Math.round(Math.min(b.damage, b.damage + e.hp)));
             floatingTexts.push({x:e.x, y:e.y-6, vx:rand(-12,12), vy:-40, life:0.8, text: dealt, color: b.crit ? '#ffd166' : palette.textLight});
             addShake(b.crit ? 2 : 0.5);
@@ -1362,7 +1364,10 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
   }
 
   // particles
-  for(let i=particles.length-1;i>=0;i--){ particles[i].life -= dt; if(particles[i].life <= 0) particles.splice(i,1); }
+  for(let i=particles.length-1;i>=0;i--){ const pt = particles[i]; pt.life -= dt;
+    if(pt.vx || pt.vy){ pt.x += (pt.vx||0)*dt; pt.y += (pt.vy||0)*dt; if(pt.grav) pt.vy += pt.grav*dt;
+      const fr = Math.max(0, 1 - 2.2*dt); pt.vx *= fr; pt.vy *= fr; }
+    if(pt.life <= 0) particles.splice(i,1); }
   if(particles.length > MAX_PARTICLES){ particles.splice(0, particles.length - MAX_PARTICLES); }
   for(let i=floatingTexts.length-1;i>=0;i--){
     const ft = floatingTexts[i];
