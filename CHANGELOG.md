@@ -1,3 +1,6 @@
+## v0.8.2.1 — Arcane menu art
+- Menu background re-themed to an arcane sanctum (floating runes, magic circles, glowing obelisks).
+
 ## v0.8.2 — Parachute, debt, dark magic
 - **Parachute drop-in**: wave 1 starts with players parachuting from the sky (invulnerable until landing, dust-burst touchdown).
 - **Loot debt**: uncollected money is vacuumed at wave end and drops around you next wave — collect last round's loot before new kill money flows (banked until debt is cleared).
