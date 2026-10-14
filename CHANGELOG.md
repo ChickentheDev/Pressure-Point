@@ -1,3 +1,11 @@
+## v0.8.2 — Parachute, debt, dark magic
+- **Parachute drop-in**: wave 1 starts with players parachuting from the sky (invulnerable until landing, dust-burst touchdown).
+- **Loot debt**: uncollected money is vacuumed at wave end and drops around you next wave — collect last round's loot before new kill money flows (banked until debt is cleared).
+- **Wildfire Rounds** (epic arcane): 25% chance fire hits spread burn to nearby enemies; stacks to max 4 owned.
+- **5 new weapons**: Ember Wand (fire), Glacier Lance (ice/pierce), Storm Rod (shock chain-3), Void Tome + Soul Siphon (black magic).
+- **Black magic** (new dark element, purple): applies hex — enemies take +20% damage. All arcane items grant +6% black-magic damage each.
+- **New menu art**: desert temple at golden hour (fresh art per the every-update rule).
+
 ## v0.8.1 — Cut pickups, more mechanics
 - **Removed**: heart/magnet pickups (cut per playtest feedback).
 - **Adrenaline**: dropping under 30% HP triggers +35% fire rate and +20% move speed, with a pulsing red vignette.

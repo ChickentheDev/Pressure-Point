@@ -1,16 +1,17 @@
-# Pressure Point — v0.8.1
+# Pressure Point — v0.8.2
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.8.1 — Cut pickups, more mechanics)
+## Latest Changes (v0.8.2 — Parachute, debt, dark magic)
+- **Parachute drop-in** on wave 1, **loot debt** (recover last wave's loot before new money flows).
+- **Wildfire Rounds** item, **5 new weapons** (Ember Wand, Glacier Lance, Storm Rod, Void Tome, Soul Siphon).
+- **Black magic** element (hex) — arcane items now boost it.
+- Fresh menu art (desert temple).
+
+## Previous (v0.8.1 — Cut pickups, more mechanics)
 - **Adrenaline** low-HP berserk mode, **Ricochet SMG** (bouncing bullets), **Vortex Cannon** (gravity wells).
 - **2 new enemies**: Phantom (phases untargetable), Leaper (AoE slam). Pickups removed.
 - Fresh menu art (storm cliffside).
-
-## Previous (v0.8.0 — Mechanics sprint)
-- **Killstreak combo** (up to 2x money/XP), **dash damage**, **heart/magnet pickups**.
-- **3 new weapons**: Frostbite, Hornet Swarm, Stormcaller. **2 new enemies**: Mender, Charger.
-- Fresh menu art (volcanic ember arena).
 
 ## Previous (v0.7.5 — New UI)
 - **DOM shop + HUD** rebuilt from the new design: card shop with rarity borders, real sprites, stats sidebar; crisp HUD with HP/XP bars, wave timer, weapon slots.
