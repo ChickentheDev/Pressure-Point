@@ -131,7 +131,8 @@ const weapons = [
   {id:'esword', name:'Energy Sword', type:'melee', rarity:'legendary', fireRate:0.6, bulletSpeed:450, spread:0.0, damage:45, mag:999, reload:0.2, recoil:0.7, color:'#00ffff', melee:true},
   {id:'mortar', name:'Mortar', type:'heavy', rarity:'rare', fireRate:0.9, bulletSpeed:380, spread:0.15, damage:55, mag:4, reload:2.2, recoil:1.9, color:'#888866', explosive:true, elemental:'fire', splashR:130},
 ];
-const weaponPrices = { pistol:60, harpoon:135, rifle:95, shotgun:115, heavy:230, blade:100, smg:70, dmr:125, flame:155, rpg:170, arc:150, minigun:240, rail:260, mine:115, sprayer:120, scatter:55, crossbow:65, sniper:130, katana:165, plasma:110, grenade:175, flak:180, tesla:250, esword:245, mortar:120 };
+const weaponPrices = { pistol:60, harpoon:135, rifle:95, shotgun:115, heavy:230, blade:100, smg:70, dmr:125, flame:155, rpg:170, arc:150, minigun:240, rail:260, mine:115, sprayer:120, scatter:55, crossbow:65, sniper:130, katana:165, plasma:110, grenade:175, flak:180, tesla:250, esword:245, mortar:120,
+  emberwand:150, glacier:170, stormrod:165, voidtome:175, soulsiphon:240, frostbite:160, hornet:120, stormcaller:250, ricochet:165, vortex:260 };
 
 const items = [
   {id:'plating', name:'Dense Plating', rarity:'rare', category:'tech', price:55, desc:'+20 Armor, -12% Move Speed', effects:{armor:20, speedMult:-0.12}, cosmetic:'armor'},
@@ -247,7 +248,8 @@ const items = [
   {id:'longbarrel', name:'Long Barrel', rarity:'common', category:'tech', price:32, desc:'+150 Bullet Range', effects:{rangeBonus:150}},
   {id:'scope', name:'Marksman Scope', rarity:'rare', category:'tech', price:58, desc:'+300 Bullet Range, +10% Accuracy', effects:{rangeBonus:300, accuracyMult:0.1}},
   {id:'railgun', name:'Rail Amplifier', rarity:'epic', category:'tech', price:110, desc:'+35% Bullet Range, +8% Damage', effects:{rangeMult:0.35, damageMult:0.08}},
-  {id:'mirror', name:'Mirror', rarity:'epic', category:'arcane', price:105, desc:'The next item you buy comes in duplicate (not another Mirror)', effects:{}}
+  {id:'mirror', name:'Mirror', rarity:'epic', category:'arcane', price:105, desc:'The next item you buy comes in duplicate (not another Mirror)', effects:{}},
+  {id:'sentry', name:'Sentry Turret', rarity:'epic', category:'tech', price:140, desc:'Press T to deploy an auto-turret (1 charge per wave). 25s uptime, fires at 60% of your damage.', effects:{turretCharges:1}}
 ];
 
 // ---- WASM shop bridge ----------------------------------------------------------------------------
@@ -407,6 +409,9 @@ const ACHIEVEMENTS = [
   {id:'map_abyss', name:'Into the Abyss', desc:'Clear wave 20 on Abyssal Hollow'},
   {id:'danger5_conqueror', name:'Inferno Conquered', desc:'Clear wave 20 on Danger 5'},
   {id:'nightmare_cartographer', name:'Nightmare Cartographer', desc:'Clear wave 20 on all 3 maps on Nightmare difficulty'},
+  {id:'second_wind', name:'Second Wind', desc:'Cheat death: get a kill while downed'},
+  {id:'elemental_set', name:'Elemental Mastery', desc:'Equip 3 weapons of the same element'},
+  {id:'mk3', name:'Master Gunsmith', desc:'Upgrade a weapon to MK III'},
 ];
 
 // ---- Maps: 3 full maps (unique enemies + difficulty), 8 mini-map background themes ----

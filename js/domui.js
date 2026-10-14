@@ -70,6 +70,22 @@ function renderDomShop(){
     `<div class="pp-slot w" title="${w.name}" style="border-color:${rarityColor(w.rarity)}">${weaponIconHTML(w)}</div>`
   ).join('');
 
+  // v0.8.3 arsenal upgrades: MK II / MK III per weapon
+  const upg = domEl('ppUpgrades');
+  if(upg){
+    const raw = p.ownedWeapons || [];
+    const rows = [];
+    for(let i=0;i<raw.length;i++){
+      const w = raw[i]; if(!w) continue;
+      const mk = w.mk || 1;
+      const cost = (typeof upgradeCostFor !== 'undefined') ? upgradeCostFor(w) : null;
+      const btn = mk >= 3 ? '<span class="pp-maxed">MAX</span>'
+        : `<button class="pp-buy" data-upgrade="${i}" ${(p.currency||0) >= cost ? '' : 'disabled'}>→ MK ${mk===1?'II':'III'} · ${cost} <i class="pp-gem"></i></button>`;
+      rows.push(`<div class="pp-upg"><span class="pp-ico">${weaponIconHTML(w)}</span><span class="pp-uname">${w.name}</span><span class="pp-mk">MK ${'I II III'.split(' ')[mk-1]}</span>${btn}</div>`);
+    }
+    upg.innerHTML = rows.join('') || '<div class="pp-slot" style="opacity:.3">—</div>';
+  }
+
   // stats sidebar (reuse pause-menu rows, restyled)
   const rows = (typeof playerStatRows !== 'undefined') ? playerStatRows(p) : '';
   domEl('ppStats').innerHTML = rows
@@ -108,6 +124,20 @@ function updateDomHud(){
     else cb.style.display = 'none';
   }
   if(domEl('ppHudItems')) domEl('ppHudItems').textContent = (p.items || []).length;
+  // v0.8.3: elemental set badges + turret charges
+  const setsEl = domEl('ppHudSets');
+  if(setsEl && typeof elementalTierSummary !== 'undefined'){
+    const sets = elementalTierSummary(p);
+    if(sets.length){
+      setsEl.style.display = '';
+      setsEl.innerHTML = sets.map(s => `<b style="color:${(typeof ELEM_TIER_COLORS !== 'undefined' && ELEM_TIER_COLORS[s.el]) || '#fff'}">${(typeof ELEM_TIER_NAMES !== 'undefined' && ELEM_TIER_NAMES[s.el]) || s.el} ${s.tier >= 2 ? 'II' : 'I'}</b>`).join(' · ');
+    } else setsEl.style.display = 'none';
+  }
+  const tuEl = domEl('ppHudTurret');
+  if(tuEl){
+    if((p.turretMax || 0) > 0){ tuEl.style.display = ''; tuEl.innerHTML = `🎯 Turret <b>${p.turretCharges || 0}</b> <small>[T]</small>`; }
+    else tuEl.style.display = 'none';
+  }
   if(typeof state !== 'undefined'){
     if(domEl('ppHudWave')) domEl('ppHudWave').textContent = 'Wave ' + state.wave;
     let tLeft = '';
@@ -156,6 +186,10 @@ document.addEventListener('click', (e) => {
     markShopDirty(); if(typeof audio !== 'undefined') audio.click(); return;
   }
   if(e.target.closest('#ppRerollBtn')){ if(typeof rerollShop !== 'undefined') rerollShop(); markShopDirty(); return; }
+  const up = e.target.closest('[data-upgrade]'); if(up){
+    if(typeof upgradeWeaponFor !== 'undefined' && players[0]) upgradeWeaponFor(players[0], +up.dataset.upgrade);
+    markShopDirty(); return;
+  }
   if(e.target.closest('#ppGoBtn')){ if(typeof startNextWave !== 'undefined') startNextWave(); return; }
   if(e.target.closest('#ppHudPause')){ if(typeof togglePause !== 'undefined') togglePause(); return; }
 });

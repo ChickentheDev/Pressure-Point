@@ -124,6 +124,9 @@ function createPlayer(x,y){ return {
   dashTimer:0, dashCooldown:0, dashDir:0, iFrames:0, vx:0, vy:0,
   classId: 'ironheart', className: 'Ironheart',
   lastHitTime:0, hitCooldown:0.5,
+  // v0.8.3: second wind + turret
+  downed:false, downT:0, secondWindUsed:false,
+  turretCharges:0, turretMax:0,
 }; }
 const players = [ createPlayer(W/2, H/2) ];
 let player = players[0];
@@ -133,6 +136,7 @@ const enemyBullets = [];
 const enemies = [];
 const moneyDrops = [];
 const vortices = []; // vortex cannon gravity wells
+const turrets = []; // v0.8.3: deployed sentry turrets {x,y,t,fireT,ownerId,dmg,angle}
 const particles = [];
 const trees = [];
 const fruits = [];
@@ -165,6 +169,7 @@ function resetRun(){
   bullets.length = 0;
   moneyDrops.length = 0;
   vortices.length = 0;
+  turrets.length = 0;
   particles.length = 0;
   state.combo = 0; state.comboT = 0; state.debt = 0; state.debtBank = 0;
   trees.length = 0;

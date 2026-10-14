@@ -1,3 +1,11 @@
+## v0.8.3 — Turrets, second wind, elemental sets, weapon upgrades
+- **Elemental set bonuses**: equipping 2 weapons of one element unlocks tier I, 3+ unlocks tier II — Inferno Set (+25% burn DPS/tier, +1s burn at II), Glacier Set (+1s slow/tier, slowed enemies take +10% at II), Storm Set (+1 chain jump/tier), Hex Set (+2s hex/tier, hex amp 20%→35% at II). HUD shows your active sets.
+- **Weapon upgrades**: the shop now has an Arsenal Upgrades section — take any weapon to MK II (+30% damage, +8% fire rate) and MK III (+25% more damage, +1 pierce).
+- **Second Wind** (solo): lethal damage downs you instead of killing you — get a kill within 6 seconds to revive at 40% HP, once per run. Red pulse + countdown overlay.
+- **Sentry Turret** (epic tech item): press T to deploy an auto-turret — 25s uptime, fires at 60% of your damage, 1 charge per wave per item owned.
+- **3 new achievements**: Second Wind, Elemental Mastery (3 same-element weapons), Master Gunsmith (MK III).
+- **New menu art**: elemental forge — fire, ice, storm and void converging on an anvil, sentry on guard (fresh art per the every-update rule).
+
 ## v0.8.2.1 — Arcane menu art
 - Menu background re-themed to an arcane sanctum (floating runes, magic circles, glowing obelisks).
 

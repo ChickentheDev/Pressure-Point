@@ -218,6 +218,18 @@ function drawPlayers(){
       }
       continue;
     }
+    // v0.8.3 second wind: downed players get a pulsing red ring with the countdown
+    if(p.downed && !p.dead){
+      const pulse = 0.5 + Math.sin(state.animTime * 10) * 0.3;
+      ctx.save();
+      ctx.globalAlpha = pulse;
+      ctx.strokeStyle = '#ff6b6b'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(p.x, p.y, 22, 0, Math.PI*2); ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(p.x, p.y, 22, -Math.PI/2, -Math.PI/2 + Math.max(0, p.downT/6) * Math.PI*2); ctx.stroke();
+      ctx.restore();
+    }
     const body = i===0 ? '#4a9eff' : '#ff6b6b';
     const moving = p.dashTimer > 0 || (state.phase === 'wave' && (p._lastX !== undefined) && (Math.abs(p.x - p._lastX) + Math.abs(p.y - p._lastY) > 0.2));
     p._lastX = p.x; p._lastY = p.y;
@@ -863,6 +875,57 @@ function drawWaveBanner(){
 
 // Celebration banner after clearing the final wave: names the unlocked danger (if any),
 // then update() returns to the menu after a few seconds. Not a victory screen.
+// v0.8.3: deployed sentry turrets (tripod base, rotating barrel, uptime ring)
+function drawTurrets(){
+  for(const tu of turrets){
+    const a = Math.min(1, tu.t / 3); // fade as uptime expires
+    ctx.save();
+    ctx.globalAlpha = Math.max(0.15, a);
+    ctx.strokeStyle = '#3a4a5f'; ctx.lineWidth = 3;
+    for(let k=0;k<3;k++){
+      const la = k * Math.PI*2/3 + 0.5;
+      ctx.beginPath(); ctx.moveTo(tu.x, tu.y);
+      ctx.lineTo(tu.x + Math.cos(la)*18, tu.y + Math.sin(la)*18); ctx.stroke();
+    }
+    ctx.fillStyle = '#2a3a4f';
+    ctx.beginPath(); ctx.arc(tu.x, tu.y, 12, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#6ef2b1'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(tu.x, tu.y, 12, 0, Math.PI*2); ctx.stroke();
+    ctx.save();
+    ctx.translate(tu.x, tu.y); ctx.rotate(tu.angle || 0);
+    ctx.fillStyle = '#6ef2b1';
+    ctx.fillRect(0, -3, 20, 6);
+    ctx.restore();
+    ctx.fillStyle = '#6ef2b1';
+    ctx.beginPath(); ctx.arc(tu.x, tu.y, 6, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = 'rgba(110,242,177,0.6)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(tu.x, tu.y, 17, -Math.PI/2, -Math.PI/2 + Math.PI*2*Math.max(0, tu.t/25)); ctx.stroke();
+    ctx.restore();
+  }
+}
+
+// v0.8.3: second-wind overlay — red pulse + countdown, screen space
+function drawSecondWind(){
+  const p = (typeof players !== 'undefined') && players.find(q => q.downed && !q.dead);
+  if(!p) return;
+  const pulse = 0.3 + Math.sin(state.animTime * 8) * 0.12;
+  const vg = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*0.3, W/2, H/2, Math.max(W,H)*0.7);
+  vg.addColorStop(0, 'rgba(255,30,30,0)');
+  vg.addColorStop(1, `rgba(255,30,30,${pulse})`);
+  ctx.fillStyle = vg;
+  ctx.fillRect(0, 0, W, H);
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ff6b6b';
+  ctx.font = uiFont(30, 'bold');
+  ctx.fillText('SECOND WIND', W/2, H*0.28);
+  ctx.fillStyle = '#ffd166';
+  ctx.font = uiFont(20, 'bold');
+  ctx.fillText(`GET A KILL — ${Math.max(0, Math.ceil(p.downT))}s`, W/2, H*0.28 + 36);
+  ctx.textAlign = 'start';
+  ctx.restore();
+}
+
 function drawVictory(){
   const t = Math.min(1, state.victoryTimer * 2);
   const y = H * 0.26;
@@ -900,11 +963,12 @@ function draw(){
   drawEffects();
   if(window.FX) FX.drawUnder();   // [brad-fx] dash trail
   drawPlayers();
+  drawTurrets(); // v0.8.3 sentry turrets
   if(window.FX) FX.drawOver();    // [brad-fx] particles, glows, muzzle flash, tracers
   ctx.restore();
   if(glOn) WebGLFX.endWorld();   // world composited with lighting; ctx is the screen again
   // [brad-ui] the HUD is hidden behind the shop (it shows wallet/stats itself) and the game-over screen
-  if(state.phase !== 'shop' && state.phase !== 'gameover'){ if(typeof USE_DOM_UI === 'undefined' || !USE_DOM_UI) drawHUD(); drawWaveBanner(); }
+  if(state.phase !== 'shop' && state.phase !== 'gameover'){ if(typeof USE_DOM_UI === 'undefined' || !USE_DOM_UI) drawHUD(); drawWaveBanner(); drawSecondWind(); }
   if(state.phase === 'victory') drawVictory();
   drawUpgradeSelector();
   drawShop();

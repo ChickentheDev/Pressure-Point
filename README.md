@@ -1,30 +1,31 @@
-# Pressure Point — v0.8.2.1
+# Pressure Point — v0.8.3
+
+**[Play online](https://chickenthedev.github.io/Pressure-Point/)** — no download, full lighting and effects.
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.8.2 — Parachute, debt, dark magic)
+## Latest Changes (v0.8.3 — Turrets, second wind, elemental sets, upgrades)
+- **Elemental set bonuses**: 2 same-element weapons = tier I, 3+ = tier II. Inferno Set (+25% burn DPS/tier), Glacier Set (+1s slow/tier, brittle at II), Storm Set (+1 chain/tier), Hex Set (+2s hex/tier, 35% amp at II).
+- **Weapon upgrades**: new Arsenal Upgrades shop section — MK II (+30% dmg) and MK III (+25% more, +1 pierce) per weapon.
+- **Second Wind** (solo): lethal damage downs you — kill within 6s to revive at 40% HP, once per run.
+- **Sentry Turret** item (epic): press T to deploy an auto-turret (25s, 60% of your damage, 1 charge/wave).
+- **3 new achievements**: Second Wind, Elemental Mastery, Master Gunsmith. Fresh menu art (elemental forge).
+
+## Previous (v0.8.2 — Parachute, debt, dark magic)
 - **Parachute drop-in** on wave 1, **loot debt** (recover last wave's loot before new money flows).
 - **Wildfire Rounds** item, **5 new weapons** (Ember Wand, Glacier Lance, Storm Rod, Void Tome, Soul Siphon).
 - **Black magic** element (hex) — arcane items now boost it.
-- Fresh menu art (desert temple).
 
 ## Previous (v0.8.1 — Cut pickups, more mechanics)
 - **Adrenaline** low-HP berserk mode, **Ricochet SMG** (bouncing bullets), **Vortex Cannon** (gravity wells).
 - **2 new enemies**: Phantom (phases untargetable), Leaper (AoE slam). Pickups removed.
-- Fresh menu art (storm cliffside).
-
-## Previous (v0.7.5 — New UI)
-- **DOM shop + HUD** rebuilt from the new design: card shop with rarity borders, real sprites, stats sidebar; crisp HUD with HP/XP bars, wave timer, weapon slots.
-
-## Previous (v0.7.3 — Boss buffs)
-- **Bosses buffed**: ~2x HP, +50% damage, faster; Overlord's burrow is a real ability now (dive, chase, AoE erupt); bigger/faster shockwaves, 3-at-a-time spawns, earlier Nightmare enrage, Ironclad 50% damage block, endless HP scaling.
 
 
 
 
 ## What's Included
 - **11 classes**: 9 unlock via achievements, Glassjaw (1 HP) unlocks by beating Nightmare.
-- **Achievements**: 16 unlockable, persisted across runs.
+- **Achievements**: 19 unlockable, persisted across runs.
 - **Elite mini-bosses**: 9 named elites with unique traits, HP bars, and bonus loot.
 - **Meta progression**: earn Essence from runs; spend on 6 permanent upgrades.
 - **9 enemy types**: Runner, Spitter, Bruiser, Burster, Splitter, Bulwark, Dasher, Aegis, Nester.

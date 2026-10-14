@@ -25,6 +25,8 @@ function createWeaponInstance(base, rarity){
   return {
     ...base,
     rarity,
+    mk: 1, // v0.8.3: upgrade tier (1-3), bought in the shop arsenal section
+    basePrice: weaponPrices[base.id] || 100,
     damage: Math.round(base.damage * mult),
     mag: Math.max(1, Math.round(base.mag * mult)),
     fireRate: base.fireRate * (1 - (mult-1)*0.2),
@@ -63,6 +65,7 @@ function applyItemEffects(player, itemData, rarity, sign=1){
   if(e.pierceAdd) player.pierceBonus = Math.max(0, player.pierceBonus + Math.round(e.pierceAdd * m));
   if(e.rangeBonus) player.rangeBonus = (player.rangeBonus || 0) + Math.round(e.rangeBonus * m);
   if(e.rangeMult) player.rangeMult = Math.max(0.5, (player.rangeMult || 1) * (1 + e.rangeMult * m));
+  if(e.turretCharges){ player.turretMax = Math.max(0, (player.turretMax || 0) + Math.round(e.turretCharges * Math.sign(sign))); player.turretCharges = Math.min(player.turretMax, (player.turretCharges || 0) + (sign > 0 ? Math.round(e.turretCharges * m) : 0)); }
 }
 
 function addItemToPlayer(player, itemData, rarity){
@@ -168,6 +171,10 @@ function applyClassToPlayer(player, classData, weaponId){
   player.critMult = 1.5;
   player.elementalBonus = 0;
   player.darkBonus = 0;
+  player.fireSpread = 0;
+  // v0.8.3: second wind + turret reset each run
+  player.downed = false; player.downT = 0; player.secondWindUsed = false;
+  player.turretCharges = 0; player.turretMax = 0;
   player.items = [];
   player.damageMult = 1;
   player.dead = false;
@@ -355,7 +362,10 @@ function startWave(){
       p.x = W/2 + (i*40);
       p.y = H/2 + (i*20);
     }
+    // v0.8.3: turret charges refill each wave
+    if(p.turretMax > 0) p.turretCharges = p.turretMax;
   }
+  turrets.length = 0; // turrets don't carry between waves
 }
 
 function openShop(){ moneyDrops.length = 0; state.phase='shop'; state.shopAnim=0; buildShop(); audio.beep(660,0.08,'triangle',0.05); }
@@ -586,11 +596,41 @@ function pickAutoTarget(p, skipCount){
   return t ? aimPointFor(p, t) : null;
 }
 
+// v0.8.3 — elemental set bonuses: 2 equipped weapons of one element = tier 1,
+// 3+ = tier 2. Explosive weapons count as fire (their bullets already do).
+// fire: +25% burn DPS per tier, tier 2 also +1s burn duration
+// ice: +1s slow per tier, tier 2 makes slowed enemies take +10% damage (brittle)
+// shock: +1 chain jump per tier
+// dark: +2s hex per tier, tier 2 raises hex damage amp from +20% to +35%
+function getElementalTiers(player){
+  const counts = {fire:0, ice:0, shock:0, dark:0};
+  for(const w of (player.ownedWeapons || [])){
+    if(!w) continue;
+    const el = w.elemental || (w.explosive ? 'fire' : null);
+    if(el && counts[el] !== undefined) counts[el]++;
+  }
+  const tiers = {};
+  for(const el of Object.keys(counts)) tiers[el] = counts[el] >= 3 ? 2 : counts[el] >= 2 ? 1 : 0;
+  return tiers;
+}
+function checkElementalSet(player){
+  const tiers = getElementalTiers(player || players[0]);
+  if(Object.values(tiers).some(t => t >= 2)) unlockAchievement('elemental_set');
+  return tiers;
+}
+const ELEM_TIER_NAMES = {fire:'Inferno Set', ice:'Glacier Set', shock:'Storm Set', dark:'Hex Set'};
+const ELEM_TIER_COLORS = {fire:'#ff8c42', ice:'#6cd6ff', shock:'#c9b6ff', dark:'#a855f7'};
+function elementalTierSummary(player){
+  const tiers = getElementalTiers(player);
+  return Object.keys(tiers).filter(el => tiers[el] > 0).map(el => ({el, tier: tiers[el]}));
+}
+
 function fireWeaponFor(player, time, target, autoSpread){
   if(!target) return;
   // All owned weapons are equipped at once: each fires on its own cooldown, ammo and overheat.
   // With auto-spread, each weapon independently targets the Nth-nearest enemy.
   const owned = player.ownedWeapons;
+  const tiers = getElementalTiers(player); // v0.8.3 set bonuses, shared by this volley's bullets
   for(let wi = 0; wi < owned.length; wi++){
     const w = owned[wi];
     if(!w || w.reloading > 0 || w.overheated) continue;
@@ -623,7 +663,7 @@ function fireWeaponFor(player, time, target, autoSpread){
       const elemental = w.elemental || (w.explosive ? 'fire' : null);
       // px/py = previous position for the swept hit test. A new bullet starts its sweep at the player's
       // centre, so an enemy overlapping the player (inside the muzzle offset) still gets hit.
-      bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, px: player.x, py: player.y, fresh: true, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, pierce: (w.pierce||0) + (player.pierceBonus||0), rehit: !!w.rehit, dist: 0, homing: !!w.homing, chain: w.chain||0, slowTime: w.slowTime||0, bounce: w.bounce||0, vortex: !!w.vortex, maxDist: ((w.range || 900) + (player.rangeBonus || 0)) * (player.rangeMult || 1), explosive: !!w.explosive, splashR: w.splashR || 110 });
+      bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, px: player.x, py: player.y, fresh: true, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, tiers, pierce: (w.pierce||0) + (player.pierceBonus||0), rehit: !!w.rehit, dist: 0, homing: !!w.homing, chain: w.chain||0, slowTime: w.slowTime||0, bounce: w.bounce||0, vortex: !!w.vortex, maxDist: ((w.range || 900) + (player.rangeBonus || 0)) * (player.rangeMult || 1), explosive: !!w.explosive, splashR: w.splashR || 110 });
     }
     addParticle({x:player.x + Math.cos(angle)*16, y:player.y + Math.sin(angle)*16, life:0.15, r: w.type==='heavy'?18:w.type==='shotgun'?14:10, color:w.color});
     if(audio.ctx && time - (w.lastSound||0) > 0.06){ w.lastSound = time; const freq = w.type==='heavy'?120:w.type==='shotgun'?180:w.type==='rifle'?240:320; audio.beep(freq,0.04,'square',0.03); }
@@ -647,6 +687,11 @@ function killEnemy(index, ownerId){
   const cm = 1 + Math.min(state.combo, 40) * 0.025;
   const cxp = Math.max(1, Math.round(e.xp * cm)), cmoney = Math.max(1, Math.round(e.money * cm));
   awardToPlayerById(ownerId, cxp, cmoney);
+  // v0.8.3 Second Wind: a kill while downed brings you back
+  if(ownerId != null){
+    const owner = players.find(pl => pl.id === ownerId);
+    if(owner && owner.downed && !owner.dead) reviveFromSecondWind(owner);
+  }
   // elites drop bonus loot: extra money shower + floating text
   if(e.elite){
     dropMoney(e.x, e.y, 8);
@@ -675,14 +720,82 @@ function killEnemy(index, ownerId){
 }
 
 // damage helper: armor applies, and no single hit can exceed 50% of max HP (no 1-shots)
+// v0.8.3 — deployable sentry turret (Sentry Turret item). 1 charge per wave per item,
+// 25s uptime, fires at 60% of the owner's average weapon damage.
+function turretDamageFor(p){
+  const owned = (p.ownedWeapons || []).filter(Boolean);
+  if(!owned.length) return 8;
+  const avg = owned.reduce((s,w)=>s + (w.damage || 8), 0) / owned.length;
+  return Math.max(4, Math.round(avg * 0.6 * (p.damageMult || 1)));
+}
+function deployTurret(p){
+  if(!p || p.dead || p.downed) return false;
+  if((p.turretCharges || 0) <= 0){ return false; }
+  p.turretCharges--;
+  turrets.push({x:p.x + 26, y:p.y + 10, t:25, fireT:0.3, ownerId:p.id, dmg:turretDamageFor(p), angle:0});
+  addParticle({x:p.x, y:p.y, life:0.4, r:18, color:'#6ef2b1'});
+  floatingTexts.push({x:p.x, y:p.y-30, vx:0, vy:-30, life:1, text:'TURRET DEPLOYED', color:'#6ef2b1'});
+  audio.beep(520, 0.1, 'square', 0.05);
+  if(typeof markShopDirty === 'function') markShopDirty();
+  return true;
+}
+function updateTurrets(dt){
+  for(let i=turrets.length-1;i>=0;i--){
+    const tu = turrets[i];
+    tu.t -= dt;
+    if(tu.t <= 0){ addParticle({x:tu.x, y:tu.y, life:0.4, r:14, color:'#8aa0b8'}); turrets.splice(i,1); continue; }
+    tu.fireT -= dt;
+    if(tu.fireT > 0) continue;
+    const target = getNearestEnemyTo(tu.x, tu.y);
+    if(!target || Math.hypot(target.x-tu.x, target.y-tu.y) > 700) continue;
+    tu.fireT = 0.4;
+    tu.angle = Math.atan2(target.y-tu.y, target.x-tu.x);
+    const owner = players.find(pl=>pl.id===tu.ownerId);
+    const elemental = null;
+    bullets.push({ x:tu.x + Math.cos(tu.angle)*14, y:tu.y + Math.sin(tu.angle)*14, px:tu.x, py:tu.y, fresh:true,
+      vx:Math.cos(tu.angle)*640, vy:Math.sin(tu.angle)*640, life:1.6, color:'#6ef2b1', damage:tu.dmg,
+      ownerId:tu.ownerId, crit:false, elemental, tiers: owner ? getElementalTiers(owner) : null,
+      pierce:0, rehit:false, dist:0, homing:false, chain:0, slowTime:0, bounce:0, vortex:false, maxDist:700, explosive:false, splashR:0 });
+    addParticle({x:tu.x + Math.cos(tu.angle)*18, y:tu.y + Math.sin(tu.angle)*18, life:0.12, r:8, color:'#6ef2b1'});
+  }
+}
+
 function hurtPlayer(p, raw){
   if(!p || p.dead) return;
+  if(p.downed) return; // second wind: downed players are invulnerable — only the timer can kill them
   if(typeof devMode !== 'undefined' && devMode) return;   // creative mode: invincible
   const cap = Math.max(1, (p.baseMaxHp || 100) * 0.5);
   p.hp -= Math.min(Math.max(1, raw - (p.armor || 0)), cap);
   p.hitFlash = 0.12;
   runStats.tookDamage = true;
-  if(p.hp <= 0){ p.hp = 0; p.dead = true; if(players.every(pl=>pl.dead)){ state.phase='gameover'; showRunOver(); } }
+  if(p.hp <= 0){
+    // v0.8.3 Second Wind (solo only, once per run): lethal damage downs you instead of
+    // killing you — get a kill within 6s to get back up at 40% HP
+    if(!state.coop && !p.secondWindUsed && !p.downed){ enterSecondWind(p); return; }
+    p.hp = 0; p.dead = true; if(players.every(pl=>pl.dead)){ state.phase='gameover'; showRunOver(); }
+  }
+}
+// v0.8.3 Second Wind: downed but not out. Stationary, still shooting, invulnerable;
+// kill any enemy before the timer runs out to revive.
+function enterSecondWind(p){
+  p.downed = true;
+  p.downT = 6;
+  p.hp = 1;
+  p.iFrames = 1;
+  p.vx = 0; p.vy = 0;
+  state.secondWindBanner = 2.5;
+  addShake(8);
+  audio.beep(180, 0.4, 'sawtooth', 0.08);
+  floatingTexts.push({x:p.x, y:p.y-44, vx:0, vy:-30, life:2.2, text:'SECOND WIND — GET A KILL!', color:'#ff6b6b'});
+}
+function reviveFromSecondWind(p){
+  p.downed = false; p.downT = 0; p.secondWindUsed = true;
+  p.hp = Math.max(1, Math.floor(p.baseMaxHp * 0.4));
+  p.iFrames = 2;
+  unlockAchievement('second_wind');
+  addParticle({x:p.x, y:p.y, life:0.8, r:24, color:'#6ef2b1'});
+  floatingTexts.push({x:p.x, y:p.y-44, vx:0, vy:-40, life:1.5, text:'REVIVED!', color:'#6ef2b1'});
+  audio.pickup();
 }
 // burster: proximity-fused explosion. One AoE hit, then the enemy is gone (no contact DPS).
 function explodeEnemy(e, index){
@@ -737,6 +850,42 @@ function detonate(b, x, y, skipEnemy, victimIdx, ownerId){
 
 function awardToPlayerById(id, xp, money){ const p = players.find(x=>x.id===id) || players[0]; p.xp += xp; p.currency += money; while(p.xp >= p.xpNext){ levelUp(p); } }
 
+// v0.8.3 — weapon upgrade tiers: MK II (+30% dmg, +8% fire rate), MK III (+25% dmg
+// cumulative ~1.62x, +7% fire rate, +1 pierce). Bought per weapon in the shop arsenal section.
+function upgradeCostFor(w){
+  if(!w || (w.mk || 1) >= 3) return null;
+  const mult = (w.mk || 1) === 1 ? 1.5 : 2.5;
+  return Math.round((w.basePrice || 100) * rarityMult(w.rarity) * mult);
+}
+function upgradeWeaponFor(player, idx){
+  const w = player.ownedWeapons && player.ownedWeapons[idx];
+  if(!w || (w.mk || 1) >= 3) return false;
+  const cost = upgradeCostFor(w);
+  if(player.currency < cost){ audio.deny(); return false; }
+  if(typeof devMode === 'undefined' || !devMode){
+    player.currency -= cost;
+    runStats.spent += cost;
+    if(runStats.spent >= 500) checkAchievements();
+  }
+  w.mk = (w.mk || 1) + 1;
+  if(w.mk === 2){
+    w.damage = Math.round(w.damage * 1.3);
+    w.fireRate *= 0.92;
+    w.name = w.name.replace(/ MK (II|III)$/, '') + ' MK II';
+  } else if(w.mk === 3){
+    w.damage = Math.round(w.damage * 1.25);
+    w.fireRate *= 0.93;
+    w.pierce = (w.pierce || 0) + 1;
+    w.name = w.name.replace(/ MK (II|III)$/, '') + ' MK III';
+    unlockAchievement('mk3');
+  }
+  refreshAmmoFor(player);
+  floatingTexts.push({x:player.x, y:player.y-30, vx:0, vy:-40, life:1.2, text:w.name + '!', color:'#ffd166'});
+  audio.buy();
+  if(typeof markShopDirty === 'function') markShopDirty();
+  return true;
+}
+
 function buyShopItemFor(player){
   const item = shop.items[shop.selection];
   if(!item || !item.data) return;
@@ -751,6 +900,7 @@ function buyShopItemFor(player){
   if(item.type === 'weapon'){
     player.ownedWeapons.push(createWeaponInstance(item.data, item.rarity || item.data.rarity));
     refreshAmmoFor(player);
+    checkElementalSet(player);
     checkAchievements();
   } else {
     if(!addItemToPlayer(player, item.data, item.rarity || item.data.rarity)){ player.currency += item.price; audio.deny(); return; }
@@ -858,6 +1008,18 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     audio.setMuted(!audio.muted);
     flashMsg(audio.muted ? 'Audio muted (M)' : 'Audio unmuted', 1.1);
   }
+  // v0.8.3: T deploys the sentry turret (P1)
+  if(input.keys['t']){
+    input.keys['t'] = false;
+    if(state.phase === 'wave' && !state.paused){
+      const p = players[0];
+      if(p && (p.turretMax || 0) > 0){
+        if(!deployTurret(p) && (p.turretCharges || 0) <= 0) flashMsg('No turret charges — refills next wave', 1.2);
+      } else if(p){
+        flashMsg('Buy the Sentry Turret item in the shop first', 1.4);
+      }
+    }
+  }
   if(state.paused) return;
   if(state.phase === 'wave' || state.phase === 'shop' || state.phase === 'upgrade' || state.phase === 'victory') state.runTime += dt;
   // animation clock, camera shake and the wave banner stop while paused
@@ -923,6 +1085,17 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
       if(input.keys['s']) dy+=1; 
       if(input.keys['a']) dx-=1; 
       if(input.keys['d']) dx+=1; 
+    }
+    // v0.8.3 Second Wind: downed players are stationary but keep shooting — kill to survive
+    if(p.downed){
+      p.downT -= dt;
+      p.iFrames = Math.max(p.iFrames, 0.2);
+      if(p.downT <= 0){
+        p.downed = false; p.hp = 0; p.dead = true;
+        floatingTexts.push({x:p.x, y:p.y-30, vx:0, vy:-30, life:1.2, text:'NO SECOND CHANCE', color:'#ff6b6b'});
+        if(players.every(pl=>pl.dead)){ state.phase='gameover'; showRunOver(); }
+      }
+      continue;
     }
     if(idx===1){ 
       if(input.keys['arrowup']) dy-=1; 
@@ -1408,7 +1581,8 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
             // aegis shield aura: nearby enemies take 30% less damage (elite: wider aura)
             let dmgMult = 1;
             for(const o of enemies){ if(o.shields && o !== e){ const auraR = o.elite ? 220 : 150; const dx=o.x-e.x, dy=o.y-e.y; if(dx*dx+dy*dy < auraR*auraR){ dmgMult = 0.7; break; } } }
-            if(e.status && e.status.hex > 0) dmgMult *= 1.2; // hexed: takes +20% damage
+            if(e.status && e.status.hex > 0) dmgMult *= 1 + 0.2 + (b.tiers && b.tiers.dark >= 2 ? 0.15 : 0); // hexed: +20% damage taken (+35% with Hex Set II)
+            if(b.tiers && b.tiers.ice >= 2 && e.status && e.status.slow > 0) dmgMult *= 1.1; // brittle: slowed enemies take +10% with Glacier Set II
             const finalDmg = b.damage * dmgMult;
             // Ironclad boss: 40% damage reduction
             const bossDR = (e.isBoss && e.bossAbility === 'fortress') ? 0.5 : 1;
@@ -1429,8 +1603,9 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
             addShake(b.crit ? 2 : 0.5);
             // elemental status
             if(b.elemental === 'fire'){
-              e.status.burn = Math.max(e.status.burn, 4);
-              e.status.burnDps = Math.max(e.status.burnDps, b.damage * 0.6);
+              const ft = (b.tiers && b.tiers.fire) || 0; // Inferno Set: +25% burn DPS per tier
+              e.status.burn = Math.max(e.status.burn, ft >= 2 ? 5 : 4);
+              e.status.burnDps = Math.max(e.status.burnDps, b.damage * 0.6 * (1 + 0.25 * ft));
               // Wildfire Rounds: chance for the burn to spread to nearby enemies
               const shooter = b.ownerId != null ? players.find(p => p.id === b.ownerId) : null;
               const spreadCh = shooter ? (shooter.fireSpread || 0) : 0;
@@ -1440,8 +1615,9 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
                   const sdx = ne.x - e.x, sdy = ne.y - e.y;
                   if(sdx*sdx + sdy*sdy < 150*150){
                     if(!ne.status) ne.status = {burn:0,burnDps:0,slow:0,shock:0,hex:0};
-                    ne.status.burn = Math.max(ne.status.burn, 4);
-                    ne.status.burnDps = Math.max(ne.status.burnDps, b.damage * 0.6);
+                    const sft = (b.tiers && b.tiers.fire) || 0;
+                    ne.status.burn = Math.max(ne.status.burn, sft >= 2 ? 5 : 4);
+                    ne.status.burnDps = Math.max(ne.status.burnDps, b.damage * 0.6 * (1 + 0.25 * sft));
                     ne.lastHitBy = b.ownerId;
                     addParticle({x:ne.x, y:ne.y, life:0.25, r:8, color:'#ff8c42'});
                   }
@@ -1449,14 +1625,14 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
                 floatingTexts.push({x:e.x, y:e.y-14, vx:0, vy:-30, life:0.7, text:'SPREAD!', color:'#ff8c42'});
               }
             } else if(b.elemental === 'ice'){
-              e.status.slow = Math.max(e.status.slow, b.slowTime || 2.0);
+              e.status.slow = Math.max(e.status.slow, (b.slowTime || 2.0) + ((b.tiers && b.tiers.ice) || 0)); // Glacier Set: +1s slow per tier
             } else if(b.elemental === 'dark'){
-              e.status.hex = Math.max(e.status.hex || 0, 4);
+              e.status.hex = Math.max(e.status.hex || 0, 4 + 2 * ((b.tiers && b.tiers.dark) || 0)); // Hex Set: +2s hex per tier
               addParticle({x:e.x, y:e.y, life:0.3, r:10, color:'#a855f7'});
               floatingTexts.push({x:e.x, y:e.y-10, vx:0, vy:-25, life:0.6, text:'HEX', color:'#a855f7'});
             } else if(b.elemental === 'shock'){
-              // chain shock: jumps to nearby enemies (Stormcaller chains up to 5)
-              let jumps = b.chain || 1, fromX = e.x, fromY = e.y;
+              // chain shock: jumps to nearby enemies (Stormcaller chains up to 5); Storm Set: +1 jump per tier
+              let jumps = (b.chain || 1) + ((b.tiers && b.tiers.shock) || 0), fromX = e.x, fromY = e.y;
               const hitSet = new Set([e]);
               for(let jn=0; jn<jumps; jn++){
                 const chain = enemies.find(en => !hitSet.has(en) && Math.hypot(en.x-fromX, en.y-fromY) < 110);
@@ -1606,6 +1782,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
   //  0.35s or button held), otherwise auto-target. Mouse Aim off: always auto-target the nearest enemy
   //  (or tree), whatever the mouse does. P2 always auto-targets and auto-fires.
   const mouseRecent = (performance.now()/1000 - input.lastMove) < 0.35;
+  if(state.phase === 'wave') updateTurrets(dt); // v0.8.3 sentry turrets
   if(state.phase === 'wave'){
     for(let i=0;i<players.length;i++){
       const p = players[i]; if(p.dead) continue;

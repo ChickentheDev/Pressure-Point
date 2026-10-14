@@ -89,3 +89,16 @@
 .pp-wpns .pp-slot { width:36px; height:36px; min-width:36px; font-size:18px; }
 .pp-wpns .pp-slot img { width:30px; height:30px; object-fit:contain; image-rendering:pixelated; }
 .pp-wpns .pp-slot.cur { border-color:var(--accent); }
+
+/* v0.8.3 arsenal upgrades */
+.pp-upgrades { margin-top:14px; }
+.pp-upgrades h2 { margin:0 0 8px; font-size:15px; letter-spacing:.5px; color:var(--muted, #8aa0b8); text-transform:uppercase; }
+#ppUpgrades { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+@media(max-width:640px){ #ppUpgrades{grid-template-columns:1fr} }
+.pp-upg { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.04); border:1px solid #2a3a4f; border-radius:10px; padding:6px 10px; }
+.pp-upg .pp-ico { width:30px; height:22px; display:flex; align-items:center; justify-content:center; }
+.pp-upg .pp-ico img { max-width:30px; max-height:22px; object-fit:contain; image-rendering:pixelated; }
+.pp-uname { flex:1; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.pp-mk { font-size:11px; color:#ffd166; font-weight:bold; letter-spacing:.5px; }
+.pp-maxed { font-size:11px; color:#6ef2b1; font-weight:bold; letter-spacing:1px; }
+.pp-upg .pp-buy { margin-top:0; padding:6px 10px; font-size:12px; }
