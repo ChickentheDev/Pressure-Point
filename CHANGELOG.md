@@ -1,3 +1,9 @@
+## v0.9 — Elemental reactions, Engineer class
+- **Elemental reactions**: cross-element combos consume existing statuses — **Detonate** (shock on burning: AoE blast), **Melt** (ice on burning: burst damage), **Shatter** (shock on slowed: bonus damage + 0.9s stun), **Hex Spread** (dark on any afflicted enemy: hex jumps to 2 nearby enemies).
+- **Engineer class** (new, unlocks via Turret Master): turret specialist — starts every run with a free Sentry Turret, turrets deal +50% damage and last +50% longer.
+- **New achievement**: Turret Master (25 turret kills in one run).
+- **New menu art**: elemental cataclysm — fire detonating on ice, lightning, void tendrils (fresh art per the every-update rule).
+
 ## v0.8.3 — Turrets, second wind, elemental sets, weapon upgrades
 - **Elemental set bonuses**: equipping 2 weapons of one element unlocks tier I, 3+ unlocks tier II — Inferno Set (+25% burn DPS/tier, +1s burn at II), Glacier Set (+1s slow/tier, slowed enemies take +10% at II), Storm Set (+1 chain jump/tier), Hex Set (+2s hex/tier, hex amp 20%→35% at II). HUD shows your active sets.
 - **Weapon upgrades**: the shop now has an Arsenal Upgrades section — take any weapon to MK II (+30% damage, +8% fire rate) and MK III (+25% more damage, +1 pierce).

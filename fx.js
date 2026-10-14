@@ -36,7 +36,7 @@
   };
   // v0.6.0 class sprites: one sheet per class per view. P2 uses the same sprite as P1
   // (the co-op ring distinguishes players); p1_/p2_ sheets stay as fallback.
-  for(const cid of ['ironheart','foxglove','gravelord','scrapjack','voltlade','circuitry','bulwark','redline','skylark','nightreap','glassjaw']){
+  for(const cid of ['ironheart','foxglove','gravelord','scrapjack','voltlade','circuitry','bulwark','redline','skylark','nightreap','glassjaw','engineer']){
     for(const v of ['down','up','side']){
       SHEETS['cls_'+cid+'_'+v] = {src:'assets/sprites/players/player_'+cid+'_'+v+'.png', fw:16, fh:21, n:4, ax:8, ay:10.5};
     }

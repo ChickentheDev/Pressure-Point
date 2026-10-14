@@ -339,6 +339,7 @@ const classArchetypes = [
   {base:'Skylark', weapon:'pistol', mods:{hpMult:0.9, speed:285, accuracy:1.1, reloadSpeed:0.95}, tags:'Very fast', pool:["smg", "pistol", "sprayer", "plasma", "crossbow", "hornet", "ricochet", "glacier"], unlock:{achievement:'medic'}},
   {base:'Nightreap', weapon:'shotgun', mods:{hpMult:1.05, speed:225, lifesteal:0.07, damageBonus:1}, tags:'Life steal', pool:["shotgun", "blade", "katana", "flame", "mine", "emberwand"], unlock:{achievement:'unique_find'}},
   {base:'Glassjaw', weapon:'rifle', mods:{hpMult:0.01, speed:300, accuracy:1.3, reloadSpeed:0.8, damageBonus:15, luck:3}, tags:'1 HP. Glass cannon.', pool:["rail", "sniper", "rifle", "dmr", "heavy", "rpg"], unlock:{nightmare:true}},
+  {base:'Engineer', weapon:'smg', mods:{hpMult:1.05, speed:225, armor:3, reloadSpeed:0.95}, tags:'Turret specialist', pool:["smg", "pistol", "rifle", "sprayer", "plasma", "tesla", "arc", "hornet"], unlock:{achievement:'turret_master'}},
 ];
 
 const classes = classArchetypes.map(a=>({
@@ -412,6 +413,7 @@ const ACHIEVEMENTS = [
   {id:'second_wind', name:'Second Wind', desc:'Cheat death: get a kill while downed'},
   {id:'elemental_set', name:'Elemental Mastery', desc:'Equip 3 weapons of the same element'},
   {id:'mk3', name:'Master Gunsmith', desc:'Upgrade a weapon to MK III'},
+  {id:'turret_master', name:'Turret Master', desc:'Get 25 turret kills in one run'},
 ];
 
 // ---- Maps: 3 full maps (unique enemies + difficulty), 8 mini-map background themes ----

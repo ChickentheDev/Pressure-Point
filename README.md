@@ -1,31 +1,31 @@
-# Pressure Point — v0.8.3
+# Pressure Point — v0.9
 
 **[Play online](https://chickenthedev.github.io/Pressure-Point/)** — no download, full lighting and effects.
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v0.8.3 — Turrets, second wind, elemental sets, upgrades)
-- **Elemental set bonuses**: 2 same-element weapons = tier I, 3+ = tier II. Inferno Set (+25% burn DPS/tier), Glacier Set (+1s slow/tier, brittle at II), Storm Set (+1 chain/tier), Hex Set (+2s hex/tier, 35% amp at II).
-- **Weapon upgrades**: new Arsenal Upgrades shop section — MK II (+30% dmg) and MK III (+25% more, +1 pierce) per weapon.
+## Latest Changes (v0.9 — Elemental reactions, Engineer class)
+- **Elemental reactions**: cross-element combos consume statuses — **Detonate** (shock on burning: AoE blast), **Melt** (ice on burning: burst), **Shatter** (shock on slowed: bonus damage + stun), **Hex Spread** (dark on afflicted: hex jumps to 2 nearby enemies).
+- **Engineer class** (unlock: Turret Master achievement): starts with a free Sentry Turret, turrets +50% damage and +50% uptime.
+- **New achievement**: Turret Master (25 turret kills in one run). Fresh menu art (elemental cataclysm).
+
+## Previous (v0.8.3 — Turrets, second wind, elemental sets, upgrades)
+- **Elemental set bonuses**: 2 same-element weapons = tier I, 3+ = tier II (Inferno/Glacier/Storm/Hex sets, HUD badges).
+- **Weapon upgrades**: Arsenal Upgrades shop section — MK II (+30% dmg) and MK III (+25% more, +1 pierce).
 - **Second Wind** (solo): lethal damage downs you — kill within 6s to revive at 40% HP, once per run.
-- **Sentry Turret** item (epic): press T to deploy an auto-turret (25s, 60% of your damage, 1 charge/wave).
-- **3 new achievements**: Second Wind, Elemental Mastery, Master Gunsmith. Fresh menu art (elemental forge).
+- **Sentry Turret** item (epic): press T to deploy (25s, 60% of your damage, 1 charge/wave).
 
 ## Previous (v0.8.2 — Parachute, debt, dark magic)
 - **Parachute drop-in** on wave 1, **loot debt** (recover last wave's loot before new money flows).
 - **Wildfire Rounds** item, **5 new weapons** (Ember Wand, Glacier Lance, Storm Rod, Void Tome, Soul Siphon).
 - **Black magic** element (hex) — arcane items now boost it.
 
-## Previous (v0.8.1 — Cut pickups, more mechanics)
-- **Adrenaline** low-HP berserk mode, **Ricochet SMG** (bouncing bullets), **Vortex Cannon** (gravity wells).
-- **2 new enemies**: Phantom (phases untargetable), Leaper (AoE slam). Pickups removed.
-
 
 
 
 ## What's Included
-- **11 classes**: 9 unlock via achievements, Glassjaw (1 HP) unlocks by beating Nightmare.
-- **Achievements**: 19 unlockable, persisted across runs.
+- **12 classes**: 10 unlock via achievements, Glassjaw (1 HP) unlocks by beating Nightmare.
+- **Achievements**: 20 unlockable, persisted across runs.
 - **Elite mini-bosses**: 9 named elites with unique traits, HP bars, and bonus loot.
 - **Meta progression**: earn Essence from runs; spend on 6 permanent upgrades.
 - **9 enemy types**: Runner, Spitter, Bruiser, Burster, Splitter, Bulwark, Dasher, Aegis, Nester.

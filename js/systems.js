@@ -175,11 +175,18 @@ function applyClassToPlayer(player, classData, weaponId){
   // v0.8.3: second wind + turret reset each run
   player.downed = false; player.downT = 0; player.secondWindUsed = false;
   player.turretCharges = 0; player.turretMax = 0;
+  player.turretDmgMult = 1; player.turretTimeMult = 1;
   player.items = [];
   player.damageMult = 1;
   player.dead = false;
   const baseW = weapons.find(w=>w.id===(weaponId || classData.weapon)) || weapons.find(w=>w.id===classData.weapon) || weapons[0];
   player.ownedWeapons = [createWeaponInstance(baseW, 'common')];
+  // v0.9 Engineer: starts with a Sentry Turret; turrets hit +50% harder and last +50% longer
+  if(classData.id === 'engineer'){
+    player.turretDmgMult = 1.5;
+    player.turretTimeMult = 1.5;
+    addItemToPlayer(player, items.find(it=>it.id==='sentry'), 'common');
+  }
   player.level = 1;
   player.xp = 0;
   player.xpNext = 60;
@@ -726,13 +733,14 @@ function turretDamageFor(p){
   const owned = (p.ownedWeapons || []).filter(Boolean);
   if(!owned.length) return 8;
   const avg = owned.reduce((s,w)=>s + (w.damage || 8), 0) / owned.length;
-  return Math.max(4, Math.round(avg * 0.6 * (p.damageMult || 1)));
+  return Math.max(4, Math.round(avg * 0.6 * (p.damageMult || 1) * (p.turretDmgMult || 1)));
 }
 function deployTurret(p){
   if(!p || p.dead || p.downed) return false;
   if((p.turretCharges || 0) <= 0){ return false; }
   p.turretCharges--;
-  turrets.push({x:p.x + 26, y:p.y + 10, t:25, fireT:0.3, ownerId:p.id, dmg:turretDamageFor(p), angle:0});
+  const tmax = 25 * (p.turretTimeMult || 1);
+  turrets.push({x:p.x + 26, y:p.y + 10, t:tmax, tmax, fireT:0.3, ownerId:p.id, dmg:turretDamageFor(p), angle:0});
   addParticle({x:p.x, y:p.y, life:0.4, r:18, color:'#6ef2b1'});
   floatingTexts.push({x:p.x, y:p.y-30, vx:0, vy:-30, life:1, text:'TURRET DEPLOYED', color:'#6ef2b1'});
   audio.beep(520, 0.1, 'square', 0.05);
@@ -754,10 +762,33 @@ function updateTurrets(dt){
     const elemental = null;
     bullets.push({ x:tu.x + Math.cos(tu.angle)*14, y:tu.y + Math.sin(tu.angle)*14, px:tu.x, py:tu.y, fresh:true,
       vx:Math.cos(tu.angle)*640, vy:Math.sin(tu.angle)*640, life:1.6, color:'#6ef2b1', damage:tu.dmg,
-      ownerId:tu.ownerId, crit:false, elemental, tiers: owner ? getElementalTiers(owner) : null,
+      ownerId:tu.ownerId, crit:false, elemental, tiers: owner ? getElementalTiers(owner) : null, turret:true,
       pierce:0, rehit:false, dist:0, homing:false, chain:0, slowTime:0, bounce:0, vortex:false, maxDist:700, explosive:false, splashR:0 });
     addParticle({x:tu.x + Math.cos(tu.angle)*18, y:tu.y + Math.sin(tu.angle)*18, life:0.12, r:8, color:'#6ef2b1'});
   }
+}
+
+// v0.9 elemental reactions: cross-element combos consume existing statuses for bonus effects.
+// Damage to blast victims is applied immediately; deaths are picked up by the normal
+// hp<=0 checks (avoids index hazards from splicing mid-loop). Kills credit ownerId.
+function reactionBlast(x, y, dmg, ownerId, color, skipEn){
+  const R = 120;
+  for(const en of enemies){
+    if(en === skipEn || en.hp <= 0) continue;
+    const dx = en.x - x, dy = en.y - y;
+    if(dx*dx + dy*dy < (R + en.r) * (R + en.r)){
+      const d = Math.sqrt(dx*dx + dy*dy) || 1;
+      const dealt = dmg * (1 - 0.6 * Math.min(1, d / (R + en.r)));
+      en.hp -= dealt;
+      en.lastHitBy = ownerId;
+      en.hitFlash = 0.1;
+      spawnBlood(en.x, en.y, en.color, 3);
+      applyKnockback(en, dx/d, dy/d, dealt);
+    }
+  }
+  addParticle({x, y, life:0.35, r:R*0.8, color});
+  addParticle({x, y, life:0.22, r:R*0.45, color:'#ffffff'});
+  addShake(6);
 }
 
 function hurtPlayer(p, raw){
@@ -1341,10 +1372,11 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
       addParticle({x:e.x, y:e.y, life:0.08, r:4, color:'#ff8c42'});
     }
     if(e.status.slow > 0){ e.status.slow -= dt; }
+    if(e.stun > 0){ e.stun -= dt; e.hitFlash = Math.max(e.hitFlash || 0, 0.05); } // v0.9 shatter stun
     // burn ticks and shock chains can drop hp to <= 0 without a bullet hit; kill the enemy here
     if(e.hp <= 0){ killEnemy(i, e.lastHitBy); continue; }
 
-    const slowMult = (e.status.slow > 0 ? 0.6 : 1) * (e.phased ? 1.6 : 1);
+    const slowMult = (e.status.slow > 0 ? 0.6 : 1) * (e.phased ? 1.6 : 1) * (e.stun > 0 ? 0 : 1);
     const ang = (e.charges && e.chargeState === 2 && e._chargeAng != null) ? e._chargeAng : Math.atan2(target.y - e.y, target.x - e.x);
     // dasher: periodic burst toward the player (elite: relentless)
     let dashMult = 1;
@@ -1451,7 +1483,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     if(e.ranged && !e.dead){
       e.shootTimer = (e.shootTimer == null ? 1.2 + Math.random() : e.shootTimer) - dt;
       const sDist = Math.hypot(target.x - e.x, target.y - e.y);
-      if(e.shootTimer <= 0 && sDist < 560){
+      if(e.shootTimer <= 0 && sDist < 560 && !(e.stun > 0)){ // stunned enemies don't shoot
         e.shootTimer = 2.1 + Math.random() * 0.9;
         const sa = Math.atan2(target.y - e.y, target.x - e.x), spd = 330;
         enemyBullets.push({x:e.x, y:e.y, vx:Math.cos(sa)*spd, vy:Math.sin(sa)*spd, r:6,
@@ -1649,8 +1681,50 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
               }
             }
             addParticle({x:e.x,y:e.y,life:0.2, r:8, color:'#ffd166'}); const ownerId = b.ownerId;
+            // v0.9 elemental reactions: cross-element combos consume existing statuses
+            const rst = e.status || (e.status = {burn:0,burnDps:0,slow:0,shock:0,hex:0});
+            if(b.elemental === 'shock' && rst.burn > 0){
+              // DETONATE: lightning ignites the burn — point-blank + AoE blast, consumes burn
+              rst.burn = 0; rst.burnDps = 0;
+              e.hp -= b.damage * 1.5;
+              reactionBlast(e.x, e.y, b.damage * 1.5, b.ownerId, '#ffd166', e);
+              floatingTexts.push({x:e.x, y:e.y-16, vx:0, vy:-35, life:0.9, text:'DETONATE!', color:'#ffd166'});
+              audio.beep(90, 0.25, 'sawtooth', 0.08);
+            } else if(b.elemental === 'ice' && rst.burn > 0){
+              // MELT: flash-freeze the burn — burst damage, consumes burn
+              rst.burn = 0; rst.burnDps = 0;
+              e.hp -= b.damage * 1.2;
+              floatingTexts.push({x:e.x, y:e.y-16, vx:0, vy:-35, life:0.9, text:'MELT!', color:'#9be8ff'});
+              for(let k=0;k<10;k++) addParticle({x:e.x+rand(-10,10), y:e.y+rand(-10,10), vx:rand(-120,120), vy:rand(-120,120), life:0.4, r:4, color:'#cfeaff'});
+              addShake(4);
+            } else if(b.elemental === 'shock' && rst.slow > 0){
+              // SHATTER: frozen-solid enemies shatter — bonus damage + stun, consumes slow
+              rst.slow = 0;
+              e.hp -= b.damage * 0.8;
+              e.stun = Math.max(e.stun || 0, 0.9);
+              floatingTexts.push({x:e.x, y:e.y-16, vx:0, vy:-35, life:0.9, text:'SHATTER!', color:'#c9b6ff'});
+              for(let k=0;k<12;k++) addParticle({x:e.x+rand(-12,12), y:e.y+rand(-12,12), vx:rand(-160,160), vy:rand(-160,160), life:0.5, r:3, color:'#a8d0e8'});
+              addShake(4); audio.beep(400, 0.15, 'square', 0.06);
+            } else if(b.elemental === 'dark' && (rst.burn > 0 || rst.slow > 0 || rst.hex > 0)){
+              // HEX SPREAD: dark magic feeds on affliction — hex jumps to 2 nearby enemies
+              let spread = 0;
+              for(const ne of enemies){
+                if(spread >= 2 || ne === e || ne.hp <= 0) continue;
+                const sdx = ne.x - e.x, sdy = ne.y - e.y;
+                if(sdx*sdx + sdy*sdy < 170*170){
+                  if(!ne.status) ne.status = {burn:0,burnDps:0,slow:0,shock:0,hex:0};
+                  ne.status.hex = Math.max(ne.status.hex || 0, 4);
+                  ne.lastHitBy = b.ownerId;
+                  addParticle({x:ne.x, y:ne.y, life:0.3, r:10, color:'#a855f7'});
+                  spread++;
+                }
+              }
+              if(spread > 0) floatingTexts.push({x:e.x, y:e.y-16, vx:0, vy:-35, life:0.9, text:'HEX SPREAD!', color:'#a855f7'});
+            }
             if(b.explosive){ i -= detonate(b, b.x, b.y, e, i, ownerId); bullets.splice(j,1); }
             else if(b.pierce > 0){ b.pierce--; if(b.rehit) b.lastHit = e; else (b.hits || (b.hits = [])).push(e); } else { bullets.splice(j,1); } if(e.hp <= 0){ // die
+            // v0.9: turret kills feed the turret_master achievement (unlocks Engineer)
+            if(b.turret){ runStats.turretKills = (runStats.turretKills || 0) + 1; if(runStats.turretKills >= 25) unlockAchievement('turret_master'); }
             // reward to owner if available, else nearest player
             killEnemy(i, ownerId); killed = true; break; } }
     }
@@ -1661,7 +1735,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
       if(p.dead) continue;
       if(p.iFrames > 0) continue;
       const d = Math.hypot(p.x - e.x, p.y - e.y);
-      if(d < p.r + e.r && !e.phased){
+      if(d < p.r + e.r && !e.phased && !(e.stun > 0)){ // stunned enemies don't deal contact damage
         p.hp -= Math.max(1, (e.dmg - p.armor) * dt);
         runStats.tookDamage = true;
         // elite spitter (Plaguewing): venomous touch slows the player

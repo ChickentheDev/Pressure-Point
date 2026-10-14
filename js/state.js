@@ -111,6 +111,7 @@ function checkAchievements(){
 }
 function resetRunStats(){
   runStats.kills = 0; runStats.spent = 0; runStats.revives = 0; runStats.tookDamage = false;
+  runStats.turretKills = 0;
 }
 
 // Players (support player 1 and optional player 2)

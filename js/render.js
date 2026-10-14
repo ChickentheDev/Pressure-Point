@@ -899,7 +899,7 @@ function drawTurrets(){
     ctx.fillStyle = '#6ef2b1';
     ctx.beginPath(); ctx.arc(tu.x, tu.y, 6, 0, Math.PI*2); ctx.fill();
     ctx.strokeStyle = 'rgba(110,242,177,0.6)'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(tu.x, tu.y, 17, -Math.PI/2, -Math.PI/2 + Math.PI*2*Math.max(0, tu.t/25)); ctx.stroke();
+    ctx.beginPath(); ctx.arc(tu.x, tu.y, 17, -Math.PI/2, -Math.PI/2 + Math.PI*2*Math.max(0, Math.min(1, tu.t/(tu.tmax || 25)))); ctx.stroke();
     ctx.restore();
   }
 }
