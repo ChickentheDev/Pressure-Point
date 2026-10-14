@@ -58,6 +58,7 @@ function applyItemEffects(player, itemData, rarity, sign=1){
   if(e.damageBonus) player.damageBonus += Math.round(e.damageBonus * m);
   if(e.damageMult) player.damageMult = Math.max(0.5, player.damageMult * (1 + e.damageMult * m));
   if(e.luckAdd) player.luck += Math.round(e.luckAdd * m);
+  if(e.fireSpreadAdd) player.fireSpread = Math.max(0, (player.fireSpread || 0) + e.fireSpreadAdd * m);
   if(e.pierceAdd) player.pierceBonus = Math.max(0, player.pierceBonus + Math.round(e.pierceAdd * m));
   if(e.rangeBonus) player.rangeBonus = (player.rangeBonus || 0) + Math.round(e.rangeBonus * m);
   if(e.rangeMult) player.rangeMult = Math.max(0.5, (player.rangeMult || 1) * (1 + e.rangeMult * m));
@@ -74,6 +75,7 @@ function addItemToPlayer(player, itemData, rarity){
   }
   player.items.push({id: itemData.id, rarity, cosmetic: itemData.cosmetic});
   applyItemEffects(player, itemData, rarity, 1);
+  if(itemData.noCombine) return true; // e.g. Wildfire Rounds: stacks to maxOwn instead of combining
   // combine if two of same id+rarity
   let combined = true;
   while(combined){
@@ -190,7 +192,7 @@ function buildShop(){
   const poolWeapons = [...weapons];
   // Unique: don't offer more once the player owns one; Exclusive enforced to epic/legendary below
   const ownsUnique = players[0] && playerOwnsUnique(players[0]);
-  const poolItems = items.filter(it => !(ownsUnique && it.category === 'unique'));
+  const poolItems = items.filter(it => !(ownsUnique && it.category === 'unique') && !(it.maxOwn && players[0] && players[0].items.filter(x => x.id === it.id).length >= it.maxOwn));
 
   function rollRarity(luck){
     const L = Math.max(0, luck || 0);
@@ -721,6 +723,7 @@ function buyShopItemFor(player){
   if(!item || !item.data) return;
   if(player.currency < item.price){ audio.deny(); return; }
   if(item.type === 'item' && item.data.category === 'unique' && playerOwnsUnique(player)){ audio.deny(); return; }
+  if(item.type === 'item' && item.data.maxOwn && players[0] && players[0].items.filter(it => it.id === item.data.id).length >= item.data.maxOwn){ flashMsg('Max ' + item.data.maxOwn + ' owned', 1.2); audio.deny(); return; }
   if(typeof devMode === 'undefined' || !devMode){
     player.currency -= item.price;
     runStats.spent += item.price;
@@ -1385,6 +1388,23 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
             if(b.elemental === 'fire'){
               e.status.burn = Math.max(e.status.burn, 4);
               e.status.burnDps = Math.max(e.status.burnDps, b.damage * 0.6);
+              // Wildfire Rounds: chance for the burn to spread to nearby enemies
+              const shooter = b.ownerId != null ? players.find(p => p.id === b.ownerId) : null;
+              const spreadCh = shooter ? (shooter.fireSpread || 0) : 0;
+              if(spreadCh > 0 && Math.random() < spreadCh){
+                for(const ne of enemies){
+                  if(ne === e || ne.hp <= 0) continue;
+                  const sdx = ne.x - e.x, sdy = ne.y - e.y;
+                  if(sdx*sdx + sdy*sdy < 150*150){
+                    if(!ne.status) ne.status = {burn:0,burnDps:0,slow:0,shock:0};
+                    ne.status.burn = Math.max(ne.status.burn, 4);
+                    ne.status.burnDps = Math.max(ne.status.burnDps, b.damage * 0.6);
+                    ne.lastHitBy = b.ownerId;
+                    addParticle({x:ne.x, y:ne.y, life:0.25, r:8, color:'#ff8c42'});
+                  }
+                }
+                floatingTexts.push({x:e.x, y:e.y-14, vx:0, vy:-30, life:0.7, text:'SPREAD!', color:'#ff8c42'});
+              }
             } else if(b.elemental === 'ice'){
               e.status.slow = Math.max(e.status.slow, b.slowTime || 2.0);
             } else if(b.elemental === 'shock'){

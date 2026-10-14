@@ -133,6 +133,7 @@ const items = [
   {id:'overclock', name:'Overclock Core', rarity:'legendary', category:'tech', price:115, desc:'+15% Fire Rate, -10 Max HP', effects:{reloadMult:-0.15, maxHpAdd:-10}},
   {id:'precision', name:'Stability Gyro', rarity:'rare', category:'tech', price:60, desc:'+20% Accuracy, -10% Reload Speed', effects:{accuracyMult:0.2, reloadMult:0.1}},
   {id:'vamp', name:'Life Tap', rarity:'epic', category:'primal', price:125, desc:'+8% Life Steal, -10 Max HP', effects:{lifestealAdd:0.08, maxHpAdd:-10}},
+  {id:'wildfire', name:'Wildfire Rounds', rarity:'epic', category:'arcane', price:130, desc:'+25% chance fire hits spread burn to nearby enemies (max 4 owned)', effects:{fireSpreadAdd:0.25}, noCombine:true, maxOwn:4},
   {id:'belt', name:'Ammo Belt', rarity:'common', category:'tech', price:30, desc:'+6 Magazine Size, -5% Accuracy', effects:{magBonus:6, accuracyMult:-0.05}, cosmetic:'belt'},
   {id:'boots', name:'Kinetic Boots', rarity:'rare', category:'tech', price:55, desc:'+20 Move Speed, -5% Damage', effects:{speedMult:0.1, damageMult:-0.05}},
   {id:'luck', name:'Lucky Charm', rarity:'common', category:'arcane', price:35, desc:'+1 Luck (rarer shop rolls)', effects:{luckAdd:1}},
