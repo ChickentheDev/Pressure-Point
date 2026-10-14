@@ -20,6 +20,7 @@
   box-shadow:inset -2px -2px 0 #1fa83a; }
 .pp-money { display:flex; align-items:center; gap:7px; margin:0 auto; font-size:22px; font-weight:900; }
 .pp-pill { background:var(--panel); border:2px solid var(--edge); box-shadow:0 4px 0 var(--edge),inset 0 2px 0 #ffffff14; border-radius:12px; }
+.pp-combo { border-color:#ffd166; color:#ffd166; font-weight:900; } .pp-combo b{font-size:16px} .pp-combo small{font-size:10px; opacity:.8; margin-left:4px}
 .pp-reroll { padding:9px 16px; font-size:16px; }
 .pp-reroll:active, .pp-buy:active { transform:translateY(2px); }
 .pp-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:14px; }
