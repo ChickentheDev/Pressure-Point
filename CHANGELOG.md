@@ -1,3 +1,12 @@
+## v0.8.1 — Cut pickups, more mechanics
+- **Removed**: heart/magnet pickups (cut per playtest feedback).
+- **Adrenaline**: dropping under 30% HP triggers +35% fire rate and +20% move speed, with a pulsing red vignette.
+- **Ricochet SMG** (epic): bullets bounce off arena walls up to 2 times.
+- **Vortex Cannon** (legendary): hits spawn a gravity well that drags enemies in and grinds them down.
+- **Phantom** (new enemy): phases in and out — untargetable and faster while phased.
+- **Leaper** (new enemy): telegraphs, then leaps onto you with an AoE slam.
+- **New menu art**: storm cliffside (fresh art per the every-update rule).
+
 ## v0.8.0 — Mechanics sprint
 - **Killstreak combo**: chained kills (3s window) build a money/XP multiplier up to 2x at 40 kills, shown as a HUD badge.
 - **Dash damage**: dashing through enemies now deals damage (15 + 60% of your damage), with blood and knockback.
