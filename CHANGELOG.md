@@ -1,3 +1,6 @@
+## Unreleased
+- **New weapon art**: replaced 23 weapon sprites with Sam's cartoon-style art (transparent-background cutouts from his reference sheets) — sniper, sprayer, tesla, e-sword, flak, flamethrower, grenade, katana, mine, mortar, plasma, railgun, scattergun, cobalt pistol, grav shotgun, harpoon gun, longshot DMR, minigun, pulse rifle, RPG, shotgun, titan cannon, viper SMG. Shop/HUD icons render smooth (no more pixelated upscaling) for the new art.
+
 ## v0.9 — Elemental reactions, Engineer class
 - **Elemental reactions**: cross-element combos consume existing statuses — **Detonate** (shock on burning: AoE blast), **Melt** (ice on burning: burst damage), **Shatter** (shock on slowed: bonus damage + 0.9s stun), **Hex Spread** (dark on any afflicted enemy: hex jumps to 2 nearby enemies).
 - **Engineer class** (new, unlocks via Turret Master): turret specialist — starts every run with a free Sentry Turret, turrets deal +50% damage and last +50% longer.

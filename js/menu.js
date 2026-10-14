@@ -34,13 +34,13 @@ function setMenuStep(step){
 
 // Weapon icon art (PNGs that exist); others fall back to a colored tile.
 const WEAPON_ICONS = {
-  pistol:'assets/weapons/CobaltPistol.png', harpoon:'assets/weapons/Harpoongun.png', rifle:'assets/weapons/Pulserifle.png',
-  shotgun:'assets/weapons/GravShotgun.png', heavy:'assets/weapons/TitanCannon.png', blade:'assets/weapons/ArcBlade.png',
-  smg:'assets/weapons/ViperSMG.png', dmr:'assets/weapons/LongshotDMR.png', rpg:'assets/weapons/RPG.png', minigun:'assets/weapons/Minigun.png',
-  scatter:'assets/weapons/weapon_scatter.png', crossbow:'assets/weapons/weapon_crossbow.png', sniper:'assets/weapons/weapon_sniper.png',
-  katana:'assets/weapons/weapon_katana.png', plasma:'assets/weapons/weapon_plasma.png', grenade:'assets/weapons/weapon_grenade.png',
-  flak:'assets/weapons/weapon_flak.png', tesla:'assets/weapons/weapon_tesla.png', esword:'assets/weapons/weapon_esword.png',
-  mortar:'assets/weapons/weapon_mortar.png',
+  pistol:'assets/weapons/w_pistol.png', harpoon:'assets/weapons/w_harpoon.png', rifle:'assets/weapons/w_rifle.png',
+  shotgun:'assets/weapons/w_shotgun.png', heavy:'assets/weapons/w_heavy.png', blade:'assets/weapons/ArcBlade.png',
+  smg:'assets/weapons/w_smg.png', dmr:'assets/weapons/w_dmr.png', rpg:'assets/weapons/w_rpg.png', minigun:'assets/weapons/w_minigun.png',
+  scatter:'assets/weapons/w_scatter.png', crossbow:'assets/weapons/weapon_crossbow.png', sniper:'assets/weapons/w_sniper.png',
+  katana:'assets/weapons/w_katana.png', plasma:'assets/weapons/w_plasma.png', grenade:'assets/weapons/w_grenade.png',
+  flak:'assets/weapons/w_flak.png', tesla:'assets/weapons/w_tesla.png', esword:'assets/weapons/w_esword.png',
+  mortar:'assets/weapons/w_mortar.png',
 };
 function weaponIconHTML(w){
   const src = WEAPON_ICONS[w.id];
