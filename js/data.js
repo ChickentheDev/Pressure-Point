@@ -63,6 +63,10 @@ const enemyTypes = [
    eliteName:'Lifewarden', eliteTrait:'mass healing aura'},
   {id:'charger', name:'Charger', color:'#ff5d7a', r:13, hp:70, speed:115, dmg:20, xp:15, money:5, charges:true,
    eliteName:'Juggernaut', eliteTrait:'unstoppable charge'},
+  {id:'phantom', name:'Phantom', color:'#b8c4d4', r:11, hp:55, speed:135, dmg:14, xp:14, money:5, phases:true,
+   eliteName:'Wraith', eliteTrait:'longer phase'},
+  {id:'leaper', name:'Leaper', color:'#ff8c42', r:12, hp:70, speed:100, dmg:16, xp:15, money:5, leaps:true,
+   eliteName:'Skyterror', eliteTrait:'bigger slam'},
 ];
 
 const bossType = {id:'overlord', name:'Overlord', color:'#ff6b6b', r:36, hp:1440, speed:60, dmg:40, xp:120, money:40};
@@ -117,6 +121,8 @@ const weapons = [
   {id:'frostbite', name:'Frostbite', type:'special', rarity:'epic', fireRate:0.16, bulletSpeed:640, spread:0.09, damage:9, mag:40, reload:1.7, recoil:0.8, color:'#9be8ff', elemental:'ice', slowTime:4.5, range:720},
   {id:'hornet', name:'Hornet Swarm', type:'special', rarity:'rare', fireRate:0.4, bulletSpeed:540, spread:0.35, damage:13, mag:12, reload:1.8, recoil:1.0, color:'#d6ff5d', homing:true, range:950},
   {id:'stormcaller', name:'Stormcaller', type:'special', rarity:'legendary', fireRate:0.55, bulletSpeed:720, spread:0.06, damage:32, mag:10, reload:2.1, recoil:1.2, color:'#c9b6ff', elemental:'shock', chain:5, range:800},
+  {id:'ricochet', name:'Ricochet SMG', type:'rifle', rarity:'epic', fireRate:0.1, bulletSpeed:720, spread:0.07, damage:6, mag:36, reload:1.5, recoil:1.0, color:'#ffe066', bounce:2, range:850},
+  {id:'vortex', name:'Vortex Cannon', type:'special', rarity:'legendary', fireRate:0.7, bulletSpeed:560, spread:0.05, damage:22, mag:8, reload:2.2, recoil:1.4, color:'#c77bff', vortex:true, range:780},
   {id:'esword', name:'Energy Sword', type:'melee', rarity:'legendary', fireRate:0.6, bulletSpeed:450, spread:0.0, damage:45, mag:999, reload:0.2, recoil:0.7, color:'#00ffff', melee:true},
   {id:'mortar', name:'Mortar', type:'heavy', rarity:'rare', fireRate:0.9, bulletSpeed:380, spread:0.15, damage:55, mag:4, reload:2.2, recoil:1.9, color:'#888866', explosive:true, elemental:'fire', splashR:130},
 ];
@@ -318,11 +324,11 @@ const classArchetypes = [
   {base:'Foxglove', weapon:'pistol', mods:{hpMult:0.95, speed:255, accuracy:1.25, luck:2}, tags:'Fast and precise', pool:["pistol", "smg", "crossbow", "dmr", "rifle"], unlock:{achievement:'first_blood'}},
   {base:'Gravelord', weapon:'heavy', mods:{hpMult:1.3, speed:200, armor:8, damageBonus:4, recoil:1.2}, tags:'Slow heavy hitter', pool:["heavy", "rpg", "grenade", "mortar", "minigun"], unlock:{achievement:'exterminator'}},
   {base:'Scrapjack', weapon:'shotgun', mods:{hpMult:1.0, speed:235, magBonus:2, damageBonus:2, reloadSpeed:0.95}, tags:'Close range', pool:["shotgun", "scatter", "flak", "flame", "sprayer", "frostbite"], unlock:{achievement:'survivor'}},
-  {base:'Voltblade', weapon:'blade', mods:{hpMult:1.1, speed:260, armor:4, lifesteal:0.05}, tags:'Melee sustain', pool:["blade", "katana", "esword", "tesla", "arc", "stormcaller"], unlock:{achievement:'veteran'}},
-  {base:'Circuitry', weapon:'rifle', mods:{hpMult:0.95, speed:235, reloadSpeed:0.85, accuracy:1.1, magBonus:1}, tags:'Fast reload', pool:["smg", "rifle", "plasma", "sprayer", "pistol", "hornet"], unlock:{achievement:'shopaholic'}},
+  {base:'Voltblade', weapon:'blade', mods:{hpMult:1.1, speed:260, armor:4, lifesteal:0.05}, tags:'Melee sustain', pool:["blade", "katana", "esword", "tesla", "arc", "stormcaller", "vortex"], unlock:{achievement:'veteran'}},
+  {base:'Circuitry', weapon:'rifle', mods:{hpMult:0.95, speed:235, reloadSpeed:0.85, accuracy:1.1, magBonus:1}, tags:'Fast reload', pool:["smg", "rifle", "plasma", "sprayer", "pistol", "hornet", "ricochet"], unlock:{achievement:'shopaholic'}},
   {base:'Bulwark', weapon:'pistol', mods:{hpMult:1.4, speed:210, armor:10, accuracy:0.95}, tags:'Tank', pool:["pistol", "heavy", "shotgun", "minigun", "flak", "scatter"], unlock:{achievement:'untouchable'}},
   {base:'Redline', weapon:'rifle', mods:{hpMult:0.95, speed:240, damageBonus:3, recoil:1.1}, tags:'High damage', pool:["rail", "rifle", "sniper", "dmr", "rpg"], unlock:{achievement:'genocide'}},
-  {base:'Skylark', weapon:'pistol', mods:{hpMult:0.9, speed:285, accuracy:1.1, reloadSpeed:0.95}, tags:'Very fast', pool:["smg", "pistol", "sprayer", "plasma", "crossbow", "hornet"], unlock:{achievement:'medic'}},
+  {base:'Skylark', weapon:'pistol', mods:{hpMult:0.9, speed:285, accuracy:1.1, reloadSpeed:0.95}, tags:'Very fast', pool:["smg", "pistol", "sprayer", "plasma", "crossbow", "hornet", "ricochet"], unlock:{achievement:'medic'}},
   {base:'Nightreap', weapon:'shotgun', mods:{hpMult:1.05, speed:225, lifesteal:0.07, damageBonus:1}, tags:'Life steal', pool:["shotgun", "blade", "katana", "flame", "mine"], unlock:{achievement:'unique_find'}},
   {base:'Glassjaw', weapon:'rifle', mods:{hpMult:0.01, speed:300, accuracy:1.3, reloadSpeed:0.8, damageBonus:15, luck:3}, tags:'1 HP. Glass cannon.', pool:["rail", "sniper", "rifle", "dmr", "heavy", "rpg"], unlock:{nightmare:true}},
 ];
