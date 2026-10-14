@@ -344,7 +344,7 @@ function startWave(){
   }
 }
 
-function openShop(){ moneyDrops.length = 0; state.phase='shop'; state.shopAnim=0; buildShop(); audio.beep(660,0.08,'triangle',0.05); }
+function openShop(){ moneyDrops.length = 0; pickups.length = 0; state.phase='shop'; state.shopAnim=0; buildShop(); audio.beep(660,0.08,'triangle',0.05); }
 
 function levelUp(player){ player.level += 1; player.xp -= player.xpNext; player.xpNext = Math.floor(player.xpNext * 1.2 + 15); if(!isGlassjaw(player)){ player.baseMaxHp += 6; player.hp = player.baseMaxHp; } }
 
@@ -620,14 +620,23 @@ function killEnemy(index, ownerId){
   state.runKills++;
   runStats.kills++;
   if(runStats.kills === 1 || runStats.kills === 500 || runStats.kills === 2000) checkAchievements();
-  awardToPlayerById(ownerId, e.xp, e.money);
+  // killstreak combo: chained kills (3s window) multiply money/XP, up to 2x at 40
+  state.combo = (state.combo || 0) + 1; state.comboT = 3;
+  const cm = 1 + Math.min(state.combo, 40) * 0.025;
+  const cxp = Math.max(1, Math.round(e.xp * cm)), cmoney = Math.max(1, Math.round(e.money * cm));
+  awardToPlayerById(ownerId, cxp, cmoney);
   // elites drop bonus loot: extra money shower + floating text
   if(e.elite){
     for(let k=0;k<8;k++){ moneyDrops.push({x:e.x+rand(-16,16), y:e.y+rand(-16,16), r:5, life:6, t:0}); }
     floatingTexts.push({x:e.x, y:e.y-20, vx:0, vy:-50, life:1.5, text: `${e.eliteName} slain!`, color:'#ffd166'});
     addShake(6);
   }
-  awardToPlayerById(ownerId, e.xp, e.money);
+  awardToPlayerById(ownerId, cxp, cmoney);
+  // pickup drops: hearts heal, magnets vacuum money
+  const pr = Math.random();
+  if(e.isBoss || e.elite) pickups.push({x:e.x, y:e.y, r:7, kind:'heart', life:25, t:0});
+  else if(pr < 0.035) pickups.push({x:e.x+rand(-8,8), y:e.y+rand(-8,8), r:7, kind:'heart', life:20, t:0});
+  else if(pr < 0.06) pickups.push({x:e.x+rand(-8,8), y:e.y+rand(-8,8), r:7, kind:'magnet', life:20, t:0});
   addParticle({x:e.x,y:e.y,life:0.35,r:16,color:'#ff5d5d'});
   spawnBlood(e.x, e.y, e.color, e.isBoss ? 24 : 10);
   addShake(e.isBoss ? 12 : 3);
@@ -794,6 +803,7 @@ canvas.addEventListener('click', (e)=>{
         applyUpgradeChoice(upgradeChoices.items[i]);
         // open shop after upgrade
         moneyDrops.length = 0;
+      pickups.length = 0;
         state.phase = 'shop';
         state.shopAnim = 0;
         buildShop();
@@ -902,6 +912,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
       p.dashTimer = 0.22;
       p.dashCooldown = 2.1;
       p.iFrames = 0.28;
+      p.dashHit = new Set();
       addShake(4);
       audio.dash();
       if(idx===0){ input.shiftL = false; } else { input.shiftR = false; input.keys['u'] = false; }
@@ -914,6 +925,21 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
       const speed = p.baseSpeed * 3.2;
       p.x += Math.cos(p.dashDir) * speed * dt;
       p.y += Math.sin(p.dashDir) * speed * dt;
+      // dash damage: plow through enemies
+      if(!p.dashHit) p.dashHit = new Set();
+      for(let ei=enemies.length-1; ei>=0; ei--){ const de = enemies[ei];
+        if(p.dashHit.has(de)) continue;
+        const ddx = de.x-p.x, ddy = de.y-p.y, rr = p.r + de.r + 6;
+        if(ddx*ddx + ddy*ddy < rr*rr){
+          p.dashHit.add(de);
+          const ddmg = Math.round(15 + (p.dmg || 0) * 0.6);
+          de.hp -= ddmg; de.hitFlash = 0.1; de.lastHitBy = p.id;
+          spawnBlood(de.x, de.y, de.color, 4);
+          applyKnockback(de, Math.cos(p.dashDir), Math.sin(p.dashDir), ddmg);
+          floatingTexts.push({x:de.x, y:de.y-6, vx:0, vy:-40, life:0.6, text:ddmg, color:'#9be8ff'});
+          if(de.hp <= 0) killEnemy(ei, p.id);
+        }
+      }
       // leave the dash carrying normal run speed in the dash direction
       p.vx = Math.cos(p.dashDir) * p.baseSpeed; p.vy = Math.sin(p.dashDir) * p.baseSpeed;
     } else {
@@ -1001,6 +1027,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
       if(timeUp && enemies.length){ for(const e of enemies){ addParticle({x:e.x, y:e.y, life:0.4, r:e.r || 12, color:'#aab0c4'}); } enemies.length = 0; }
       state.waveCompleteTimer += dt;
       moneyDrops.length = 0;
+      pickups.length = 0;
       if(!runStats.tookDamage && state.wave > 1) unlockAchievement('untouchable');
       checkAchievements();
       if(state.wave >= state.maxWave && !state.endless){
@@ -1339,7 +1366,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
   }
 
   // money pickups
-  const pickupRange = 80;
+  const pickupRange = (state.magnetT > 0) ? 2000 : 80;
   for(let i=moneyDrops.length-1;i>=0;i--){
     const m = moneyDrops[i];
     // no despawn: keep money drops on ground
@@ -1362,8 +1389,34 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     }
     if(moneyDrops.length > MAX_MONEY_DROPS){ moneyDrops.splice(0, moneyDrops.length - MAX_MONEY_DROPS); break; }
   }
+  // heart/magnet pickups
+  for(let i=pickups.length-1;i>=0;i--){
+    const k = pickups[i]; k.t += dt; k.life -= dt;
+    if(k.life <= 0){ pickups.splice(i,1); continue; }
+    if(alivePlayers.length === 0) continue;
+    let nearest = alivePlayers[0]; let bd = (alivePlayers[0].x-k.x)**2 + (alivePlayers[0].y-k.y)**2;
+    for(const p of alivePlayers){ const d=(p.x-k.x)**2 + (p.y-k.y)**2; if(d<bd){ bd=d; nearest=p; } }
+    const dist = Math.sqrt(bd);
+    const pr2 = 90;
+    if(dist < pr2){ const pull = Math.min(1, (pr2-dist)/pr2); k.x += (nearest.x-k.x)*pull*dt*12; k.y += (nearest.y-k.y)*pull*dt*12; }
+    if(dist < nearest.r + k.r){
+      if(k.kind === 'heart'){
+        nearest.hp = Math.min(nearest.baseMaxHp, nearest.hp + 25);
+        floatingTexts.push({x:k.x, y:k.y-10, vx:0, vy:-40, life:1, text:'+25 HP', color:'#7dff9b'});
+        addParticle({x:k.x, y:k.y, life:0.3, r:12, color:'#7dff9b'});
+      } else {
+        state.magnetT = 6;
+        floatingTexts.push({x:k.x, y:k.y-10, vx:0, vy:-40, life:1.2, text:'MAGNET!', color:'#6cd6ff'});
+        addParticle({x:k.x, y:k.y, life:0.3, r:12, color:'#6cd6ff'});
+      }
+      audio.pickup();
+      pickups.splice(i,1);
+    }
+  }
 
   // particles
+  if(state.comboT > 0){ state.comboT -= dt; if(state.comboT <= 0) state.combo = 0; }
+  if(state.magnetT > 0) state.magnetT -= dt;
   for(let i=particles.length-1;i>=0;i--){ const pt = particles[i]; pt.life -= dt;
     if(pt.vx || pt.vy){ pt.x += (pt.vx||0)*dt; pt.y += (pt.vy||0)*dt; if(pt.grav) pt.vy += pt.grav*dt;
       const fr = Math.max(0, 1 - 2.2*dt); pt.vx *= fr; pt.vy *= fr; }

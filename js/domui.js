@@ -101,6 +101,12 @@ function updateDomHud(){
   if(domEl('ppXpFill')) domEl('ppXpFill').style.width = xpPct + '%';
   if(domEl('ppLvlText')) domEl('ppLvlText').textContent = 'LV.' + (p.level || 1);
   if(domEl('ppHudMoney')) domEl('ppHudMoney').textContent = p.currency || 0;
+  const cb = domEl('ppHudCombo');
+  if(cb){
+    const n = (typeof state !== 'undefined' && state.combo) || 0;
+    if(n >= 5){ cb.style.display = ''; cb.innerHTML = '<b>x' + n + '</b><small>' + (1 + Math.min(n, 40) * 0.025).toFixed(2) + 'x</small>'; }
+    else cb.style.display = 'none';
+  }
   if(domEl('ppHudItems')) domEl('ppHudItems').textContent = (p.items || []).length;
   if(typeof state !== 'undefined'){
     if(domEl('ppHudWave')) domEl('ppHudWave').textContent = 'Wave ' + state.wave;

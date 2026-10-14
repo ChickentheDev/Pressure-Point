@@ -132,6 +132,7 @@ const bullets = [];
 const enemyBullets = [];
 const enemies = [];
 const moneyDrops = [];
+const pickups = []; // heart/magnet drops
 const particles = [];
 const trees = [];
 const fruits = [];
@@ -163,7 +164,9 @@ function resetRun(){
   enemies.length = 0;
   bullets.length = 0;
   moneyDrops.length = 0;
+  pickups.length = 0;
   particles.length = 0;
+  state.combo = 0; state.comboT = 0; state.magnetT = 0;
   trees.length = 0;
   fruits.length = 0;
   floatingTexts.length = 0;

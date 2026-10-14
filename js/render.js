@@ -778,6 +778,22 @@ function drawEffects(){
     ctx.restore();
   }
 
+  // pickups: hearts + magnets
+  for(const k of pickups){
+    const bob = Math.sin(state.animTime * 4 + k.x * 0.1) * 3;
+    drawGroundShadow(k.x, k.y + 6, 8, 3);
+    if(k.kind === 'heart'){
+      ctx.fillStyle = '#ff5d7a';
+      ctx.beginPath(); ctx.arc(k.x - 3, k.y + bob - 2, 4.5, 0, Math.PI*2); ctx.arc(k.x + 3, k.y + bob - 2, 4.5, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(k.x - 7, k.y + bob); ctx.lineTo(k.x, k.y + bob + 7); ctx.lineTo(k.x + 7, k.y + bob); ctx.fill();
+    } else {
+      ctx.strokeStyle = '#6cd6ff'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(k.x, k.y + bob, 7, Math.PI * 0.9, Math.PI * 2.1); ctx.stroke();
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(k.x - 9.5, k.y + bob - 8.5, 5, 5); ctx.fillRect(k.x + 4.5, k.y + bob - 8.5, 5, 5);
+    }
+  }
+
   // particles ([brad-fx] v0.56: soft additive glows instead of flat discs; fx.js adds the sparks)
   ctx.save();
   if(window.FX) ctx.globalCompositeOperation = 'lighter';
