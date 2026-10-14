@@ -166,7 +166,7 @@ function resetRun(){
   moneyDrops.length = 0;
   vortices.length = 0;
   particles.length = 0;
-  state.combo = 0; state.comboT = 0;
+  state.combo = 0; state.comboT = 0; state.debt = 0; state.debtBank = 0;
   trees.length = 0;
   fruits.length = 0;
   floatingTexts.length = 0;

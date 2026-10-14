@@ -395,6 +395,7 @@ function startRun(){
   if(players[1]) applyClassToPlayer(players[1], chosenClass, chosenWeapon);
   applyMetaUpgrades(players[0]);
   for(const p of players){ p.dashCooldown = 0; p.dashTimer = 0; p.iFrames = 0; p.vx = 0; p.vy = 0; }   // fresh dash + no leftover momentum each run
+  for(const p of players){ p.dropTargetX = p.x; p.dropTargetY = p.y; p.y = -110; p.dropT = 1.8; p.iFrames = 2; } // parachute drop-in
   state.wave = 1;
   state.runKills = 0;
   state.runTime = 0;

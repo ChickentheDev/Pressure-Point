@@ -224,6 +224,23 @@ function drawPlayers(){
     const bob = moving ? Math.abs(Math.sin(state.animTime * 12 + i)) * -2.5 : Math.sin(state.animTime * 3 + i) * 0.8;
 
     drawGroundShadow(p.x, p.y + 20, 14, 5);
+    // parachute drop-in: canopy + lines while descending
+    if(p.dropT > 0){
+      const sway = Math.sin(state.animTime * 5) * 6;
+      ctx.save();
+      ctx.translate(p.x + sway * 0.3, p.y - 46 + bob * 0.3);
+      ctx.fillStyle = '#e8e2d0';
+      ctx.beginPath(); ctx.arc(0, 0, 26, Math.PI, 0); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#c94f4f';
+      ctx.beginPath(); ctx.arc(0, 0, 26, Math.PI * 1.25, Math.PI * 1.75); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.arc(0, 0, 26, Math.PI * 1.08, Math.PI * 1.42); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.arc(0, 0, 26, Math.PI * 1.58, Math.PI * 1.92); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#8a8578'; ctx.lineWidth = 2;
+      for(const lx of [-20, -7, 7, 20]){
+        ctx.beginPath(); ctx.moveTo(lx * 1.1, -8); ctx.lineTo(lx * 0.3 + sway * 0.2, 34); ctx.stroke();
+      }
+      ctx.restore();
+    }
     ctx.save();
     ctx.translate(p.x, p.y + bob);
 
