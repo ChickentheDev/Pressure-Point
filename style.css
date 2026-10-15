@@ -139,6 +139,10 @@ input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:po
   padding:10px 18px;font-size:14px;font-weight:700;color:var(--text);
   border-radius:12px;animation:toast-in 180ms ease-out;pointer-events:none;
 }
+/* narrow screens: let long toasts (e.g. achievement text) wrap instead of clipping */
+@media (max-width:640px){
+  #msg{ white-space:normal; text-align:center; font-size:13px; line-height:1.4; }
+}
 .overlay.small{padding:8px 14px;font-size:13px}
 
 /* ---------- Menu steps (class -> weapon -> danger) ---------- */
