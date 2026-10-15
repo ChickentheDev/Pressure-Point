@@ -1,4 +1,6 @@
 ## v1.0.1 — Mobile layout fixes
+- **Menu taps on iOS**: class/weapon buttons (and all buttons) had `:hover` styles — iOS Safari fires hover on the first tap and only clicks on the second, so single taps did nothing. All hover styles now gated behind `@media (hover:hover)`.
+- **Select screens on portrait**: class/weapon lists were a cramped clipped side column — now stack full-width above the detail panel; keyboard hints hidden on touch.
 - **Level-up taps**: the upgrade picker is canvas-drawn and used mouse `click` — but touch `preventDefault` kills click events on iOS, so phones couldn't pick upgrades. Taps now handled directly in the touch layer.
 - **Toast clipping**: long toast text (e.g. achievement names) was cut off on narrow screens — now wraps.
 - **Minimap/weapon overlap**: minimap sat on top of the weapon slots — moved up to clear them.

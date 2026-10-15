@@ -62,12 +62,16 @@ canvas#game{display:block;width:100%;height:100%;background:#0b111a}
 }
 .btn-primary{background:linear-gradient(180deg,var(--accent) 0%,var(--accent-2) 100%);color:var(--accent-ink)}
 .btn-secondary{background:linear-gradient(180deg,#223a52 0%,#162739 100%);color:var(--text)}
+@media (hover:hover){
 .btn:hover{filter:brightness(1.1);transform:translateY(-2px);box-shadow:0 6px 0 var(--edge), inset 0 2px 0 rgba(255,255,255,0.16)}
+}
 .btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--edge)}
 .btn:focus-visible,.icon-btn:focus-visible,.class-btn:focus-visible,.danger-btn:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
 
 .icon-btn{background:transparent;border:0;color:var(--text-dim);font-size:24px;cursor:pointer;line-height:1;padding:4px 10px;border-radius:8px;transition:background .12s ease,transform .12s ease}
+@media (hover:hover){
 .icon-btn:hover{background:rgba(255,255,255,0.08);transform:scale(1.05);color:var(--text)}
+}
 
 /* ---------- Danger selector ---------- */
 .danger-list{display:inline-flex;gap:10px;flex-wrap:wrap;justify-content:center}
@@ -79,11 +83,15 @@ canvas#game{display:block;width:100%;height:100%;background:#0b111a}
   transition:transform .12s ease,filter .12s ease,box-shadow .12s ease;
   position:relative;user-select:none;
 }
+@media (hover:hover){
 .danger-btn:hover{filter:brightness(1.12);transform:translateY(-2px);box-shadow:0 6px 0 var(--edge), inset 0 2px 0 rgba(255,255,255,0.12)}
+}
 .danger-btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--edge)}
 .danger-btn.active{background:linear-gradient(180deg,var(--accent) 0%,var(--accent-2) 100%);color:var(--accent-ink)}
 .danger-btn.locked{opacity:0.5;cursor:not-allowed;color:var(--text-faint)}
+@media (hover:hover){
 .danger-btn.locked:hover{transform:none;filter:none}
+}
 .danger-btn.locked::after{content:'LOCKED';position:absolute;font-size:8px;letter-spacing:.5px;color:var(--text-faint);bottom:3px}
 
 /* ---------- Class grid ---------- */
@@ -101,7 +109,9 @@ canvas#game{display:block;width:100%;height:100%;background:#0b111a}
   font-size:13px;transition:transform .12s ease,filter .12s ease,box-shadow .12s ease;user-select:none;
 }
 .class-btn span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (hover:hover){
 .class-btn:hover{filter:brightness(1.12);transform:translateY(-2px);box-shadow:0 5px 0 var(--edge), inset 0 2px 0 rgba(255,255,255,0.12)}
+}
 .class-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--edge)}
 .class-btn.active{background:linear-gradient(180deg,var(--accent) 0%,var(--accent-2) 100%);color:var(--accent-ink)}
 .class-btn .tag{flex:none;font-size:10px;background:#1f3144;border:2px solid var(--edge);border-radius:6px;padding:1px 6px;color:#b9d6ff;text-transform:uppercase;letter-spacing:.5px}
@@ -115,7 +125,9 @@ canvas#game{display:block;width:100%;height:100%;background:#0b111a}
   box-shadow:0 2px 0 var(--edge);color:var(--text);font-size:13px;font-weight:700;
   transition:transform .12s ease,filter .12s ease;
 }
+@media (hover:hover){
 .toggle:hover,.settings-row label:hover{filter:brightness(1.12);transform:translateY(-1px)}
+}
 input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:pointer}
 
 .overlay.settings{width:min(520px, calc(100vw - 32px));text-align:center}
@@ -130,7 +142,9 @@ input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:po
 /* ---------- In-game DOM buttons / toasts ---------- */
 .pause-btn{position:absolute;right:16px;top:16px;min-width:0;padding:8px 16px;font-size:14px;z-index:1}
 .restart-btn{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);z-index:1}
+@media (hover:hover){
 .restart-btn:hover{transform:translateX(-50%) translateY(-2px)}
+}
 .restart-btn:active{transform:translateX(-50%) translateY(2px)}
 
 /* v0.56 (e): toast sits low (above the dash/weapon cards) so it never covers the level-up panel */
@@ -181,7 +195,9 @@ input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:po
 }
 .weapon-btn img{width:100%;height:100%;object-fit:contain;image-rendering:auto}
 .weapon-btn .fallback{font-weight:800;font-size:20px}
+@media (hover:hover){
 .weapon-btn:hover{filter:brightness(1.15);transform:translateY(-2px)}
+}
 .weapon-btn.active{outline:3px solid var(--accent);outline-offset:1px;filter:brightness(1.15)}
 
 /* ---------- Run summary screens (won / over / pause) ---------- */
@@ -264,7 +280,9 @@ input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:po
 }
 
 .class-btn.locked{opacity:0.45;cursor:not-allowed;filter:grayscale(0.7)}
+@media (hover:hover){
 .class-btn.locked:hover{transform:none;filter:grayscale(0.7)}
+}
 
 /* ---------- Brotato-style landing (v0.7.6) ---------- */
 #menu.landing-mode{
@@ -312,6 +330,13 @@ input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:po
 /* touch devices: keyboard hints are useless — hide them */
 @media (pointer:coarse){
   .landing-hint{ display:none !important; }
+  .kbd-hint{ display:none !important; }
+}
+/* portrait phones: select screens stack list above detail instead of a cramped side column */
+@media (max-width:640px){
+  .select-layout{ grid-template-columns:1fr; }
+  .select-grid{ max-height:32vh; }
+  .class-list{ grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); }
 }
 /* scale the whole menu UI with viewport */
 #menu{ width:min(1020px, calc(100vw - 32px)); }
