@@ -2,6 +2,10 @@
 
 **[Play online](https://chickenthedev.github.io/Pressure-Point/)** — no download, full lighting and effects.
 
+disable lighting in settings if it bugs
+
+in order to get maximum performance use the zip file in releases and double click on index.html
+
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
 ## Latest Changes (v1.0 — Full release)
