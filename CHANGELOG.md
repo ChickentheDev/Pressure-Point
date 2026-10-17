@@ -1,6 +1,7 @@
 ## v1.0.2 — Polish pass
 - **Pause menu**: the wave timer used to bleed through behind the "Paused" title — it's now hidden while paused (desktop and mobile verified).
 - **Bug sweep**: headless autopilot played 3 waves (141 kills, 7 shops, 2 upgrades) with zero JS errors, stalls, or NaNs.
+- **New menu art**: aurora borealis over jagged peaks (fresh procedural art per the every-update rule).
 
 ## v1.0.1 — Mobile layout fixes
 - **Menu taps on iOS**: class/weapon buttons (and all buttons) had `:hover` styles — iOS Safari fires hover on the first tap and only clicks on the second, so single taps did nothing. All hover styles now gated behind `@media (hover:hover)`.
