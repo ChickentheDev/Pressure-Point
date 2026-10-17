@@ -1,3 +1,6 @@
+## v1.0.3 — Shop icons
+- **Shop icons**: reverted UI weapon icons (shop, HUD, menus) to the original pixel-art sprites — the cartoon sprites stay for in-game held weapons.
+
 ## v1.0.2 — Polish pass
 - **Pause menu**: the wave timer used to bleed through behind the "Paused" title — it's now hidden while paused (desktop and mobile verified).
 - **Bug sweep**: headless autopilot played 3 waves (141 kills, 7 shops, 2 upgrades) with zero JS errors, stalls, or NaNs.
