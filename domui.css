@@ -83,6 +83,8 @@
 .pp-wave small { display:block; font-size:14px; color:#dbe8ff; font-weight:800; }
 .pp-wave strong { font-size:34px; font-weight:900; line-height:1; }
 .pp-wave .devbadge { display:block; font-size:11px; color:#7dff9a; font-weight:900; }
+/* keep the wave timer from bleeding through the pause menu */
+body.is-paused .pp-wave { display:none; }
 .pp-pause { right:12px; top:12px; width:44px; height:44px; pointer-events:auto; display:grid;
   place-items:center; font-size:18px; padding:0; }
 .pp-wpns { right:12px; bottom:12px; display:flex; gap:5px; }

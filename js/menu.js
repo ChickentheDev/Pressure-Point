@@ -334,8 +334,9 @@ function showPauseMenu(){
   const ps = document.getElementById('pauseStats');
   if(ps) ps.innerHTML = playerStatRows(p);
   if(pauseMenuEl) pauseMenuEl.style.display = 'block';
+  document.body.classList.add('is-paused');
 }
-function hidePauseMenu(){ if(pauseMenuEl) pauseMenuEl.style.display = 'none'; }
+function hidePauseMenu(){ if(pauseMenuEl) pauseMenuEl.style.display = 'none'; document.body.classList.remove('is-paused'); }
 
 function wireSummaryButtons(){
   const on = (id, fn)=>{ const el = document.getElementById(id); if(el) el.addEventListener('click', ()=>{ audio.click(); fn(); }); };
