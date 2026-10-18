@@ -310,7 +310,8 @@ input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:po
 .logo-sub{ margin-top:10px; font-size:clamp(13px, 1.6vw, 19px); font-weight:700;
   color:#dbe8ff; text-shadow:0 2px 0 #000, 0 0 18px rgba(0,0,0,.8); letter-spacing:1px; }
 .landing-cols{ position:absolute; inset:0; pointer-events:none; }
-.landing-left{ position:absolute; left:4%; top:52%; display:flex; flex-direction:column; gap:12px; pointer-events:auto; }
+.landing-left.menu-left-col{ position:absolute; left:4%; top:42%; display:flex; flex-direction:column; gap:10px; pointer-events:auto; align-items:flex-start; }
+.menu-left-col .btn-compact{ min-width:160px; font-size:14px; padding:9px 18px; }
 .landing-right{ position:absolute; right:4%; top:52%; display:flex; flex-direction:column; gap:12px;
   align-items:flex-end; pointer-events:auto; }
 .btn-huge{ font-size:clamp(22px, 2.6vw, 34px) !important; padding:16px 58px !important; border-radius:16px !important; }
