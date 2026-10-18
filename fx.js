@@ -8,43 +8,43 @@
   const PX = 2;                                    // screen px per art px
   // fw/fh = frame size in art px, ax/ay = body centre in art px (lines the body up with the hitbox)
   const SHEETS = {
-    p1_down: {src:'assets/sprites/players/player_p1_down.png', fw:16, fh:21, n:4, ax:8, ay:10.5},
-    p1_up:   {src:'assets/sprites/players/player_p1_up.png',   fw:16, fh:21, n:4, ax:8, ay:10.5},
-    p1_side: {src:'assets/sprites/players/player_p1_side.png', fw:16, fh:21, n:4, ax:8, ay:10.5},
-    p2_down: {src:'assets/sprites/players/player_p2_down.png', fw:16, fh:21, n:4, ax:8, ay:10.5},
-    p2_up:   {src:'assets/sprites/players/player_p2_up.png',   fw:16, fh:21, n:4, ax:8, ay:10.5},
-    p2_side: {src:'assets/sprites/players/player_p2_side.png', fw:16, fh:21, n:4, ax:8, ay:10.5},
+    p1_down: {src:'assets/sprites/players/player_p1_down.png', fw:64, fh:84, n:4, ax:32, ay:42},
+    p1_up:   {src:'assets/sprites/players/player_p1_up.png',   fw:64, fh:84, n:4, ax:32, ay:42},
+    p1_side: {src:'assets/sprites/players/player_p1_side.png', fw:64, fh:84, n:4, ax:32, ay:42},
+    p2_down: {src:'assets/sprites/players/player_p2_down.png', fw:64, fh:84, n:4, ax:32, ay:42},
+    p2_up:   {src:'assets/sprites/players/player_p2_up.png',   fw:64, fh:84, n:4, ax:32, ay:42},
+    p2_side: {src:'assets/sprites/players/player_p2_side.png', fw:64, fh:84, n:4, ax:32, ay:42},
     // v0.56 enemy set: raptor runner, dino-head bruiser, mosquito spitter, sandworm boss (frames 4-5 = emerging)
-    runner:   {src:'assets/sprites/enemies/enemy_runner.png',   fw:20, fh:20, n:4, ax:9,  ay:10,  fps:12},
-    bruiser:  {src:'assets/sprites/enemies/enemy_bruiser.png',  fw:26, fh:26, n:4, ax:12, ay:12,  fps:6},
-    spitter:  {src:'assets/sprites/enemies/enemy_spitter.png',  fw:22, fh:22, n:4, ax:13, ay:12,  fps:10},
-    bulwark:  {src:'assets/sprites/enemies/enemy_bulwark.png',  fw:32, fh:32, n:4, ax:16, ay:16,  fps:6},
-    burster:  {src:'assets/sprites/enemies/enemy_burster.png',  fw:20, fh:20, n:4, ax:10, ay:11,  fps:10},
-    splitter: {src:'assets/sprites/enemies/enemy_splitter.png', fw:24, fh:24, n:4, ax:12, ay:13,  fps:8},
-    dasher:   {src:'assets/sprites/enemies/enemy_dasher.png',   fw:20, fh:20, n:4, ax:10, ay:10,  fps:12},
-    aegis:    {src:'assets/sprites/enemies/enemy_aegis.png',    fw:32, fh:32, n:4, ax:16, ay:16,  fps:6},
-    nester:   {src:'assets/sprites/enemies/enemy_nester.png',   fw:32, fh:32, n:4, ax:16, ay:16,  fps:6},
-    boss:     {src:'assets/sprites/enemies/enemy_sandworm.png', fw:52, fh:56, n:6, ax:27, ay:30,  fps:4, loop:4, faceLeft:true},
-    overlord: {src:'assets/sprites/enemies/enemy_sandworm.png', fw:52, fh:56, n:6, ax:27, ay:30,  fps:4, loop:4, faceLeft:true},
-    hive:     {src:'assets/sprites/enemies/enemy_hive.png',     fw:52, fh:56, n:6, ax:26, ay:28,  fps:4},
-    storm:    {src:'assets/sprites/enemies/enemy_storm.png',    fw:52, fh:56, n:6, ax:26, ay:28,  fps:6},
-    ironclad: {src:'assets/sprites/enemies/enemy_ironclad.png', fw:52, fh:56, n:6, ax:26, ay:28,  fps:4},
-    void:     {src:'assets/sprites/enemies/enemy_void.png',     fw:52, fh:56, n:6, ax:26, ay:28,  fps:6},
-    nightmare:{src:'assets/sprites/enemies/enemy_nightmare.png',fw:52, fh:56, n:6, ax:26, ay:28,  fps:6},
-    tree:     {src:'assets/sprites/fx/tree.png',           fw:26, fh:32, n:1, ax:13, ay:20},
-    decals:   {src:'assets/sprites/fx/ground_decals.png',  fw:16, fh:16, n:8, ax:8,  ay:8},
+    runner:   {src:'assets/sprites/enemies/enemy_runner.png',   fw:80, fh:80, n:4, ax:36,  ay:40,  fps:12},
+    bruiser:  {src:'assets/sprites/enemies/enemy_bruiser.png',  fw:104, fh:104, n:4, ax:48, ay:48,  fps:6},
+    spitter:  {src:'assets/sprites/enemies/enemy_spitter.png',  fw:88, fh:88, n:4, ax:52, ay:48,  fps:10},
+    bulwark:  {src:'assets/sprites/enemies/enemy_bulwark.png',  fw:128, fh:128, n:4, ax:64, ay:64,  fps:6},
+    burster:  {src:'assets/sprites/enemies/enemy_burster.png',  fw:80, fh:80, n:4, ax:40, ay:44,  fps:10},
+    splitter: {src:'assets/sprites/enemies/enemy_splitter.png', fw:96, fh:96, n:4, ax:48, ay:52,  fps:8},
+    dasher:   {src:'assets/sprites/enemies/enemy_dasher.png',   fw:80, fh:80, n:4, ax:40, ay:40,  fps:12},
+    aegis:    {src:'assets/sprites/enemies/enemy_aegis.png',    fw:128, fh:128, n:4, ax:64, ay:64,  fps:6},
+    nester:   {src:'assets/sprites/enemies/enemy_nester.png',   fw:128, fh:128, n:4, ax:64, ay:64,  fps:6},
+    boss:     {src:'assets/sprites/enemies/enemy_sandworm.png', fw:208, fh:224, n:6, ax:108, ay:120,  fps:4, loop:4, faceLeft:true},
+    overlord: {src:'assets/sprites/enemies/enemy_sandworm.png', fw:208, fh:224, n:6, ax:108, ay:120,  fps:4, loop:4, faceLeft:true},
+    hive:     {src:'assets/sprites/enemies/enemy_hive.png',     fw:208, fh:224, n:6, ax:104, ay:112,  fps:4},
+    storm:    {src:'assets/sprites/enemies/enemy_storm.png',    fw:208, fh:224, n:6, ax:104, ay:112,  fps:6},
+    ironclad: {src:'assets/sprites/enemies/enemy_ironclad.png', fw:208, fh:224, n:6, ax:104, ay:112,  fps:4},
+    void:     {src:'assets/sprites/enemies/enemy_void.png',     fw:208, fh:224, n:6, ax:104, ay:112,  fps:6},
+    nightmare:{src:'assets/sprites/enemies/enemy_nightmare.png',fw:208, fh:224, n:6, ax:104, ay:112,  fps:6},
+    tree:     {src:'assets/sprites/fx/tree.png',           fw:104, fh:128, n:1, ax:52, ay:80},
+    decals:   {src:'assets/sprites/fx/ground_decals.png',  fw:64, fh:64, n:8, ax:32,  ay:32},
   };
   // v0.6.0 class sprites: one sheet per class per view. P2 uses the same sprite as P1
   // (the co-op ring distinguishes players); p1_/p2_ sheets stay as fallback.
   for(const cid of ['ironheart','foxglove','gravelord','scrapjack','voltlade','circuitry','bulwark','redline','skylark','nightreap','glassjaw','engineer']){
     for(const v of ['down','up','side']){
-      SHEETS['cls_'+cid+'_'+v] = {src:'assets/sprites/players/player_'+cid+'_'+v+'.png', fw:16, fh:21, n:4, ax:8, ay:10.5};
+      SHEETS['cls_'+cid+'_'+v] = {src:'assets/sprites/players/player_'+cid+'_'+v+'.png', fw:64, fh:84, n:4, ax:32, ay:42};
     }
   }
   // paper-doll cosmetics: single-frame overlays drawn on the owning player
-  SHEETS.cos_crown = {src:'assets/sprites/cosmetics/cosmetic_crown.png', fw:14, fh:7, n:1, ax:7, ay:3.5};
-  SHEETS.cos_armor = {src:'assets/sprites/cosmetics/cosmetic_armor.png', fw:16, fh:8, n:1, ax:8, ay:4};
-  SHEETS.cos_belt  = {src:'assets/sprites/cosmetics/cosmetic_belt.png',  fw:12, fh:5, n:1, ax:6, ay:2.5};
+  SHEETS.cos_crown = {src:'assets/sprites/cosmetics/cosmetic_crown.png', fw:56, fh:28, n:1, ax:28, ay:14};
+  SHEETS.cos_armor = {src:'assets/sprites/cosmetics/cosmetic_armor.png', fw:64, fh:32, n:1, ax:32, ay:16};
+  SHEETS.cos_belt  = {src:'assets/sprites/cosmetics/cosmetic_belt.png',  fw:48, fh:20, n:1, ax:24, ay:10};
   const imgs = {};
   for(const [k, s] of Object.entries(SHEETS)){ const im = new Image(); im.src = s.src; imgs[k] = im; }
   const ready = k => { const im = imgs[k]; return im && im.complete && im.naturalWidth > 0; };
@@ -65,7 +65,8 @@
     const f = ((frame % s.n) + s.n) % s.n;
     const dw = s.fw * PX, dh = s.fh * PX, ox = -s.ax * PX, oy = -s.ay * PX;
     ctx.save();
-    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     if(opts && opts.alpha != null) ctx.globalAlpha *= opts.alpha;
     if(opts && opts.flipX) ctx.scale(-1, 1);
     const src = opts && opts.tint ? tinted(k, opts.tint) : imgs[k];
@@ -449,14 +450,15 @@
     // legacy doodle decals for extra variety
     const im = imgs.decals, cell = 130;
     if(im && im.complete && im.naturalWidth){
-      g.imageSmoothingEnabled = false;
+      g.imageSmoothingEnabled = true;
+      g.imageSmoothingQuality = 'high';
       for(let gy = ay; gy < ay + ah; gy += cell){
         for(let gx = ax; gx < ax + aw; gx += cell){
           if(rnd() < 0.45) continue;
           const f = Math.floor(rnd() * 8), x = gx + rnd() * cell, y = gy + rnd() * cell;
-          const sc = 2, flip = rnd() < 0.5;
+          const flip = rnd() < 0.5;
           g.save(); g.globalAlpha = 0.5 + rnd() * 0.3; g.translate(Math.round(x), Math.round(y)); if(flip) g.scale(-1, 1);
-          g.drawImage(im, f * 16, 0, 16, 16, -8 * sc, -8 * sc, 16 * sc, 16 * sc); g.restore();
+          g.drawImage(im, f * 64, 0, 64, 64, -16, -16, 32, 32); g.restore();
         }
       }
     }

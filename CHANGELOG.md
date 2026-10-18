@@ -1,3 +1,7 @@
+## v1.0.4 — Smooth HD sprites
+- **Sprite smoothing**: all 62 character/effect sprite sheets (12 player classes × 3 views, 15 enemies, cosmetics, ground decals, trees) re-rendered at 4x resolution with smooth anti-aliased edges — same designs, same on-screen sizes, no more chunky pixels. The renderer now smooth-scales sprite sheets instead of nearest-neighbour.
+- **New menu art**: Emberstorm Citadel — a burning fortress skyline under a crimson nebula (fresh procedural art per the every-update rule).
+
 ## v1.0.3 — Shop icons
 - **Shop icons**: reverted UI weapon icons (shop, HUD, menus) to the original pixel-art sprites — the cartoon sprites stay for in-game held weapons.
 
