@@ -1,3 +1,8 @@
+## v1.0.5 — Bold cartoon sprites
+- **Full cartoon redraw**: all 62 character/effect sprite sheets (12 player classes × 3 views, 15 enemies, cosmetics, ground decals, trees) redrawn in the bold cartoon style of the weapon art — thick black outlines, flat cel-shaded colors, simple clean shapes. Same characters and animations, same on-screen sizes.
+- **Bug fix**: v1.0.4's upscale accidentally rendered sprites 4x too large on screen (sheet dims were scaled but the draw size followed) — sprite rendering now uses logical frame sizes with an 8x image scale, so on-screen sizes match the originals exactly.
+- **New menu art**: Tempest Spires — lightning storm over glowing crystal towers (fresh procedural art per the every-update rule).
+
 ## v1.0.4 — Smooth HD sprites
 - **Sprite smoothing**: all 62 character/effect sprite sheets (12 player classes × 3 views, 15 enemies, cosmetics, ground decals, trees) re-rendered at 4x resolution with smooth anti-aliased edges — same designs, same on-screen sizes, no more chunky pixels. The renderer now smooth-scales sprite sheets instead of nearest-neighbour.
 - **New menu art**: Emberstorm Citadel — a burning fortress skyline under a crimson nebula (fresh procedural art per the every-update rule).
