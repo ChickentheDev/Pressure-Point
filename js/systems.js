@@ -652,7 +652,7 @@ function fireWeaponFor(player, time, target, autoSpread){
   for(let wi = 0; wi < owned.length; wi++){
     const w = owned[wi];
     if(!w || w.reloading > 0 || w.overheated) continue;
-    const fireRate = w.fireRate * player.reloadSpeed * (player.adrenaline ? 0.65 : 1);
+    const fireRate = w.fireRate * player.reloadSpeed;  // v1.0.7: adrenaline no longer touches attack speed (move speed only)
     if(time - (w.last||0) < fireRate) continue;
     if(w.ammoInMag <= 0){ w.reloading = w.reload * player.reloadSpeed; audio.beep(240,0.08,'sawtooth',0.04); continue; }
     w.last = time; w.ammoInMag -= 1; player.kick = Math.max(player.kick, 0.08 * w.recoil);

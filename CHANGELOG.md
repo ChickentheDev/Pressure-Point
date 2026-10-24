@@ -1,3 +1,7 @@
+## v1.0.7 — Adrenaline fix
+- **Adrenaline no longer changes attack speed**: dropping under 30% HP used to cut fire delay to 0.65x (about 54% faster shooting). Now it only gives the +20% move speed, plus the red vignette — fire rate and reload are untouched.
+- **New menu art**: Ember Tide Coast — sunset over sea cliffs (fresh procedural art per the every-update rule).
+
 ## v1.0.6 — Mature painted sprites
 - **Sprite style v3**: all 62 sheets repainted in a mature-but-simple stylized look — clean smooth shapes, subtle shading, serious proportions. Same characters and animations, same on-screen sizes. (The bold cartoon pass read too childish.)
 - **New menu art**: Crimson Canyon — dusk sun over desert mesas (fresh procedural art per the every-update rule).
