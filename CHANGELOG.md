@@ -1,3 +1,7 @@
+## v1.0.8 — Pixel sprite revert
+- **Characters back to pixel art**: all 62 character/effect sheets restored to the original pixel sprites (pre-v1.0.4) — the mature painted look sat wrong against the pixel ground, tiles and UI. Renderer back to crisp nearest-neighbour, same on-screen sizes, same characters and animations. Weapons keep their cartoon art, as before v1.0.4.
+- **New menu art**: Frostpine Summit — snowy peaks under an aurora (fresh procedural art per the every-update rule).
+
 ## v1.0.7 — Adrenaline fix
 - **Adrenaline no longer changes attack speed**: dropping under 30% HP used to cut fire delay to 0.65x (about 54% faster shooting). Now it only gives the +20% move speed, plus the red vignette — fire rate and reload are untouched.
 - **New menu art**: Ember Tide Coast — sunset over sea cliffs (fresh procedural art per the every-update rule).

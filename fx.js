@@ -6,7 +6,7 @@
 (function(){
   'use strict';
   const PX = 2;                                    // screen px per art px
-  const IMGSCALE = 8;                              // sprite PNGs are 8x the logical fw/fh (v1.0.5 cartoon art)
+  const IMGSCALE = 1;                              // pixel revert: PNGs are 1x the logical fw/fh (original pixel art)
   // fw/fh = frame size in art px, ax/ay = body centre in art px (lines the body up with the hitbox)
   const SHEETS = {
     p1_down: {src:'assets/sprites/players/player_p1_down.png', fw:16, fh:21, n:4, ax:8, ay:10.5},
@@ -66,8 +66,7 @@
     const f = ((frame % s.n) + s.n) % s.n;
     const dw = s.fw * PX, dh = s.fh * PX, ox = -s.ax * PX, oy = -s.ay * PX;
     ctx.save();
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
+    ctx.imageSmoothingEnabled = false;             // pixel art: crisp nearest-neighbour, no smoothing blur
     if(opts && opts.alpha != null) ctx.globalAlpha *= opts.alpha;
     if(opts && opts.flipX) ctx.scale(-1, 1);
     const src = opts && opts.tint ? tinted(k, opts.tint) : imgs[k];
@@ -452,15 +451,14 @@
     // legacy doodle decals for extra variety
     const im = imgs.decals, cell = 130;
     if(im && im.complete && im.naturalWidth){
-      g.imageSmoothingEnabled = true;
-      g.imageSmoothingQuality = 'high';
+      g.imageSmoothingEnabled = false;
       for(let gy = ay; gy < ay + ah; gy += cell){
         for(let gx = ax; gx < ax + aw; gx += cell){
           if(rnd() < 0.45) continue;
           const f = Math.floor(rnd() * 8), x = gx + rnd() * cell, y = gy + rnd() * cell;
           const flip = rnd() < 0.5;
           g.save(); g.globalAlpha = 0.5 + rnd() * 0.3; g.translate(Math.round(x), Math.round(y)); if(flip) g.scale(-1, 1);
-          g.drawImage(im, f * 128, 0, 128, 128, -16, -16, 32, 32); g.restore();
+          g.drawImage(im, f * 16, 0, 16, 16, -16, -16, 32, 32); g.restore();
         }
       }
     }
