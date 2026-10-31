@@ -33,12 +33,10 @@ const SPRITE_DEFS = {
   w_dmr:       {src:'assets/weapons/w_dmr.png', crop:[0,0,477,198], pixel:false},
   // [brad-fx] v0.56 pixel art for the five weapons that had none (tools/gen_sprites.py)
   w_flame:     {src:'assets/weapons/w_flame.png',   crop:[0,0,463,170], pixel:false},
-  w_arc:       {src:'assets/weapons/weapon_arc.png',     crop:[0,0,30,14], pixel:true},
   w_rail:      {src:'assets/weapons/w_rail.png',    crop:[0,0,439,170], pixel:false},
   w_mine:      {src:'assets/weapons/w_mine.png',    crop:[0,0,347,146], pixel:false},
   w_sprayer:   {src:'assets/weapons/w_sprayer.png', crop:[0,0,429,171], pixel:false},
   w_scatter:   {src:'assets/weapons/w_scatter.png', crop:[0,0,429,165], pixel:false},
-  w_crossbow:  {src:'assets/weapons/weapon_crossbow.png',crop:[0,0,32,14], pixel:true},
   w_sniper:    {src:'assets/weapons/w_sniper.png',  crop:[0,0,484,201], pixel:false},
   w_katana:    {src:'assets/weapons/w_katana.png',  crop:[0,0,487,118], pixel:false},
   w_plasma:    {src:'assets/weapons/w_plasma.png',  crop:[0,0,411,167], pixel:false},

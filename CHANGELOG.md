@@ -1,3 +1,7 @@
+## v1.0.9 — Dangling weapon art references
+- **Bug fix**: PR #11 deleted 11 weapon PNGs but left dangling references — 10 weapon UI icons (scatter, sniper, katana, plasma, grenade, flak, tesla, esword, mortar) showed broken images in the shop, weapon select, and HUD, and 2 held-weapon sprite entries (arc, crossbow) 404'd on every page load. The 9 icons with `w_` counterparts now point at Sam's weapon art; crossbow falls back to the colored tile (no art exists for it); the arc/crossbow held sprites use the drawn fallback instead of missing files. Zero console errors on load.
+- **New menu art**: Solar Flare Wastes — scorched dunes under a flaring sun (fresh procedural art per the every-update rule).
+
 ## v1.0.8 — Pixel sprite revert
 - **Characters back to pixel art**: all 62 character/effect sheets restored to the original pixel sprites (pre-v1.0.4) — the mature painted look sat wrong against the pixel ground, tiles and UI. Renderer back to crisp nearest-neighbour, same on-screen sizes, same characters and animations. Weapons keep their cartoon art, as before v1.0.4.
 - **New menu art**: Frostpine Summit — snowy peaks under an aurora (fresh procedural art per the every-update rule).
