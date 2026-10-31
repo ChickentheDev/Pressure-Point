@@ -51,6 +51,8 @@ const enemyTypes = [
    eliteName:'Detonator', eliteTrait:'massive explosion'},
   {id:'splitter', name:'Splitter', color:'#8fd4e8', r:13, hp:50, speed:85, dmg:12, xp:12, money:4, splits:true,
    eliteName:'Fracture', eliteTrait:'splits into 4'},
+  {id:'gloomweaver', name:'Gloomweaver', color:'#8a5adf', r:12, hp:70, speed:85, dmg:14, xp:16, money:5, ranged:true, homing:true,
+   eliteName:'Apex', eliteTrait:'triple homing orb spread'},
   {id:'bulwark', name:'Bulwark', color:'#8f7654', r:20, hp:180, speed:42, dmg:26, xp:22, money:6,
    eliteName:'Ironwall', eliteTrait:'reflects damage'},
   {id:'dasher', name:'Dasher', color:'#ff9f43', r:11, hp:45, speed:140, dmg:14, xp:12, money:4, dashes:true,

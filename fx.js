@@ -23,6 +23,7 @@
     burster:  {src:'assets/sprites/enemies/enemy_burster.png',  fw:20, fh:20, n:4, ax:10, ay:11,  fps:10},
     splitter: {src:'assets/sprites/enemies/enemy_splitter.png', fw:24, fh:24, n:4, ax:12, ay:13,  fps:8},
     dasher:   {src:'assets/sprites/enemies/enemy_dasher.png',   fw:20, fh:20, n:4, ax:10, ay:10,  fps:12},
+    gloomweaver:{src:'assets/sprites/enemies/enemy_gloomweaver.png', fw:24, fh:24, n:4, ax:12, ay:12, fps:8},
     aegis:    {src:'assets/sprites/enemies/enemy_aegis.png',    fw:32, fh:32, n:4, ax:16, ay:16,  fps:6},
     nester:   {src:'assets/sprites/enemies/enemy_nester.png',   fw:32, fh:32, n:4, ax:16, ay:16,  fps:6},
     boss:     {src:'assets/sprites/enemies/enemy_sandworm.png', fw:52, fh:56, n:6, ax:27, ay:30,  fps:4, loop:4, faceLeft:true},
@@ -137,7 +138,7 @@
   let lastNow = performance.now();
   let fdt = 0;
   let fxFrame = 0;                                 // bumped each frame; replaces the per-frame Set of live enemies
-  const ENEMY_COLORS = { runner:['#8a6670', '#b08f96', '#5e4048'], bruiser:['#6f5442', '#d9b54a', '#8f725c'], spitter:['#2e8a72', '#7f6048', '#9cff6b'], overlord:['#86604a', '#e8e0cc', '#5fd068'] };
+  const ENEMY_COLORS = { runner:['#8a6670', '#b08f96', '#5e4048'], bruiser:['#6f5442', '#d9b54a', '#8f725c'], spitter:['#2e8a72', '#7f6048', '#9cff6b'], overlord:['#86604a', '#e8e0cc', '#5fd068'], gloomweaver:['#3b2560', '#8a5adf', '#d580ff'] };
 
   function ownerWeapon(id){ const p = players.find(q => q.id === id); return p ? getWeaponFor(p) : null; }
   function gunTip(p){
@@ -289,16 +290,23 @@
   function drawOver(){
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    // enemy bullets: venomous green globs
+    // enemy bullets: venomous green globs, violet for homing gloom orbs
     if(typeof enemyBullets !== 'undefined'){
       for(const b of enemyBullets){
+        const hom = !!b.homing;
         const g2 = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r * 2.4);
-        g2.addColorStop(0, 'rgba(200,255,140,0.9)');
-        g2.addColorStop(0.5, 'rgba(150,255,90,0.45)');
-        g2.addColorStop(1, 'rgba(150,255,90,0)');
+        if(hom){
+          g2.addColorStop(0, 'rgba(230,170,255,0.95)');
+          g2.addColorStop(0.5, 'rgba(170,80,255,0.5)');
+          g2.addColorStop(1, 'rgba(170,80,255,0)');
+        } else {
+          g2.addColorStop(0, 'rgba(200,255,140,0.9)');
+          g2.addColorStop(0.5, 'rgba(150,255,90,0.45)');
+          g2.addColorStop(1, 'rgba(150,255,90,0)');
+        }
         ctx.fillStyle = g2;
         ctx.beginPath(); ctx.arc(b.x, b.y, b.r * 2.4, 0, 6.29); ctx.fill();
-        ctx.fillStyle = '#d6ff9e';
+        ctx.fillStyle = hom ? '#f2d8ff' : '#d6ff9e';
         ctx.beginPath(); ctx.arc(b.x, b.y, b.r * 0.7, 0, 6.29); ctx.fill();
       }
     }

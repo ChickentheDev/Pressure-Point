@@ -425,7 +425,7 @@ function spawnEnemy(opts){
   const eliteHP = elite ? 3 : 1, eliteDmg = elite ? 1.4 : 1;
   const xp = Math.floor((t.xp + Math.floor(state.wave*0.6)*(state.danger)) * (elite ? 3 : 1));
   const money = Math.max(1, Math.floor((Math.floor(t.money * 0.7) + Math.floor(state.wave*0.2) * state.danger) * (elite ? 3 : 1)));
-  enemies.push({ id: t.id, x,y, r: Math.floor(t.r * (elite ? 1.35 : 1)), hp: Math.floor(t.hp * waveScale * dangerHP * eliteHP * mapMult), maxHp: Math.floor(t.hp * waveScale * dangerHP * eliteHP * mapMult), speed: Math.floor((t.speed + state.wave*2) * dangerSpeed * (elite && t.id === 'runner' ? 1.5 : 1)), dmg: Math.floor(t.dmg * dangerDmg * lateDmg * eliteDmg * mapMult + state.wave*1.2), color: t.color, xp, money, explodes: !!t.explodes, splits: !!t.splits, dashes: !!t.dashes, shields: !!t.shields, spawns: !!t.spawns, ranged: !!t.ranged, heals: !!t.heals, charges: !!t.charges, healTimer: 2, chargeState: 0, chargeTimer: 2 + Math.random()*2, chargeDir: 0, phases: !!t.phases, phaseTimer: 3 + Math.random()*2, phased: false, leaps: !!t.leaps, leapState: 0, leapTimer: 2 + Math.random()*2, leapFromX: 0, leapFromY: 0, leapToX: 0, leapToY: 0, elite, eliteName: elite ? t.eliteName : null, dashTimer: 2 + Math.random()*2, dashTime: 0, spawnTimer: 3 });
+  enemies.push({ id: t.id, x,y, r: Math.floor(t.r * (elite ? 1.35 : 1)), hp: Math.floor(t.hp * waveScale * dangerHP * eliteHP * mapMult), maxHp: Math.floor(t.hp * waveScale * dangerHP * eliteHP * mapMult), speed: Math.floor((t.speed + state.wave*2) * dangerSpeed * (elite && t.id === 'runner' ? 1.5 : 1)), dmg: Math.floor(t.dmg * dangerDmg * lateDmg * eliteDmg * mapMult + state.wave*1.2), color: t.color, xp, money, explodes: !!t.explodes, splits: !!t.splits, dashes: !!t.dashes, shields: !!t.shields, spawns: !!t.spawns, ranged: !!t.ranged, homing: !!t.homing, heals: !!t.heals, charges: !!t.charges, healTimer: 2, chargeState: 0, chargeTimer: 2 + Math.random()*2, chargeDir: 0, phases: !!t.phases, phaseTimer: 3 + Math.random()*2, phased: false, leaps: !!t.leaps, leapState: 0, leapTimer: 2 + Math.random()*2, leapFromX: 0, leapFromY: 0, leapToX: 0, leapToY: 0, elite, eliteName: elite ? t.eliteName : null, dashTimer: 2 + Math.random()*2, dashTime: 0, spawnTimer: 3 });
   if(enemies.length > 120){ enemies.shift(); }
   addParticle({x, y, life:0.35, r:18, color: elite ? '#ffd166' : palette.uiAccent});
 }
@@ -1372,6 +1372,26 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     // enemy bullets: move, hit players (capped by hurtPlayer), expire off-screen
     for(let i = enemyBullets.length - 1; i >= 0; i--){
       const b = enemyBullets[i];
+      if(b.homing && !b.dead){
+        // steer toward the nearest living player, limited turn rate
+        let best = null, bd2 = Infinity;
+        for(const p of players){
+          if(p.dead) continue;
+          const d2 = (p.x-b.x)*(p.x-b.x) + (p.y-b.y)*(p.y-b.y);
+          if(d2 < bd2){ bd2 = d2; best = p; }
+        }
+        if(best){
+          const cur = Math.atan2(b.vy, b.vx);
+          const want = Math.atan2(best.y - b.y, best.x - b.x);
+          let d = want - cur;
+          while(d > Math.PI) d -= Math.PI*2;
+          while(d < -Math.PI) d += Math.PI*2;
+          const maxTurn = (b.turn || 2.5) * dt;
+          const na = cur + Math.max(-maxTurn, Math.min(maxTurn, d));
+          const spd = Math.hypot(b.vx, b.vy);
+          b.vx = Math.cos(na)*spd; b.vy = Math.sin(na)*spd;
+        }
+      }
       const esx = b.vx * dt, esy = b.vy * dt;
       b.x += esx; b.y += esy; b.life -= dt; b.dist = (b.dist || 0) + Math.sqrt(esx*esx + esy*esy);
       let consumed = b.life <= 0 || (b.maxDist && b.dist >= b.maxDist) || b.x < -40 || b.x > WW + 40 || b.y < -40 || b.y > WH + 40;
@@ -1616,10 +1636,23 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
       if(e.shootTimer <= 0 && sDist < 560 && !(e.stun > 0)){ // stunned enemies don't shoot
         e.shootTimer = 2.1 + Math.random() * 0.9;
         const sa = Math.atan2(target.y - e.y, target.x - e.x), spd = 330;
-        enemyBullets.push({x:e.x, y:e.y, vx:Math.cos(sa)*spd, vy:Math.sin(sa)*spd, r:6,
-          dmg:Math.max(4, Math.floor(e.dmg * 0.7)), color:'#aaff66', life:3.2, dist:0, maxDist:700});
-        addParticle({x:e.x, y:e.y, life:0.2, r:10, color:'#aaff66'});
-        audio.beep(300, 0.07, 'square', 0.03);
+        if(e.homing){
+          // Gloomweaver: slow homing dark orbs; Apex elite fires a 3-orb spread
+          const orbs = e.elite ? [-0.35, 0, 0.35] : [0];
+          for(const off of orbs){
+            const a = sa + off, s2 = e.elite ? 360 : 300;
+            enemyBullets.push({x:e.x, y:e.y, vx:Math.cos(a)*s2, vy:Math.sin(a)*s2, r:7,
+              dmg:Math.max(4, Math.floor(e.dmg * 0.7)), color:'#c44dff', life:4.0, dist:0, maxDist:800,
+              homing:true, turn:2.6});
+          }
+          addParticle({x:e.x, y:e.y, life:0.25, r:12, color:'#c44dff'});
+          audio.beep(180, 0.12, 'sine', 0.04);
+        } else {
+          enemyBullets.push({x:e.x, y:e.y, vx:Math.cos(sa)*spd, vy:Math.sin(sa)*spd, r:6,
+            dmg:Math.max(4, Math.floor(e.dmg * 0.7)), color:'#aaff66', life:3.2, dist:0, maxDist:700});
+          addParticle({x:e.x, y:e.y, life:0.2, r:10, color:'#aaff66'});
+          audio.beep(300, 0.07, 'square', 0.03);
+        }
       }
     }
     // boss abilities
