@@ -109,7 +109,7 @@ const weapons = [
   {id:'rpg', name:'RPG-7', type:'heavy', rarity:'epic', fireRate:0.8, bulletSpeed:460, spread:0.08, damage:65, mag:4, reload:1.8, recoil:2.0, color:'#ff5d5d', explosive:true, elemental:'fire', splashR:120},
   {id:'arc', name:'Arc Thrower', type:'special', rarity:'epic', fireRate:0.22, bulletSpeed:600, spread:0.15, damage:15, mag:24, reload:1.5, recoil:1.0, color:'#b27bff', elemental:'shock'},
   {id:'minigun', name:'Minigun', type:'heavy', rarity:'legendary', fireRate:0.055, bulletSpeed:760, spread:0.12, damage:6, mag:200, reload:2.8, recoil:1.4, color:'#ffb44c', overheatMax:100, overheatPerShot:2, overheatCool:22, overheatLock:1.4},
-  {id:'rail', name:'Railgun', type:'rifle', rarity:'legendary', fireRate:0.7, bulletSpeed:1200, spread:0.0, damage:65, mag:6, reload:1.5, recoil:1.8, color:'#ff6b6b', range:1350},
+  {id:'rail', name:'Railgun', type:'rifle', rarity:'legendary', fireRate:0.7, bulletSpeed:1200, spread:0.0, damage:65, mag:6, reload:1.5, recoil:1.8, color:'#ff6b6b', range:1350, pierce:99, beam:true},   // v1.1.1: true piercing line shot — the bolt goes through everything in its path, beam visual
   {id:'mine', name:'Mine Layer', type:'special', rarity:'rare', fireRate:0.6, bulletSpeed:300, spread:0.2, damage:30, mag:8, reload:1.5, recoil:1.0, color:'#c9a867', explosive:true, elemental:'fire', splashR:100},
   {id:'sprayer', name:'Frost Sprayer', type:'special', rarity:'rare', fireRate:0.08, bulletSpeed:520, spread:0.2, damage:5, mag:60, reload:1.7, recoil:0.8, color:'#6cd6ff', elemental:'ice', range:620},
   {id:'scatter', name:'Scattergun', type:'shotgun', rarity:'common', fireRate:0.7, bulletSpeed:480, spread:0.55, damage:5, pellets:6, mag:8, reload:1.6, recoil:1.3, color:'#c9a867', range:390},

@@ -10,8 +10,9 @@
   --font:"Trebuchet MS","Segoe UI",system-ui,Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
+html,body{height:100%;overflow-x:hidden}
 body{
+  position:relative;
   background:radial-gradient(circle at 20% 10%,var(--bg-2) 0%,var(--bg-1) 45%,var(--bg-0) 100%);
   color:var(--text);
   font-family:var(--font);

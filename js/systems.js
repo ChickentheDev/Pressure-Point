@@ -376,11 +376,25 @@ function startWave(){
     if(p.turretMax > 0) p.turretCharges = p.turretMax;
   }
   turrets.length = 0; // turrets don't carry between waves
+  // v1.1.1 wave-start burst: a ring + rising sparks on each player so the wave opening reads
+  for(const p of players){
+    if(p.dead) continue;
+    rings.push({x:p.x, y:p.y, r:10, t:0, life:0.45, maxR:90, color:palette.uiAccent, width:4});
+    spawnSparks(p.x, p.y, palette.uiAccent, 8);
+  }
 }
 
 function openShop(){ moneyDrops.length = 0; state.phase='shop'; state.shopAnim=0; buildShop(); audio.beep(660,0.08,'triangle',0.05); }
 
-function levelUp(player){ player.level += 1; player.xp -= player.xpNext; player.xpNext = Math.floor(player.xpNext * 1.2 + 15); if(!isGlassjaw(player)){ player.baseMaxHp += 6; player.hp = player.baseMaxHp; } }
+function levelUp(player){
+  player.level += 1; player.xp -= player.xpNext; player.xpNext = Math.floor(player.xpNext * 1.2 + 15);
+  if(!isGlassjaw(player)){ player.baseMaxHp += 6; player.hp = player.baseMaxHp; }
+  // v1.1.1 level-up burst: gold ring + rising sparks + floating text
+  rings.push({x:player.x, y:player.y, r:10, t:0, life:0.5, maxR:100, color:'#ffd166', width:4});
+  spawnSparks(player.x, player.y, '#ffd166', 12);
+  addParticle({x:player.x, y:player.y, life:0.5, r:20, color:'#ffd166'});
+  floatingTexts.push({x:player.x, y:player.y-30, vx:0, vy:-45, life:1.2, text:'LEVEL UP!', color:'#ffd166'});
+}
 
 function spawnTree(){
   const margin = 40;
@@ -404,14 +418,21 @@ function spawnEnemy(opts){
   const y = Math.max(20, Math.min(WH-20, anchor.y + Math.sin(sa)*sd));
   const eset = enemySetFor(state.mapId);
   const tier = Math.min(eset.length-1, Math.floor((state.wave-1)/3));
-  // weighted pick: swarms of weak types early, tougher types as the tier unlocks
-  // late game: widen the top bracket so new enemies actually appear
+  // weighted pick: swarms of weak types early, tougher types as the tier unlocks.
+  // v1.1.1 unlock-and-keep: every unlocked type stays in the pool — the top 22%
+  // is shared evenly across indices 3..tier, so mid-tier enemies (Burster,
+  // Splitter, Gloomweaver) no longer vanish after their 3-wave debut.
   const roll = Math.random();
   let idx;
-  if(state.wave >= 19 && tier >= 6){
-    idx = roll < 0.45 ? 0 : roll < 0.65 ? Math.min(tier, 1) : roll < 0.8 ? Math.min(tier, 2) : roll < 0.9 ? Math.min(tier, 5) : tier;
+  const upper = Math.max(0, tier - 2); // indices 3..tier
+  if(upper === 0){
+    idx = roll < 0.55 ? 0 : roll < 0.8 ? Math.min(tier, 1) : tier;
   } else {
-    idx = roll < 0.55 ? 0 : roll < 0.8 ? Math.min(tier, 1) : roll < 0.93 ? Math.min(tier, 2) : tier;
+    const share = 0.22 / upper;
+    if(roll < 0.45) idx = 0;
+    else if(roll < 0.65) idx = Math.min(tier, 1);
+    else if(roll < 0.78) idx = Math.min(tier, 2);
+    else idx = 3 + Math.min(upper - 1, Math.floor((roll - 0.78) / share));
   }
   const t = eset[Math.max(0, idx)];
   const mapMult = (mapDef(state.mapId).diffMult || 1);
@@ -662,6 +683,9 @@ function fireWeaponFor(player, time, target, autoSpread){
         w.overheated = true;
         w.overheatTimer = w.overheatLock || 1.2;
         audio.deny();
+        // v1.1.1 overheat steam: grey puffs venting off the player
+        spawnDust(player.x, player.y - 12, 6, {color:'#b8c4cc', r:5, speed:60, up:90});
+        addParticle({x:player.x, y:player.y - 10, life:0.4, r:12, color:'#ff8c42'});
       }
     }
     const wTarget = autoSpread ? (pickAutoTarget(player, wi) || target) : target;
@@ -681,13 +705,24 @@ function fireWeaponFor(player, time, target, autoSpread){
       const elemental = w.elemental || (w.explosive ? 'fire' : null);
       // px/py = previous position for the swept hit test. A new bullet starts its sweep at the player's
       // centre, so an enemy overlapping the player (inside the muzzle offset) still gets hit.
-      bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, px: player.x, py: player.y, fresh: true, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, tiers, pierce: (w.pierce||0) + (player.pierceBonus||0), rehit: !!w.rehit, dist: 0, homing: !!w.homing, chain: w.chain||0, slowTime: w.slowTime||0, bounce: w.bounce||0, vortex: !!w.vortex, maxDist: ((w.range || 900) + (player.rangeBonus || 0)) * (player.rangeMult || 1), explosive: !!w.explosive, splashR: w.splashR || 110 });
+      bullets.push({ x: player.x + Math.cos(a)*player.r, y: player.y + Math.sin(a)*player.r, px: player.x, py: player.y, fresh: true, vx: Math.cos(a)*speed, vy: Math.sin(a)*speed, life: 1.6, color: w.color, damage: dmg, ownerId: player.id, crit: isCrit, elemental, tiers, pierce: (w.pierce||0) + (player.pierceBonus||0), rehit: !!w.rehit, dist: 0, homing: !!w.homing, chain: w.chain||0, slowTime: w.slowTime||0, bounce: w.bounce||0, vortex: !!w.vortex, maxDist: ((w.range || 900) + (player.rangeBonus || 0)) * (player.rangeMult || 1), explosive: !!w.explosive, splashR: w.splashR || 110, beam: !!w.beam });
     }
     // v0.9.1 muzzle flash: white-hot core + colored glow, bigger for heavy/shotgun
     const mzx = player.x + Math.cos(angle)*18, mzy = player.y + Math.sin(angle)*18;
     const mrz = w.type==='heavy' ? 16 : w.type==='shotgun' ? 12 : 8;
     addParticle({x:mzx, y:mzy, life:0.09, r:mrz*0.55, color:'#ffffff'});
     addParticle({x:mzx, y:mzy, life:0.14, r:mrz, color:w.color});
+    // v1.1.1 railgun beam: a searing line from muzzle to max range, plus trail sparks
+    if(w.beam){
+      const blen = ((w.range || 900) + (player.rangeBonus || 0)) * (player.rangeMult || 1);
+      beams.push({x1:mzx, y1:mzy, x2:player.x + Math.cos(angle)*blen, y2:player.y + Math.sin(angle)*blen, t:0, life:0.18, color:w.color});
+      addParticle({x:mzx, y:mzy, life:0.12, r:14, color:'#ffffff'});
+      addParticle({x:mzx, y:mzy, life:0.2, r:22, color:w.color});
+      for(let s=0;s<6;s++){
+        const d = blen * (0.15 + Math.random()*0.75);
+        addParticle({x:player.x+Math.cos(angle)*d+rand(-6,6), y:player.y+Math.sin(angle)*d+rand(-6,6), vx:rand(-40,40), vy:rand(-40,40), life:0.25+Math.random()*0.2, r:2+Math.random()*2.5, color: Math.random()<0.5 ? '#ffffff' : w.color});
+      }
+    }
     // v0.9.1 melee swing arc
     if(w.melee) swings.push({x:player.x, y:player.y, angle, t:0, life:0.18, color:w.color});
     if(audio.ctx && time - (w.lastSound||0) > 0.06){ w.lastSound = time; const freq = w.type==='heavy'?120:w.type==='shotgun'?180:w.type==='rifle'?240:320; audio.beep(freq,0.04,'square',0.03); }
@@ -721,6 +756,9 @@ function killEnemy(index, ownerId){
     dropMoney(e.x, e.y, 8);
     floatingTexts.push({x:e.x, y:e.y-20, vx:0, vy:-50, life:1.5, text: `${e.eliteName} slain!`, color:'#ffd166'});
     addShake(6);
+    // v1.1.1 elite death burst: colored shockwave + spark shower in the elite's color
+    rings.push({x:e.x, y:e.y, r:10, t:0, life:0.4, maxR:90, color:e.color, width:4});
+    spawnSparks(e.x, e.y, e.color, 10);
   }
   // v0.9.1 boss loot: a boss always drops a free random item + a money shower
   if(e.isBoss){
@@ -899,11 +937,15 @@ function hurtPlayer(p, raw){
   p.hp -= Math.min(Math.max(1, raw - (p.armor || 0)), cap);
   p.hitFlash = 0.12;
   runStats.tookDamage = true;
+  // v1.1.1 hurt burst: red sparks on the player so every hit reads, not just the flash
+  spawnSparks(p.x, p.y, '#ff5d5d', 6);
+  addParticle({x:p.x, y:p.y, life:0.25, r:14, color:'#ff5d5d'});
   if(p.hp <= 0){
     // v0.8.3 Second Wind (solo only, once per run): lethal damage downs you instead of
     // killing you — get a kill within 6s to get back up at 40% HP
     if(!state.coop && !p.secondWindUsed && !p.downed){ enterSecondWind(p); return; }
-    p.hp = 0; p.dead = true; if(players.every(pl=>pl.dead)){ state.phase='gameover'; showRunOver(); }
+    p.hp = 0; p.dead = true; spawnPlayerDeathBurst(p); addShake(10);
+    if(players.every(pl=>pl.dead)){ state.phase='gameover'; showRunOver(); }
   }
 }
 // v0.8.3 Second Wind: downed but not out. Stationary, still shooting, invulnerable;
@@ -1793,6 +1835,8 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
             applyKnockback(e, b.vx, b.vy, b.damage);
             e.hitFlash = 0.1; // visual only
             spawnBlood(e.x, e.y, e.color, 3);
+            // v1.1.1 impact sparks: bright flecks in the bullet's color (railgun hits burst bigger)
+            spawnSparks(e.x, e.y, b.crit ? '#ffd166' : (b.color || '#ffffff'), b.beam ? 8 : 4);
             // v0.9.1 crit damage numbers: meaningful crits pop their number
             if(b.crit && finalDmg >= 15){
               floatingTexts.push({x:e.x+rand(-8,8), y:e.y-18, vx:rand(-15,15), vy:-55, life:0.8, text:Math.round(finalDmg), color:'#ffd166'});
@@ -1916,10 +1960,12 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
           addShake(8); addParticle({x:e.x,y:e.y,life:0.3,r:24,color:'#c43'});
         }
         addShake(p.hitFlash > 0 ? 0.3 : 5);   // a kick on first contact, not a constant max shake
+        if(p.hitFlash <= 0) spawnSparks(p.x, p.y, '#ff5d5d', 6); // v1.1.1 hurt sparks on first contact
         p.hitFlash = 0.12;
         if(p.hp <= 0){
           p.hp = 0;
           p.dead = true;
+          spawnPlayerDeathBurst(p); // v1.1.1 player death burst
           addShake(10);
           // game over only if all players are dead
           if(players.every(pl=>pl.dead)){
@@ -2022,6 +2068,8 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
   // v0.9.1 melee swings + shockwave rings
   for(let i=swings.length-1;i>=0;i--){ const s = swings[i]; s.t += dt; if(s.t >= s.life) swings.splice(i,1); }
   for(let i=rings.length-1;i>=0;i--){ const r = rings[i]; r.t += dt; if(r.t >= r.life) rings.splice(i,1); }
+  // v1.1.1 railgun beams
+  for(let i=beams.length-1;i>=0;i--){ const bm = beams[i]; bm.t += dt; if(bm.t >= bm.life) beams.splice(i,1); }
 
   // Player firing.
   //  Auto Shoot on: fire whenever there is a target. Auto Shoot off (P1): fire only while the mouse button

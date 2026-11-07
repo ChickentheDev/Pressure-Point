@@ -141,6 +141,7 @@ const turrets = []; // v0.8.3: deployed sentry turrets {x,y,t,fireT,ownerId,dmg,
 const particles = [];
 const swings = []; // v0.9.1: melee swing arcs {x,y,angle,t,life,color}
 const rings = []; // v0.9.1: expanding shockwave rings {x,y,r,t,life,maxR,color,width}
+const beams = []; // v1.1.1: railgun beam flashes {x1,y1,x2,y2,t,life,color}
 const trees = [];
 const fruits = [];
 
@@ -173,6 +174,21 @@ function spawnDust(x, y, n, opts){
       color:col});
   }
 }
+// v1.1.1 impact sparks: bright flecks that fly out from a hit, in the shooter's color
+function spawnSparks(x, y, color, n){
+  for(let k=0;k<n;k++){
+    const a = Math.random()*Math.PI*2, sp = 80+Math.random()*200;
+    addParticle({x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp,
+      life:0.15+Math.random()*0.2, r:1.5+Math.random()*2, color});
+  }
+}
+// v1.1.1 player death burst: blood + gold sparks + shockwave + dust
+function spawnPlayerDeathBurst(p){
+  spawnBlood(p.x, p.y, '#ff5d5d', 12);
+  spawnSparks(p.x, p.y, '#ffd166', 8);
+  rings.push({x:p.x, y:p.y, r:10, t:0, life:0.5, maxR:110, color:'#ff5d5d', width:4});
+  spawnDust(p.x, p.y, 8, {r:5, speed:120});
+}
 // v0.9.2 ambient birds: harmless critters that hop around and scatter from danger
 const critters = [];
 function spawnCritters(){
@@ -196,6 +212,7 @@ function resetRun(){
   vortices.length = 0;
   turrets.length = 0;
   particles.length = 0;
+  beams.length = 0;
   state.combo = 0; state.comboT = 0; state.debt = 0; state.debtBank = 0;
   trees.length = 0;
   fruits.length = 0;

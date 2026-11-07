@@ -40,7 +40,7 @@ const WEAPON_ICONS = {
   scatter:'assets/weapons/w_scatter.png', sniper:'assets/weapons/w_sniper.png',
   katana:'assets/weapons/w_katana.png', plasma:'assets/weapons/w_plasma.png', grenade:'assets/weapons/w_grenade.png',
   flak:'assets/weapons/w_flak.png', tesla:'assets/weapons/w_tesla.png', esword:'assets/weapons/w_esword.png',
-  mortar:'assets/weapons/w_mortar.png',
+  mortar:'assets/weapons/w_mortar.png', rail:'assets/weapons/w_rail.png',
 };
 function weaponIconHTML(w){
   const src = WEAPON_ICONS[w.id];
@@ -383,6 +383,7 @@ function startRun(){
   // retry wipes the field and drops everyone at map center
   enemies.length = 0; bullets.length = 0; moneyDrops.length = 0;
   if(typeof particles !== 'undefined') particles.length = 0;
+  if(typeof beams !== 'undefined') beams.length = 0;
   if(typeof floatingTexts !== 'undefined') floatingTexts.length = 0;
   for(const p of players){ p.x = WW/2; p.y = WH/2; p.vx = 0; p.vy = 0; p.dead = false; }
   state.coop = coopToggle.checked;

@@ -859,6 +859,19 @@ function drawEffects(){
   // the most expensive canvas ops; this blits one cached image per bullet instead. Same disc
   // colors/sizes and a matching soft glow, so the look is unchanged.
   for(const b of bullets){
+    if(b.beam){
+      // v1.1.1 railgun bolt: elongated streak with a white-hot core
+      ctx.save();
+      ctx.translate(b.x, b.y);
+      ctx.rotate(Math.atan2(b.vy, b.vx));
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = 0.7; ctx.strokeStyle = b.color || '#ff6b6b'; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(-30, 0); ctx.lineTo(12, 0); ctx.stroke();
+      ctx.globalAlpha = 1; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(-24, 0); ctx.lineTo(10, 0); ctx.stroke();
+      ctx.restore();
+      continue;
+    }
     const s = bulletSprite(b.crit ? '#ffd166' : (b.color || '#fffa'), b.crit);
     ctx.save();
     ctx.translate(b.x, b.y);
@@ -958,6 +971,19 @@ function drawEffects(){
     ctx.globalAlpha = 1;
   }
   ctx.restore();
+  // v1.1.1 railgun beams: colored glow + white-hot core, fading fast
+  if(beams.length){
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for(const bm of beams){
+      const a = Math.max(0, 1 - bm.t / bm.life);
+      ctx.globalAlpha = a * 0.35; ctx.strokeStyle = bm.color; ctx.lineWidth = 7;
+      ctx.beginPath(); ctx.moveTo(bm.x1, bm.y1); ctx.lineTo(bm.x2, bm.y2); ctx.stroke();
+      ctx.globalAlpha = a; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(bm.x1, bm.y1); ctx.lineTo(bm.x2, bm.y2); ctx.stroke();
+    }
+    ctx.restore();
+  }
   // adrenaline vignette: pulsing red edges when a player is under 30% HP
   const adrenP = (typeof players !== 'undefined') && players.some(p => p.adrenaline && !p.dead);
   if(adrenP){
