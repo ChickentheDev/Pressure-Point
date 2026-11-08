@@ -989,6 +989,7 @@ function explodeEnemy(e, index){
   addParticle({x:e.x, y:e.y, life:0.4, r:26, color:'#ff8c42'});
   addParticle({x:e.x, y:e.y, life:0.3, r:16, color:'#ff5d2a'});
   spawnDust(e.x, e.y, 8, {r:5, speed:130}); // v0.9.2 burster dust
+  spawnDustRing(e.x, e.y, R); // v1.1.2 dust shockwave
   audio.deny();
   enemies.splice(index, 1);
 }
@@ -1019,6 +1020,7 @@ function detonate(b, x, y, skipEnemy, victimIdx, ownerId){
   addParticle({x, y, life:0.25, r:R*0.35, color:'#ffd166'});
   addParticle({x, y, life:0.5, r:R*0.7, color:'#555555'});
   spawnDust(x, y, 8, {r:5, speed:130}); // v0.9.2 explosion dust
+  spawnDustRing(x, y, R); // v1.1.2 dust shockwave
   rings.push({x, y, r:12, t:0, life:0.35, maxR:R, color:'#ffd166', width:4}); // v0.9.1 shockwave
   addShake(5);
   if(audio.ctx) audio.beep(70, 0.25, 'sawtooth', 0.12);

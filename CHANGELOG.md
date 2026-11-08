@@ -1,3 +1,8 @@
+## v1.1.2 — Dust shockwave explosions
+
+- **Explosions now throw a dust shockwave**: every blast (explosive weapons and Burster pops) fires a ring of 26 dust puffs racing outward from ground zero, growing and fading as they slow — the ground-hugging dust ring a real explosion makes, on top of the existing fireball, smoke, and gold shockwave ring. Verified: the ring expands from 26px out past the 130px blast radius.
+- **New menu art**: Ashfall Crater — a blasted crater under drifting ash and ember glow (fresh procedural art per the every-update rule).
+
 ## v1.1.1 — Railgun goes piercing + particle effects + spawn balance
 
 - **Railgun is a real railgun now**: the legendary Railgun already existed but fired like an ordinary slow rifle — no pierce, no beam. It now pierces through everything in its path (pierce 99, 1350 range), fires a searing beam line from muzzle to max range with a white-hot core, and its bolt renders as an elongated streak. Shop icon fixed too — it now uses Sam's `w_rail.png` art instead of the letter tile.

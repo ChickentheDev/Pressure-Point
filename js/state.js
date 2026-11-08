@@ -189,6 +189,22 @@ function spawnPlayerDeathBurst(p){
   rings.push({x:p.x, y:p.y, r:10, t:0, life:0.5, maxR:110, color:'#ff5d5d', width:4});
   spawnDust(p.x, p.y, 8, {r:5, speed:120});
 }
+// v1.1.2 dust shockwave: a ring of dust puffs racing outward from a blast, the way a
+// real explosion throws a ground-hugging dust ring. Particles start on a small circle
+// and fly radially outward, growing and fading as they slow — reaching near the blast
+// radius before they dissipate.
+function spawnDustRing(x, y, maxR){
+  const n = Math.max(16, Math.min(32, Math.round(maxR / 5)));
+  const r0 = Math.max(10, maxR * 0.2);
+  const speed = maxR * 2.8; // friction bleeds ~70% of this over the ring's life
+  for(let k=0;k<n;k++){
+    const a = (k / n) * Math.PI * 2 + rand(-0.06, 0.06);
+    const col = Math.random() < 0.6 ? '#b8a88f' : '#8a7a63';
+    addParticle({x:x + Math.cos(a)*r0, y:y + Math.sin(a)*r0,
+      vx:Math.cos(a)*speed*(0.85+Math.random()*0.3), vy:Math.sin(a)*speed*(0.85+Math.random()*0.3),
+      life:0.45+Math.random()*0.2, r:4+Math.random()*2, grow:16, color:col});
+  }
+}
 // v0.9.2 ambient birds: harmless critters that hop around and scatter from danger
 const critters = [];
 function spawnCritters(){
