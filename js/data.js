@@ -94,6 +94,7 @@ const rarities = [
   {id:'rare', name:'Rare', color:'#4cc3ff'},
   {id:'epic', name:'Epic', color:'#b67bff'},
   {id:'legendary', name:'Legendary', color:'#ff6b6b'},
+  {id:'mythic', name:'Mythic', color:'#ffc700'},
 ];
 
 const weapons = [
@@ -258,7 +259,7 @@ const items = [
 // The C# records (wasm/BrotatoSystems/Extra.cs) use PascalCase properties and int enums, so the JS data
 // has to be converted before LoadData, and RollShop results ({Type, Data:{Id..}, Rarity, Price}) have to
 // be mapped back to the JS objects buildShop expects ({type, data, rarity, price}).
-const WASM_RARITY = { common:0, rare:1, epic:2, legendary:3 };        // C# Rarity: Common, Rare, Epic, Legendary
+const WASM_RARITY = { common:0, rare:1, epic:2, legendary:3, mythic:4 };        // C# Rarity: Common, Rare, Epic, Legendary, Mythic
 const WASM_TIMEOUT_MS = 10000;
 function wasmDamageType(w){ return w.elemental==='fire' ? 1 : w.elemental==='ice' ? 2 : w.elemental==='shock' ? 3 : w.explosive ? 4 : 0; }
 function wasmWeaponData(){

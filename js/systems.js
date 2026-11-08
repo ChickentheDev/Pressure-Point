@@ -1,10 +1,10 @@
 // Pressure Point — systems.js (split from game.js for v0.6.1)
 
-const rarityOrder = ['common','rare','epic','legendary'];
-const RARITY_MULTS = {common:1, rare:1.25, epic:1.5, legendary:2.0};
+const rarityOrder = ['common','rare','epic','legendary','mythic'];
+const RARITY_MULTS = {common:1, rare:1.25, epic:1.5, legendary:2.0, mythic:2.5};
 function rarityMult(r){ return RARITY_MULTS[r] || 1; }
 // rarity border colors (shared by HUD weapon slots, menu weapon grid; shop uses its own copy in ui.js)
-const RARITY_COLORS = {common:'#a7b3c4', rare:'#4cc3ff', epic:'#b67bff', legendary:'#ff5d5d'};
+const RARITY_COLORS = {common:'#a7b3c4', rare:'#4cc3ff', epic:'#b67bff', legendary:'#ff5d5d', mythic:'#ffc700'};
 const WAVE_DURATION = 60; // seconds per wave: survive the timer, Brotato-style
 
 // Item categories. Unique: at most one per player, never combines. Exclusive: epic/legendary only, 1.5x shop price.
@@ -87,13 +87,14 @@ function addItemToPlayer(player, itemData, rarity){
     for(const r of rarityOrder){
       const same = player.items.filter(it=>it.id===itemData.id && it.rarity===r);
       if(same.length >= 2){
+        const nextIdx = rarityOrder.indexOf(r)+1;
+        if(nextIdx >= rarityOrder.length) continue; // top rung (mythic): nothing to combine into, keep both
         // remove two, downgrade stats, add next rarity if possible
         const idxs = [];
         for(let i=player.items.length-1;i>=0 && idxs.length<2;i--){
           if(player.items[i].id===itemData.id && player.items[i].rarity===r) idxs.push(i);
         }
         for(const idx of idxs){ player.items.splice(idx,1); applyItemEffects(player, itemData, r, -1); }
-        const nextIdx = rarityOrder.indexOf(r)+1;
         if(nextIdx < rarityOrder.length){
           const nextR = rarityOrder[nextIdx];
           if(player.items.length < 6){
@@ -216,21 +217,30 @@ function buildShop(){
     // quadrupled the legendary rate (2% -> 8.3% per slot, 41% of shops showing
     // a legendary). Now luck is a zero-sum shift: it moves weight OUT of common
     // into the higher tiers, capped so legendaries stay legendary at max luck.
-    // v1.1.3 (tightened): a shop has 6 slots, so a max of 20% of shops showing
-    // a legendary means a per-slot legendary rate of at most ~3.65%. Legendary
-    // only takes 5% of the shift (max 3.5% per slot = 19% of shops); the rest
-    // goes to rare and epic, so epic is the real luck payoff.
+    // Sam's curve (share of shops showing a legendary, 6 slots per shop):
+    // luck 0 -> 5%, luck 5 -> 10%, luck 10 -> 15%, luck 15-20 -> 20% (max).
+    // That means a per-slot legendary rate of 0.85% -> 1.78% -> 2.72% -> 3.65%,
+    // so legendary weight ramps 0.85 + shift*(2.8/30) and caps at 3.65; epic
+    // takes the bulk of the shift, so it's the real luck payoff.
+    // Mythic (v1.1.3): new top tier, same formula shape as legendary but halved —
+    // per-slot mythic rate 0.42% -> 1.74%, so shops showing a mythic go
+    // luck 0 -> 2.5%, luck 5 -> 5%, luck 10 -> 7.5%, luck 15-20 -> 10% (max).
+    // Legendary keeps its curve (5/10/15/20); mythic is additional, and rare
+    // absorbs the difference as the remainder. Mythic rolls draw from the
+    // legendary pool at mythic tier (see buildShop) — no separate catalog.
     const shift = Math.min(30, L * 2); // points moved out of common
     const wCommon = 55 - shift;
-    const wRare = 35 + shift * 0.55;
     const wEpic = 8 + shift * 0.40;
-    const wLegendary = 2 + shift * 0.05;
-    const total = wCommon + wRare + wEpic + wLegendary; // always 100
+    const wLegendary = 0.85 + shift * (2.8 / 30);
+    const wMythic = 0.42 + shift * (1.32 / 30);
+    const wRare = 100 - wCommon - wEpic - wLegendary - wMythic; // remainder keeps total 100
+    const total = wCommon + wRare + wEpic + wLegendary + wMythic; // always 100
     let r = Math.random() * total;
     if((r -= wCommon) <= 0) return 'common';
     if((r -= wRare) <= 0) return 'rare';
     if((r -= wEpic) <= 0) return 'epic';
-    return 'legendary';
+    if((r -= wLegendary) <= 0) return 'legendary';
+    return 'mythic';
   }
 
   const luck = players[0]?.luck || 0;
@@ -257,8 +267,11 @@ function buildShop(){
   while(picks.some(p=>!p) && guard < 200){
     guard++;
     const rarity = rollRarity(luck);
-    const weaponsOfR = poolWeapons.filter(w=>w.rarity === rarity);
-    const itemsOfR = poolItems.filter(it=>it.rarity === rarity && !(it.category==='exclusive' && rarity!=='epic' && rarity!=='legendary'));
+    // v1.1.3 mythic: no mythic catalog — a mythic roll draws from the legendary
+    // pool and presents it at mythic tier (2.5x stats/price via rarityMult).
+    const poolRarity = rarity === 'mythic' ? 'legendary' : rarity;
+    const weaponsOfR = poolWeapons.filter(w=>w.rarity === poolRarity);
+    const itemsOfR = poolItems.filter(it=>it.rarity === poolRarity && !(it.category==='exclusive' && poolRarity!=='epic' && poolRarity!=='legendary'));
     const exclusiveMult = (it)=> it.category==='exclusive' ? 1.5 : 1;
     const combined = [
       ...weaponsOfR.map(w=>({type:'weapon', data:w, rarity, price:Math.round(weaponPrices[w.id] * rarityMult(rarity))})),
