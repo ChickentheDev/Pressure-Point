@@ -212,11 +212,16 @@ function buildShop(){
 
   function rollRarity(luck){
     const L = Math.max(0, luck || 0);
-    const wCommon = 55;
-    const wRare = 35 + L * 3;
-    const wEpic = 8 + L * 3.5;
-    const wLegendary = 2 + L * 4;
-    const total = wCommon + wRare + wEpic + wLegendary;
+    // v1.1.3: luck used to ADD weight on top of a fixed common 55, so +2 luck
+    // quadrupled the legendary rate (2% -> 8.3% per slot, 41% of shops showing
+    // a legendary). Now luck is a zero-sum shift: it moves weight OUT of common
+    // into the higher tiers, capped so legendaries stay legendary at max luck.
+    const shift = Math.min(30, L * 2); // points moved out of common
+    const wCommon = 55 - shift;
+    const wRare = 35 + shift * 0.40;
+    const wEpic = 8 + shift * 0.35;
+    const wLegendary = 2 + shift * 0.25;
+    const total = wCommon + wRare + wEpic + wLegendary; // always 100
     let r = Math.random() * total;
     if((r -= wCommon) <= 0) return 'common';
     if((r -= wRare) <= 0) return 'rare';
