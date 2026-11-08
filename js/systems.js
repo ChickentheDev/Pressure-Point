@@ -216,11 +216,15 @@ function buildShop(){
     // quadrupled the legendary rate (2% -> 8.3% per slot, 41% of shops showing
     // a legendary). Now luck is a zero-sum shift: it moves weight OUT of common
     // into the higher tiers, capped so legendaries stay legendary at max luck.
+    // v1.1.3 (tightened): a shop has 6 slots, so a max of 20% of shops showing
+    // a legendary means a per-slot legendary rate of at most ~3.65%. Legendary
+    // only takes 5% of the shift (max 3.5% per slot = 19% of shops); the rest
+    // goes to rare and epic, so epic is the real luck payoff.
     const shift = Math.min(30, L * 2); // points moved out of common
     const wCommon = 55 - shift;
-    const wRare = 35 + shift * 0.40;
-    const wEpic = 8 + shift * 0.35;
-    const wLegendary = 2 + shift * 0.25;
+    const wRare = 35 + shift * 0.55;
+    const wEpic = 8 + shift * 0.40;
+    const wLegendary = 2 + shift * 0.05;
     const total = wCommon + wRare + wEpic + wLegendary; // always 100
     let r = Math.random() * total;
     if((r -= wCommon) <= 0) return 'common';
