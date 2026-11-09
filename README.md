@@ -1,4 +1,4 @@
-# Pressure Point — v1.1.4
+# Pressure Point — v1.2.0
 
 **[Play online](https://chickenthedev.github.io/Pressure-Point/)** — no download, full lighting and effects.
 
@@ -8,7 +8,7 @@ in order to get maximum performance use the zip file in releases and double clic
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v1.1.4 — Landing rebuilt Brotato-style)
+## Latest Changes (v1.2.0 — Landing rebuilt Brotato-style)
 - **Doodle-wall background**: the menu background is now a dark mauve wall covered in faint sketches of the game's own enemies — Sam's pixel art, desaturated and dimmed, instead of generated art.
 - **Ironheart centre-stage**: the player character stands in a warm spotlight pool under the logo, and in the O of POINT, like Brotato's potato.
 - **One left menu column, plain text**: Start (teal) then How to Play, Leaderboard, Credits, Achievements, Upgrades, Settings — bold text, no boxes, hover slides teal.
