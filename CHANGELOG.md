@@ -1,3 +1,11 @@
+## v1.1.4 — Landing rebuilt Brotato-style (doodle wall, hero Ironheart)
+
+- **Landing rebuilt to match the Brotato reference Sam sent**: the Gilded Vault art is gone — the background is now a dark mauve wall covered in faint doodles of the game's own enemy sprites (runner, bruiser, sandworm, gloomweaver, nester, aegis...), desaturated and dimmed so they read as pencil sketches. Nothing AI-looking: every doodle is Sam's own pixel art.
+- **Ironheart is the hero now**: the player character stands centre-stage in a warm sandy spotlight pool with a gentle idle bob (gated behind `prefers-reduced-motion`), and the same sprite stands in the O of POINT in the logo — like Brotato's potato in the O.
+- **Menu is one left column of plain text**: Start (teal, leads), How to Play, Leaderboard, Credits, Achievements, Upgrades, Settings — no boxes, just bold text with a black outline; hover slides right and turns teal, press scales to 0.96 (better-ui values). Logo got a chunkier 4px outline and a slight hand-drawn tilt.
+- **Verified**: full menu flow Start → map → class → weapon → danger → wave works, zero page errors, phone portrait stacks cleanly with no sideways pan (scrollWidth exactly 390).
+- **New menu art**: Doodle Wall — the enemy-sketch wall (fresh art per the every-update rule).
+
 ## v1.1.3 — Shop odds rebalanced (luck no longer floods legendaries)
 
 - **Found it — luck was inflating the top end with no tradeoff**: the shop roller added luck weight on top of a fixed common 55, so just +2 luck (one class pick, or two cheap +1 items) quadrupled the legendary rate from 2% to 8.3% per slot, and 41% of shops showed a legendary. At luck 5, 60% of shops had one; at luck 10, 74%. Legendaries stopped feeling legendary.

@@ -285,48 +285,78 @@ input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:po
 .class-btn.locked:hover{transform:none;filter:grayscale(0.7)}
 }
 
-/* ---------- Brotato-style landing (v0.7.6) ---------- */
+/* ---------- Brotato-style landing (v1.1.4) ---------- */
 #menu.landing-mode{
   width:100vw; height:100vh; max-height:100vh; left:50%; top:50%;
   border:none; border-radius:0; padding:0; box-shadow:none; overflow:hidden;
-  background:#0a0e14 url('assets/ui/menu_bg.png') center/cover no-repeat;
+  background:#221d26 url('assets/ui/menu_bg.png') center/cover no-repeat;
   animation:none;
 }
 #menu.landing-mode::before{
   content:''; position:absolute; inset:0;
-  background:radial-gradient(ellipse at 50% 42%, transparent 30%, rgba(4,6,10,.55) 75%, rgba(2,3,6,.88) 100%);
+  background:radial-gradient(ellipse at 50% 42%, transparent 30%, rgba(4,6,10,.45) 75%, rgba(2,3,6,.8) 100%);
   pointer-events:none;
 }
 #menuStepLanding{ position:relative; width:100%; height:100%; }
-.landing-logo{ position:absolute; top:9%; left:0; right:0; text-align:center; pointer-events:none; }
+.landing-logo{ position:absolute; top:7%; left:0; right:0; text-align:center; pointer-events:none; transform:rotate(-1.2deg); }
 .logo-pressure, .logo-point{
   font-family:'Trebuchet MS','Segoe UI',system-ui,sans-serif; font-weight:900;
-  font-size:clamp(54px, 9vw, 118px); line-height:.95; letter-spacing:2px; color:#fff;
+  font-size:clamp(48px, 8vw, 104px); line-height:.95; letter-spacing:2px; color:#fff;
   text-shadow:
-    -3px -3px 0 #101418, 3px -3px 0 #101418, -3px 3px 0 #101418, 3px 3px 0 #101418,
-    -3px 0 0 #101418, 3px 0 0 #101418, 0 -3px 0 #101418, 0 3px 0 #101418,
+    -4px -4px 0 #101418, 4px -4px 0 #101418, -4px 4px 0 #101418, 4px 4px 0 #101418,
+    -4px 0 0 #101418, 4px 0 0 #101418, 0 -4px 0 #101418, 0 4px 0 #101418,
     0 8px 0 rgba(0,0,0,.55), 0 14px 28px rgba(0,0,0,.6);
 }
 .logo-point{ color:#ff5d4d; }
-.logo-sub{ margin-top:10px; font-size:clamp(13px, 1.6vw, 19px); font-weight:700;
+.logo-o{
+  height:.92em; width:auto; image-rendering:pixelated;
+  vertical-align:-.08em; margin:0 .01em;
+  filter:drop-shadow(0 4px 0 rgba(0,0,0,.55));
+}
+.logo-sub{ margin-top:12px; font-size:clamp(13px, 1.6vw, 19px); font-weight:700;
   color:#dbe8ff; text-shadow:0 2px 0 #000, 0 0 18px rgba(0,0,0,.8); letter-spacing:1px; }
+/* hero: Ironheart centre-stage in a warm spotlight pool */
+.landing-spotlight{ position:absolute; left:50%; top:76%; width:min(560px, 48vw); height:130px;
+  transform:translate(-50%,-50%); border-radius:50%; pointer-events:none;
+  background:radial-gradient(ellipse at center, rgba(216,178,118,.5) 0%, rgba(190,150,95,.28) 45%, rgba(190,150,95,0) 70%); }
+.landing-hero{ position:absolute; left:50%; top:52%; transform:translateX(-50%);
+  height:clamp(120px, 21vh, 200px); width:auto; image-rendering:pixelated; pointer-events:none;
+  filter:drop-shadow(0 12px 14px rgba(0,0,0,.55)); }
+@media (prefers-reduced-motion: no-preference){
+  .landing-hero{ animation:heroBob 2.4s ease-in-out infinite alternate; }
+  @keyframes heroBob{ from{ transform:translateX(-50%) translateY(0); } to{ transform:translateX(-50%) translateY(-7px); } }
+}
+/* menu: one left column, plain text like Brotato — Start leads */
 .landing-cols{ position:absolute; inset:0; pointer-events:none; }
-.landing-left.menu-left-col{ position:absolute; left:4%; top:42%; display:flex; flex-direction:column; gap:10px; pointer-events:auto; align-items:flex-start; }
-.menu-left-col .btn-compact{ min-width:160px; font-size:14px; padding:9px 18px; }
-.landing-right{ position:absolute; right:4%; top:52%; display:flex; flex-direction:column; gap:12px;
-  align-items:flex-end; pointer-events:auto; }
-.btn-huge{ font-size:clamp(22px, 2.6vw, 34px) !important; padding:16px 58px !important; border-radius:16px !important; }
-.landing-right .btn{ min-width:190px; font-size:17px; padding:11px 22px; text-align:center; }
+.landing-left.menu-left-col{ position:absolute; left:4%; top:44%; display:flex; flex-direction:column; gap:6px; pointer-events:auto; align-items:flex-start; }
+.landing-menu-btn{
+  background:transparent !important; border:none !important; box-shadow:none !important;
+  color:#fff; font-weight:800; font-size:15px; text-align:left;
+  padding:5px 2px; min-width:0;
+  text-shadow:-2px -2px 0 #101418, 2px -2px 0 #101418, -2px 2px 0 #101418, 2px 2px 0 #101418, 0 3px 0 rgba(0,0,0,.5);
+  transition-property:color, transform;
+  transition-duration:150ms; transition-timing-function:ease-out;
+  -webkit-tap-highlight-color:transparent;
+}
+.landing-start-btn{ font-size:clamp(24px, 2.6vw, 32px); color:#5ff2c8; padding:8px 2px; }
+@media (hover:hover){
+  .landing-menu-btn:hover{ color:#5ff2c8; transform:translateX(4px); background:transparent !important; }
+  .landing-start-btn:hover{ color:#8ffce0; }
+}
+.landing-menu-btn:active:not(:disabled){ transform:scale(.96); }
+.landing-menu-btn:focus-visible{ outline:2px solid #5ff2c8; outline-offset:3px; border-radius:6px; }
 .landing-version{ position:absolute; right:18px; bottom:12px; font-size:13px; color:#8fa8c8; font-weight:700;
   text-shadow:0 1px 0 #000; }
 .landing-hint{ position:absolute; left:0; right:0; bottom:12px; text-align:center; font-size:13px;
   color:#9db4d4; text-shadow:0 1px 0 #000; }
-/* portrait phones: stack the landing buttons vertically instead of two columns */
+/* portrait phones: hero up top, menu stacked centred at the bottom */
 @media (max-width:640px){
-  .landing-cols{ display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:12px; padding-bottom:9%; }
-  .landing-left, .landing-right{ position:static; transform:none; align-items:center; }
-  .landing-right .btn{ min-width:220px; }
-  .btn-huge{ padding:14px 44px !important; }
+  .landing-logo{ top:5%; }
+  .landing-hero{ top:38%; height:15vh; }
+  .landing-spotlight{ top:53%; width:66vw; height:64px; }
+  .landing-cols{ display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:6px; padding-bottom:9%; }
+  .landing-left{ position:static; transform:none; align-items:center; }
+  .landing-menu-btn{ text-align:center; }
   .landing-version{ bottom:2px; }
 }
 /* touch devices: keyboard hints are useless — hide them */
@@ -346,8 +376,6 @@ input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:po
 #menu .btn{ font-size:clamp(14px, 1.35vw, 18px); }
 .select-grid .btn, .class-list .btn, .weapon-list .btn{ font-size:clamp(13px, 1.25vw, 16px); }
 @media (max-width:700px){
-  .landing-right{ top:auto; bottom:64px; }
-  .landing-left{ top:auto; bottom:64px; }
   .logo-pressure, .logo-point{ font-size:15vw; }
 }
 /* hide the old header buttons + title while the landing is up (it has its own) */

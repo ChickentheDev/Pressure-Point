@@ -1,4 +1,4 @@
-# Pressure Point — v1.0
+# Pressure Point — v1.1.4
 
 **[Play online](https://chickenthedev.github.io/Pressure-Point/)** — no download, full lighting and effects.
 
@@ -8,23 +8,18 @@ in order to get maximum performance use the zip file in releases and double clic
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v1.0 — Full release)
-- **Map is 3x bigger**: the arena is 3x the viewport in each dimension, with a camera that follows you, enemies spawning just off-screen, and a live minimap (players, enemies, elites, bosses, loot, turrets).
-- **Touch controls**: phones and tablets are auto-detected — twin virtual sticks (left moves, right aims and fires, auto-fire when idle) plus a dash button.
-- **Dust everywhere**: expanding dust puffs on dashes, landings, explosions, kills, slams, and revives.
-- **Ambient birds**: little birds hop around the arena and scatter when danger gets close.
-- **Bug fixes**: kills no longer award double XP/currency; shock-chain kills can't delete the wrong enemy.
-- **Boss loot + mid-wave elites**: bosses drop a free item and a money shower; waves 3+ get an elite pack event.
-- **Graphics juice**: white-hot muzzle flashes, melee swing arcs, crit damage numbers, shockwave rings on every explosion.
-- **Fresh weapon art**: 23 weapons now use Sam's cartoon-style sprites with smooth (non-pixelated) icons.
-- **Fresh menu art**: elemental convergence — fire, ice, storm, and void spiraling into one core.
+## Latest Changes (v1.1.4 — Landing rebuilt Brotato-style)
+- **Doodle-wall background**: the menu background is now a dark mauve wall covered in faint sketches of the game's own enemies — Sam's pixel art, desaturated and dimmed, instead of generated art.
+- **Ironheart centre-stage**: the player character stands in a warm spotlight pool under the logo, and in the O of POINT, like Brotato's potato.
+- **One left menu column, plain text**: Start (teal) then How to Play, Leaderboard, Credits, Achievements, Upgrades, Settings — bold text, no boxes, hover slides teal.
+- **Fresh menu art**: Doodle Wall.
 
-## Previous (v0.9 — Elemental reactions, Engineer class)
-- **Elemental reactions**: Detonate, Melt, Shatter, Hex Spread cross-element combos.
-- **Engineer class** (unlock: Turret Master): free Sentry Turret, +50% turret damage/uptime.
+## Previous (v1.1.3 — Shop odds rebalanced)
+- **Luck is now a zero-sum shift**: legendary shops follow 5/10/15/20% at luck 0/5/10/15+ instead of flooding at +2 luck.
+- **New mythic rarity** (top tier, 2.5x stats/price, max 10% of shops); two legendaries combine into a mythic.
 
-## Previous (v0.8.3 — Turrets, second wind, elemental sets, upgrades)
-- **Elemental set bonuses** (Inferno/Glacier/Storm/Hex), **weapon MK II/III upgrades**, **Second Wind** revives, **Sentry Turret** item.
+## Previous (v1.1.2 — Dust shockwave explosions)
+- **Explosions now throw a dust shockwave**: a ring of 26 dust puffs racing outward from every blast.
 
 
 
