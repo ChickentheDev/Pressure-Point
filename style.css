@@ -285,7 +285,7 @@ input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:po
 .class-btn.locked:hover{transform:none;filter:grayscale(0.7)}
 }
 
-/* ---------- Brotato-style landing (v1.1.4) ---------- */
+/* ---------- Brotato-style landing (v1.2.0) ---------- */
 #menu.landing-mode{
   width:100vw; height:100vh; max-height:100vh; left:50%; top:50%;
   border:none; border-radius:0; padding:0; box-shadow:none; overflow:hidden;
