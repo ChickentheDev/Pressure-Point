@@ -83,7 +83,7 @@ def frame(cid, view, step):
     leg = (-.55, .55, .55, -.55)[step]
     # Rear view gets the same silhouette but shows the class backpack/kit rather than a face.
     face = view != "up"
-    if view == "side":
+    if view in ("side", "left", "right"):
         body = path("M6.1 5.5 Q11.6 4.2 11.3 9.4 Q10.7 14.3 7.2 19.5 Q6.2 20.2 6 19 L5.2 11 Q4.5 7.5 6.1 5.5Z", ORANGE, 1.3)
         leaves = path("M7.2 5 Q5 2.7 6.1 .9 Q8.1 1.7 8.6 3.6 Q9.4 .6 11.1 .8 Q11.2 3.3 8.8 5.2Z", leaf, 1.0)
         vest = path("M5.1 8 Q8.6 7.1 10.9 8.3 L10.1 12 L5.7 12.1Z", armor, 1.0)
@@ -129,31 +129,34 @@ def frame(cid, view, step):
         prop += '<path d="M13.5 6.2 L14.4 4.6 L14 6.4 L15.2 5.7" fill="none" stroke="' + trim + '" stroke-width=".7"/>'
     # A class badge on the chest keeps the identities readable in the tiny top-down view.
     badge = f'<circle cx="8" cy="9.4" r="1.05" fill="{c["badge"]}" stroke="{INK}" stroke-width=".65"/>'
-    return f'<g transform="translate(0 {bob})">{leaves}{body}{legs}{boots}{vest}{extras}{gear}{eyes}{badge}{prop}</g>'
+    art = f'{leaves}{body}{legs}{boots}{vest}{extras}{gear}{eyes}{badge}{prop}'
+    if view == "left":
+        art = f'<g transform="translate(16 0) scale(-1 1)">{art}</g>'
+    return f'<g transform="translate(0 {bob})">{art}</g>'
 
 def make_sheet(cid, view):
     frames = "".join(f'<g transform="translate({i*16} 0)">{frame(cid, view, i)}</g>' for i in range(4))
     return f'<svg xmlns="http://www.w3.org/2000/svg" width="256" height="84" viewBox="0 0 64 21"><g>{frames}</g></svg>'
 
 for cid in CLASSES:
-    for view in ("down", "up", "side"):
+    for view in ("down", "up", "left", "right"):
         (OUT / f"player_{cid}_{view}.svg").write_text(make_sheet(cid, view), encoding="utf-8")
 
 # P1/P2 fallback uses the balanced Ironheart model; selected classes use their own sheet.
-for view in ("down", "up", "side"):
-    source = make_sheet("ironheart", view)
+for view in ("down", "up", "left", "right", "side"):
+    source = make_sheet("ironheart", "right" if view == "side" else view)
     for player in ("p1", "p2"):
         (OUT / f"player_{player}_{view}.svg").write_text(source, encoding="utf-8")
 
-# One compact atlas is used by fx.js so all 36 class/view sheets load as a single image.
+# One compact atlas is used by fx.js so all 48 class/direction sheets load as a single image.
 atlas_rows = []
 row = 0
 for cid in CLASSES:
-    for view in ("down", "up", "side"):
+    for view in ("down", "up", "left", "right"):
         inner = make_sheet(cid, view).split("<g>", 1)[1].rsplit("</g>", 1)[0]
         atlas_rows.append(f'<g transform="translate(0 {row * 21})">{inner}</g>')
         row += 1
 atlas = f'<svg xmlns="http://www.w3.org/2000/svg" width="256" height="{row * 84}" viewBox="0 0 64 {row * 21}"><g>{"".join(atlas_rows)}</g></svg>'
 (OUT / "carrot_class_atlas.svg").write_text(atlas, encoding="utf-8")
 
-print(f"Generated {len(CLASSES)} class-specific carrot soldier models (3 views x 4 frames each).")
+print(f"Generated {len(CLASSES)} class-specific carrot soldier models (4 directions x 4 frames each).")
