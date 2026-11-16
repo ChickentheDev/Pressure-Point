@@ -39,11 +39,11 @@
   // v0.6.0 class sprites: one sheet per class per view. P2 uses the same sprite as P1
   // (the co-op ring distinguishes players); p1_/p2_ sheets stay as fallback.
   const classSpriteOrder = ['ironheart','foxglove','gravelord','scrapjack','voltblade','circuitry','bulwark','redline','skylark','nightreap','glassjaw','engineer'];
-  const classViewRows = {down:0, up:1, side:2};
+  const classViewRows = {down:0, up:1, left:2, right:3};
   for(const cid of classSpriteOrder){
-    for(const v of ['down','up','side']){
+    for(const v of ['down','up','left','right']){
       // Each class/view occupies one 4-frame row in the shared SVG atlas.
-      const sy = (classSpriteOrder.indexOf(cid) * 3 + classViewRows[v]) * 84;
+      const sy = (classSpriteOrder.indexOf(cid) * 4 + classViewRows[v]) * 84;
       SHEETS['cls_'+cid+'_'+v] = {src:'assets/sprites/players/carrot_class_atlas.svg', fw:16, fh:21, n:4, ax:8, ay:10.5, sy};
     }
   }
@@ -240,12 +240,13 @@
   function drawPlayer(p, i, key, flipX, flash, moving){
     // v0.6.0: per-class sprite; P2 uses the same sprite as P1 (co-op ring tells them apart)
     const cls = p.classId || 'ironheart';
-    let k = 'cls_' + cls + '_' + VIEW[key];
-    if(!ready(k)) k = (i === 0 ? 'p1_' : 'p2_') + VIEW[key];   // legacy fallback
+    const direction = key === 'playerSide' ? (flipX ? 'left' : 'right') : VIEW[key];
+    let k = 'cls_' + cls + '_' + direction;
+    if(!ready(k)) k = (i === 0 ? 'p1_' : 'p2_') + (key === 'playerSide' ? 'side' : VIEW[key]);   // legacy fallback
     if(!ready(k)) return false;
     const f = moving ? Math.floor(state.animTime * 10 + i * 2) : 1;
     views.set(p, {k, f, flip: flipX});
-    drawFrame(k, f, {flipX, flash});
+    drawFrame(k, f, {flipX: k.startsWith('cls_') ? false : flipX, flash});
     return true;
   }
   // paper-doll cosmetic overlay, drawn at (dx, dy) px relative to player centre
