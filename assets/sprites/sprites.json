@@ -285,31 +285,31 @@
  },
  "weapons": {
   "flame": {
-   "src": "assets/weapons/weapon_flame.png",
+   "src": "assets/sprites/weapons/weapon_flame.png",
    "fw": 32,
    "fh": 14,
    "frames": 1
   },
   "arc": {
-   "src": "assets/weapons/weapon_arc.png",
+   "src": "assets/sprites/weapons/weapon_arc.png",
    "fw": 30,
    "fh": 14,
    "frames": 1
   },
   "rail": {
-   "src": "assets/weapons/weapon_rail.png",
+   "src": "assets/sprites/weapons/weapon_rail.png",
    "fw": 38,
    "fh": 12,
    "frames": 1
   },
   "mine": {
-   "src": "assets/weapons/weapon_mine.png",
+   "src": "assets/sprites/weapons/weapon_mine.png",
    "fw": 28,
    "fh": 16,
    "frames": 1
   },
   "sprayer": {
-   "src": "assets/weapons/weapon_sprayer.png",
+   "src": "assets/sprites/weapons/weapon_sprayer.png",
    "fw": 30,
    "fh": 14,
    "frames": 1
