@@ -2,19 +2,19 @@
 // Draw-side only: this file reads game state (players, enemies, bullets, state, settings) and never
 // changes gameplay values. Everything it needs to know (hits, kills, shots, dashes) it detects by
 // comparing what it saw last frame, so game.js only needs a few hook calls, all marked "[brad-fx]".
-// Sprite sheets come from tools/gen_sprites.py (assets/sprites/). Art is drawn at 2x, nearest-neighbour.
+// Sprite sheets come from tools/gen_sprites.py (assets/sprites/). Carrot soldier vector sheets are rasterized at 4x for smooth outlined rendering.
 (function(){
   'use strict';
   const PX = 2;                                    // screen px per art px
   const IMGSCALE = 4;                              // source PNGs are 4x logical frame dimensions
   // fw/fh = frame size in art px, ax/ay = body centre in art px (lines the body up with the hitbox)
   const SHEETS = {
-    p1_down: {src:'assets/sprites/players/player_p1_down.png', fw:16, fh:21, n:4, ax:8, ay:10.5},
-    p1_up:   {src:'assets/sprites/players/player_p1_up.png',   fw:16, fh:21, n:4, ax:8, ay:10.5},
-    p1_side: {src:'assets/sprites/players/player_p1_side.png', fw:16, fh:21, n:4, ax:8, ay:10.5},
-    p2_down: {src:'assets/sprites/players/player_p2_down.png', fw:16, fh:21, n:4, ax:8, ay:10.5},
-    p2_up:   {src:'assets/sprites/players/player_p2_up.png',   fw:16, fh:21, n:4, ax:8, ay:10.5},
-    p2_side: {src:'assets/sprites/players/player_p2_side.png', fw:16, fh:21, n:4, ax:8, ay:10.5},
+    p1_down: {src:'assets/sprites/players/player_p1_down.svg', fw:16, fh:21, n:4, ax:8, ay:10.5},
+    p1_up:   {src:'assets/sprites/players/player_p1_up.svg',   fw:16, fh:21, n:4, ax:8, ay:10.5},
+    p1_side: {src:'assets/sprites/players/player_p1_side.svg', fw:16, fh:21, n:4, ax:8, ay:10.5},
+    p2_down: {src:'assets/sprites/players/player_p2_down.svg', fw:16, fh:21, n:4, ax:8, ay:10.5},
+    p2_up:   {src:'assets/sprites/players/player_p2_up.svg',   fw:16, fh:21, n:4, ax:8, ay:10.5},
+    p2_side: {src:'assets/sprites/players/player_p2_side.svg', fw:16, fh:21, n:4, ax:8, ay:10.5},
     // v0.56 enemy set: raptor runner, dino-head bruiser, mosquito spitter, sandworm boss (frames 4-5 = emerging)
     runner:   {src:'assets/sprites/enemies/enemy_runner.png',   fw:20, fh:20, n:4, ax:9,  ay:10,  fps:12},
     bruiser:  {src:'assets/sprites/enemies/enemy_bruiser.png',  fw:26, fh:26, n:4, ax:12, ay:12,  fps:6},
@@ -40,7 +40,7 @@
   // (the co-op ring distinguishes players); p1_/p2_ sheets stay as fallback.
   for(const cid of ['ironheart','foxglove','gravelord','scrapjack','voltlade','circuitry','bulwark','redline','skylark','nightreap','glassjaw','engineer']){
     for(const v of ['down','up','side']){
-      SHEETS['cls_'+cid+'_'+v] = {src:'assets/sprites/players/player_'+cid+'_'+v+'.png', fw:16, fh:21, n:4, ax:8, ay:10.5};
+      SHEETS['cls_'+cid+'_'+v] = {src:'assets/sprites/players/player_'+cid+'_'+v+'.svg', fw:16, fh:21, n:4, ax:8, ay:10.5};
     }
   }
   // paper-doll cosmetics: single-frame overlays drawn on the owning player
