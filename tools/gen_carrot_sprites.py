@@ -144,4 +144,15 @@ for view in ("down", "up", "side"):
     for player in ("p1", "p2"):
         (OUT / f"player_{player}_{view}.svg").write_text(source, encoding="utf-8")
 
+# One compact atlas is used by fx.js so all 36 class/view sheets load as a single image.
+atlas_rows = []
+row = 0
+for cid in CLASSES:
+    for view in ("down", "up", "side"):
+        inner = make_sheet(cid, view).split("<g>", 1)[1].rsplit("</g>", 1)[0]
+        atlas_rows.append(f'<g transform="translate(0 {row * 21})">{inner}</g>')
+        row += 1
+atlas = f'<svg xmlns="http://www.w3.org/2000/svg" width="256" height="{row * 84}" viewBox="0 0 64 {row * 21}"><g>{"".join(atlas_rows)}</g></svg>'
+(OUT / "carrot_class_atlas.svg").write_text(atlas, encoding="utf-8")
+
 print(f"Generated {len(CLASSES)} class-specific carrot soldier models (3 views x 4 frames each).")
