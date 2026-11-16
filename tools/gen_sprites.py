@@ -11,10 +11,13 @@ art pixel = 2 screen pixels, and the body width in art pixels equals the hitbox 
 Run:  python3 tools/gen_sprites.py   (needs Pillow)
 """
 import os, math, json
-from PIL import Image
+from PIL import Image, ImageFilter
 
 OUT = os.path.join(os.path.dirname(__file__), '..', 'assets', 'sprites')
 OUTLINE = (8, 10, 16, 255)
+# Four-times-resolution exports for clean browser downsampling.
+# A one-art-pixel silhouette expansion gives the ink line more weight.
+ART_SCALE = 4
 
 def hx(h, a=255):
     h = h.lstrip('#'); return (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16), a)
@@ -77,12 +80,28 @@ class Grid:
         return img
 
 def sheet(frames, ramps, name, outline=True, outline_col=None):
-    imgs = [f.render(ramps, outline, outline_col) for f in frames]
-    w, h = imgs[0].size
-    out = Image.new('RGBA', (w*len(imgs), h), (0, 0, 0, 0))
-    for i, im in enumerate(imgs): out.paste(im, (i*w, 0))
-    out.save(os.path.join(OUT, name))
-    return {'src': 'assets/sprites/' + name, 'fw': w, 'fh': h, 'frames': len(imgs)}
+    # Keep frame dimensions in logical art pixels; only the PNG export is 4x.
+    # Expand the alpha silhouette, then composite the original art over it.
+    imgs = []
+    for frame in frames:
+        im = frame.render(ramps, outline, outline_col)
+        alpha = im.getchannel('A').filter(ImageFilter.MaxFilter(3))
+        ink = Image.new('RGBA', im.size, outline_col or OUTLINE)
+        ink.putalpha(alpha)
+        ink.alpha_composite(im)
+        imgs.append(ink.resize((im.width * ART_SCALE, im.height * ART_SCALE), Image.Resampling.LANCZOS))
+    w, h = frames[0].w, frames[0].h
+    out = Image.new('RGBA', (w * ART_SCALE * len(imgs), h * ART_SCALE), (0, 0, 0, 0))
+    for i, im in enumerate(imgs): out.alpha_composite(im, (i * w * ART_SCALE, 0))
+    folder = ('players' if name.startswith('player_') else
+              'enemies' if name.startswith('enemy_') else
+              'cosmetics' if name.startswith('cosmetic_') else
+              'weapons' if name.startswith('weapon_') else
+              'ui' if name.startswith('ui_') else 'fx')
+    dest = os.path.join(OUT, folder)
+    os.makedirs(dest, exist_ok=True)
+    out.save(os.path.join(dest, name), optimize=True)
+    return {'src': 'assets/sprites/' + folder + '/' + name, 'fw': w, 'fh': h, 'frames': len(imgs)}
 
 # ------------------------------------------------------------------ player ----
 PLAYER_PAL = {
