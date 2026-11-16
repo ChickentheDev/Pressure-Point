@@ -6,7 +6,7 @@
 (function(){
   'use strict';
   const PX = 2;                                    // screen px per art px
-  const IMGSCALE = 1;                              // pixel revert: PNGs are 1x the logical fw/fh (original pixel art)
+  const IMGSCALE = 4;                              // source PNGs are 4x logical frame dimensions
   // fw/fh = frame size in art px, ax/ay = body centre in art px (lines the body up with the hitbox)
   const SHEETS = {
     p1_down: {src:'assets/sprites/players/player_p1_down.png', fw:16, fh:21, n:4, ax:8, ay:10.5},
@@ -67,7 +67,8 @@
     const f = ((frame % s.n) + s.n) % s.n;
     const dw = s.fw * PX, dh = s.fh * PX, ox = -s.ax * PX, oy = -s.ay * PX;
     ctx.save();
-    ctx.imageSmoothingEnabled = false;             // pixel art: crisp nearest-neighbour, no smoothing blur
+    ctx.imageSmoothingEnabled = true;              // high-resolution art: smooth downsampling
+    ctx.imageSmoothingQuality = 'high';
     if(opts && opts.alpha != null) ctx.globalAlpha *= opts.alpha;
     if(opts && opts.flipX) ctx.scale(-1, 1);
     const src = opts && opts.tint ? tinted(k, opts.tint) : imgs[k];
