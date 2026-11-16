@@ -268,7 +268,8 @@ function drawMinimap(){
   // viewport rect
   ctx.strokeStyle = 'rgba(255,255,255,0.5)';
   ctx.lineWidth = 1;
-  ctx.strokeRect(mx + (-camera.fx)*sx, my + (-camera.fy)*sy, W*sx, H*sy);
+  // v1.3.1: viewport rect in world coordinates at the zoomed view size
+  ctx.strokeRect(mx + ((W/2 - camera.fx) - (W/2)/CAM_ZOOM)*sx, my + ((H/2 - camera.fy) - (H/2)/CAM_ZOOM)*sy, (W/CAM_ZOOM)*sx, (H/CAM_ZOOM)*sy);
   ctx.restore();
 }
 // v0.9.2 touch controls: twin virtual sticks + dash button, drawn in screen space
@@ -1111,7 +1112,11 @@ function draw(){
   }
   if(state.phase === 'wave' || state.phase === 'gameover') setCursor('crosshair');
   ctx.save();
-  ctx.translate(camera.fx + camera.sx, camera.fy + camera.sy); // v0.9.2 follow + shake
+  // v1.3.1: zoomed camera — scale the world around the screen centre, then
+  // translate by the follow offset (shake stays in screen pixels, pre-scale)
+  ctx.translate(W/2 + camera.sx, H/2 + camera.sy);
+  ctx.scale(CAM_ZOOM, CAM_ZOOM);
+  ctx.translate(camera.fx - W/2, camera.fy - H/2);
   // v0.9.2: world ground scrolls with the camera (3x viewport world)
   if(!(window.FX && FX.drawWorldGround())){
     const grad = ctx.createLinearGradient(0,0,WW,WH);

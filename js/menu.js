@@ -168,7 +168,7 @@ function renderClassDetail(){
   const w = weapons.find(x=>x.id === c.weapon);
   const unlockText = classUnlockText(c);
   classDetailEl.innerHTML =
-    `<div class="class-portrait"><img src="assets/sprites/players/player_${c.id}_down.png" alt="${c.name}" draggable="false"></div>` +
+    `<div class="class-portrait"><img src="assets/sprites/players/portrait_${c.id}.png" alt="${c.name}" draggable="false"></div>` +
     `<h3>${c.name}</h3>` +
     (unlockText && !isClassUnlocked(c.id) ? `<div class="sub" style="color:#c44dff">${unlockText}</div>` : '') +
     `<div class="sub">Starts with: ${w ? w.name : c.weapon} &bull; Class Lv ${state.danger}</div>` +

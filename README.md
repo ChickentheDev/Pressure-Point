@@ -1,4 +1,4 @@
-# Pressure Point — v1.2.0
+# Pressure Point — v1.3.1
 
 **[Play online](https://chickenthedev.github.io/Pressure-Point/)** — no download, full lighting and effects.
 
@@ -8,13 +8,13 @@ in order to get maximum performance use the zip file in releases and double clic
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v1.2.0 — Landing rebuilt Brotato-style)
-- **Doodle-wall background**: the menu background is now a dark mauve wall covered in faint sketches of the game's own enemies — Sam's pixel art, desaturated and dimmed, instead of generated art.
-- **Ironheart centre-stage**: the player character stands in a warm spotlight pool under the logo, and in the O of POINT, like Brotato's potato.
-- **One left menu column, plain text**: Start (teal) then How to Play, Leaderboard, Credits, Achievements, Upgrades, Settings — bold text, no boxes, hover slides teal.
-- **Fresh menu art**: Doodle Wall.
+## Latest Changes (v1.3.1 — Carrot soldiers, zoomed camera, matching menu)
+- **Carrot soldiers (from PR #12)**: all 12 classes are now vector carrot soldiers with per-class uniforms and props, rendered at 4x with smooth outlines; enemies, cosmetics, weapons and UI sheets regenerated to match; the stone arena is now a grassy field with dirt and gravel patches.
+- **Camera zoomed in 1.5x**: the player and enemies read clearly at a glance; mouse aim, minimap viewport and camera clamping all follow the zoom.
+- **Menu matches the new art**: landing hero and logo O are the Ironheart carrot soldier, class portraits show the carrot per class, and the menu background is fresh "Carrotfield Dawn" art.
+- **Fresh menu art**: Carrotfield Dawn.
 
-## Previous (v1.1.3 — Shop odds rebalanced)
+## Previous (v1.2.0 — Landing rebuilt Brotato-style)
 - **Luck is now a zero-sum shift**: legendary shops follow 5/10/15/20% at luck 0/5/10/15+ instead of flooding at +2 luck.
 - **New mythic rarity** (top tier, 2.5x stats/price, max 10% of shops); two legendaries combine into a mythic.
 

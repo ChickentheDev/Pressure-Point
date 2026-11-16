@@ -142,6 +142,13 @@ const MAX_BULLETS = 320;
 
 const floatingTexts = [];
 const camera = {shake:0, x:0, y:0, fx:0, fy:0, sx:0, sy:0}; // fx/fy = follow, sx/sy = shake
+// v1.3.1: camera zoom — the world renders 1.5x larger so the player and enemies
+// read clearly at a glance. fx/fy still hold W/2 - followCentre; the draw()
+// transform scales around the screen centre, and screenToWorld*() converts
+// mouse positions back into world coordinates at the same zoom.
+const CAM_ZOOM = 1.5;
+function screenToWorldX(sx){ return (W/2 - camera.fx) + (sx - W/2) / CAM_ZOOM; }
+function screenToWorldY(sy){ return (H/2 - camera.fy) + (sy - H/2) / CAM_ZOOM; }
 
 // Perf: draw() runs every frame and used to write canvas.style.cursor and button style.display
 // unconditionally, plus hudP2CardY() forced layout (getBoundingClientRect) per frame. Cursor and
@@ -498,8 +505,11 @@ function updateCamera(dt){
     if(typeof players !== 'undefined') for(const p of players){ if(!p.dead){ cx += p.x; cy += p.y; n++; } }
     if(n > 0){
       cx /= n; cy /= n;
-      camera.fx = Math.max(W - WW, Math.min(0, W/2 - cx));
-      camera.fy = Math.max(H - WH, Math.min(0, H/2 - cy));
+      // v1.3.1: clamp the follow centre so the zoomed view never shows outside the world
+      cx = Math.max((W/2)/CAM_ZOOM, Math.min(WW - (W/2)/CAM_ZOOM, cx));
+      cy = Math.max((H/2)/CAM_ZOOM, Math.min(WH - (H/2)/CAM_ZOOM, cy));
+      camera.fx = W/2 - cx;
+      camera.fy = H/2 - cy;
     }
   } else { camera.fx = 0; camera.fy = 0; }
   if(!settings.screenShake){

@@ -1,3 +1,12 @@
+## v1.3.1 — Carrot soldiers, zoomed camera, matching menu (pre-release)
+
+- **Carrot soldiers (PR #12 merged)**: all 12 classes replaced with vector 'carrot soldier' art (orange carrot bodies, green leaves, per-class uniforms/props via tools/gen_carrot_sprites.py + shared carrot_class_atlas.svg); enemies, cosmetics, weapons, ground decals and trees regenerated at 4x with Lanczos antialiasing and bolder outlines; fx.js IMGSCALE 1→4 with high-quality smoothing; ui_items/ui_stats regenerated too.
+- **Stone arena → grassy field**: the arena floor is now lush grass with irregular dirt and gravel patches — the carrot-soldier battlefield, not a stone dungeon.
+- **Camera zoomed in 1.5x**: new CAM_ZOOM in the render transform so the player reads clearly (the preview showed the carrot as a tiny dark speck at 1x); camera follow clamps to the zoomed view, mouse aim and the minimap viewport rect follow the zoom, victory confetti spawns across the visible view.
+- **Menu matches the new art**: landing hero and logo O are now the Ironheart carrot soldier (rasterized from the class atlas), class detail portraits show each class's carrot, hero/logo rendering switched from pixelated to smooth, and the menu background is fresh "Carrotfield Dawn" art.
+- **Verified**: headless Chromium load + menu flow + Wave 1 playthrough, zero JS page errors (desktop and 390x844 phone).
+- **New menu art**: Carrotfield Dawn — a carrot field at sunrise, soldier silhouettes on the ridge (fresh art per the every-update rule).
+
 ## v1.2.0 — Landing rebuilt Brotato-style (doodle wall, hero Ironheart)
 
 - **Landing rebuilt to match the Brotato reference Sam sent**: the Gilded Vault art is gone — the background is now a dark mauve wall covered in faint doodles of the game's own enemy sprites (runner, bruiser, sandworm, gloomweaver, nester, aegis...), desaturated and dimmed so they read as pencil sketches. Nothing AI-looking: every doodle is Sam's own pixel art.

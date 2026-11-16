@@ -309,7 +309,7 @@ input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:po
 }
 .logo-point{ color:#ff5d4d; }
 .logo-o{
-  height:.92em; width:auto; image-rendering:pixelated;
+  height:.92em; width:auto; image-rendering:auto;
   vertical-align:-.08em; margin:0 .01em;
   filter:drop-shadow(0 4px 0 rgba(0,0,0,.55));
 }
@@ -320,7 +320,7 @@ input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:po
   transform:translate(-50%,-50%); border-radius:50%; pointer-events:none;
   background:radial-gradient(ellipse at center, rgba(216,178,118,.5) 0%, rgba(190,150,95,.28) 45%, rgba(190,150,95,0) 70%); }
 .landing-hero{ position:absolute; left:50%; top:52%; transform:translateX(-50%);
-  height:clamp(120px, 21vh, 200px); width:auto; image-rendering:pixelated; pointer-events:none;
+  height:clamp(120px, 21vh, 200px); width:auto; image-rendering:auto; pointer-events:none;
   filter:drop-shadow(0 12px 14px rgba(0,0,0,.55)); }
 @media (prefers-reduced-motion: no-preference){
   .landing-hero{ animation:heroBob 2.4s ease-in-out infinite alternate; }

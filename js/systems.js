@@ -1309,7 +1309,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
       if(input.keys['arrowleft']) dx-=1; 
       if(input.keys['arrowright']) dx+=1; 
     }
-    if(idx===0 && settings.mouseAim){ p.angle = Math.atan2(input.my - camera.fy - p.y, input.mx - camera.fx - p.x); }
+    if(idx===0 && settings.mouseAim){ p.angle = Math.atan2(screenToWorldY(input.my) - p.y, screenToWorldX(input.mx) - p.x); }
     if(state.phase === 'shop' || state.phase === 'upgrade'){ dx = 0; dy = 0; }
     if(dx||dy){ const len = Math.hypot(dx,dy); dx/=len; dy/=len; }
     if(p.dashCooldown > 0) p.dashCooldown -= dt;
@@ -1512,7 +1512,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
     // where the newly unlocked danger is selectable.
     state.victoryTimer += dt;
     if(Math.random() < dt * 24){
-      addParticle({x: -camera.fx + Math.random()*W, y: -camera.fy + Math.random()*H*0.55, life: 0.9, r: 5,
+      addParticle({x: screenToWorldX(Math.random()*W), y: screenToWorldY(Math.random()*H*0.55), life: 0.9, r: 5,
         color: ['#ffd166','#6ef2b1','#6cd6ff','#ff6b6b'][(Math.random()*4)|0]});
     }
     if(state.victoryTimer > 2.8 && !state.summaryShown) showRunWon();
@@ -2110,7 +2110,7 @@ function update(dt, t){ if(state.phase === 'menu' || state.phase === 'gameover' 
       const mouseAiming = i===0 && settings.mouseAim && (mouseRecent || input.mouseDown);
       const touchAiming = i===0 && input.touchAim.active && Math.hypot(input.touchAim.x, input.touchAim.y) > 0.25; // v0.9.2
       if(touchAiming){ target = {x: p.x + input.touchAim.x*120, y: p.y + input.touchAim.y*120}; }
-      else if(mouseAiming){ target = {x: input.mx - camera.fx, y: input.my - camera.fy}; }
+      else if(mouseAiming){ target = {x: screenToWorldX(input.mx), y: screenToWorldY(input.my)}; }
       else { const nearest = getNearestEnemyTo(p.x,p.y) || getNearestTreeTo(p.x,p.y); if(nearest) target = aimPointFor(p, nearest); }
       if(!target) continue;
       p.angle = Math.atan2(target.y - p.y, target.x - p.x);
