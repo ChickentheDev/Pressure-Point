@@ -31,7 +31,8 @@ ORANGE = "#f28a32"
 SHADE = "#c95c25"
 
 def path(d, fill, sw=1.25, extra=""):
-    return f'<path d="{d}" fill="{fill}" stroke="{INK}" stroke-width="{sw}" stroke-linejoin="round" stroke-linecap="round" {extra}/>'
+    fill_attr = "" if 'fill="' in extra else f'fill="{fill}"'
+    return f'<path d="{d}" {fill_attr} stroke="{INK}" stroke-width="{sw}" stroke-linejoin="round" stroke-linecap="round" {extra}/>'
 
 def prop_art(kind, armor, trim, dark):
     if kind == "rifle":
