@@ -282,6 +282,77 @@ const audio = {
     o.connect(g); g.connect(this.ctx.destination);
     o.start(); o.stop(this.ctx.currentTime+dur);
   },
+  // shared 1s white-noise buffer, built once (a gunshot is mostly noise)
+  _noiseBuf(){
+    if(!this._nb){
+      const len = this.ctx.sampleRate;
+      const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for(let i=0;i<len;i++) d[i] = Math.random()*2-1;
+      this._nb = buf;
+    }
+    return this._nb;
+  },
+  // Real gunshot synth: a noise crack through a filter + a low pitch-dropping
+  // thump. The old square-wave beep is gone. Profiles per weapon kind:
+  // heavy booms, shotgun cracks wide, rifle snaps, sidearm pops, beam/energy
+  // zaps, melee whooshes, flamethrower/sprayer hisses.
+  gunshot(w){
+    if(!this.ctx || this.muted) return;
+    const vol = (this.volume == null ? 1 : this.volume / 100);
+    const t = this.ctx.currentTime;
+    let kind = 'rifle';
+    if(w.beam) kind = 'zap';
+    else if(w.melee) kind = 'melee';
+    else if(w.type === 'special') kind = (w.id === 'flame' || w.id === 'sprayer') ? 'spray' : (w.id === 'arc' || w.id === 'plasma') ? 'zap' : 'sidearm';
+    else if(w.type === 'heavy' || w.type === 'shotgun' || w.type === 'sidearm') kind = w.type;
+    // [noise filter type, noise cutoff Hz, noise decay s, noise vol, thump from Hz, thump to Hz, thump decay s, thump vol]
+    const P = {
+      heavy:   ['lowpass',  700, 0.18, 0.16, 170, 42, 0.16, 0.22],
+      shotgun: ['lowpass', 1400, 0.12, 0.13, 150, 50, 0.11, 0.16],
+      rifle:   ['lowpass', 2600, 0.07, 0.10, 200, 60, 0.07, 0.10],
+      sidearm: ['lowpass', 2200, 0.05, 0.09, 220, 70, 0.05, 0.09],
+      spray:   ['lowpass',  800, 0.06, 0.045, 0, 0, 0, 0],
+      melee:   ['bandpass', 900, 0.14, 0.05, 0, 0, 0, 0],
+      zap:     ['highpass', 2500, 0.05, 0.06, 0, 0, 0, 0],
+    }[kind] || ['lowpass', 2600, 0.07, 0.10, 200, 60, 0.07, 0.10];
+    // noise crack
+    const src = this.ctx.createBufferSource();
+    src.buffer = this._noiseBuf();
+    const flt = this.ctx.createBiquadFilter();
+    flt.type = P[0];
+    flt.frequency.value = P[1];
+    if(kind === 'melee'){ flt.Q.value = 1.2; flt.frequency.setValueAtTime(400, t); flt.frequency.exponentialRampToValueAtTime(1800, t + P[2]); }
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(P[3] * vol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + P[2]);
+    src.connect(flt); flt.connect(g); g.connect(this.ctx.destination);
+    src.start(t); src.stop(t + P[2] + 0.02);
+    // low thump (skipped for spray/melee/zap, which are hiss/whoosh/zap only)
+    if(P[7] > 0){
+      const o = this.ctx.createOscillator();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(P[4], t);
+      o.frequency.exponentialRampToValueAtTime(P[5], t + P[6]);
+      const og = this.ctx.createGain();
+      og.gain.setValueAtTime(P[7] * vol, t);
+      og.gain.exponentialRampToValueAtTime(0.001, t + P[6]);
+      o.connect(og); og.connect(this.ctx.destination);
+      o.start(t); o.stop(t + P[6] + 0.02);
+    }
+    // railgun/energy zap: a sawtooth sweep down on top of the crackle
+    if(kind === 'zap'){
+      const o = this.ctx.createOscillator();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(1500, t);
+      o.frequency.exponentialRampToValueAtTime(90, t + 0.16);
+      const og = this.ctx.createGain();
+      og.gain.setValueAtTime(0.07 * vol, t);
+      og.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+      o.connect(og); og.connect(this.ctx.destination);
+      o.start(t); o.stop(t + 0.18);
+    }
+  },
   click(){ this.beep(520, 0.03, 'square', 0.03); },
   pickup(){ this.beep(860, 0.04, 'triangle', 0.05); },
   deny(){ this.beep(160, 0.06, 'sawtooth', 0.05); },

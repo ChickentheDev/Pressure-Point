@@ -747,7 +747,7 @@ function fireWeaponFor(player, time, target, autoSpread){
     }
     // v0.9.1 melee swing arc
     if(w.melee) swings.push({x:player.x, y:player.y, angle, t:0, life:0.18, color:w.color});
-    if(audio.ctx && time - (w.lastSound||0) > 0.06){ w.lastSound = time; const freq = w.type==='heavy'?120:w.type==='shotgun'?180:w.type==='rifle'?240:320; audio.beep(freq,0.04,'square',0.03); }
+    if(audio.ctx && time - (w.lastSound||0) > 0.06){ w.lastSound = time; audio.gunshot(w); }
   }
 }
 

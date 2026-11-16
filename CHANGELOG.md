@@ -1,3 +1,7 @@
+## Unreleased
+
+- **Gun sounds rebuilt**: gunfire no longer uses a square-wave beep — every shot is now a synthesized gunshot (a noise crack through a filter plus a low pitch-dropping thump), with a distinct profile per weapon kind: heavy cannons boom, shotguns crack wide, rifles snap, pistols pop, the railgun zaps, melee swings whoosh, and the flamethrower/sprayer hiss. UI, enemy, and explosion sounds are untouched.
+
 ## v1.3.0 — Carrot soldiers, zoomed camera, matching menu
 
 - **Carrot soldiers (PR #12 merged)**: all 12 classes replaced with vector 'carrot soldier' art (orange carrot bodies, green leaves, per-class uniforms/props via tools/gen_carrot_sprites.py + shared carrot_class_atlas.svg); enemies, cosmetics, weapons, ground decals and trees regenerated at 4x with Lanczos antialiasing and bolder outlines; fx.js IMGSCALE 1→4 with high-quality smoothing; ui_items/ui_stats regenerated too.
