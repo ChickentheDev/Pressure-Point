@@ -6,6 +6,7 @@ on:
       - art/smooth-bold-sprite-pass
     paths:
       - tools/gen_sprites.py
+      - tools/gen_carrot_sprites.py
       - .github/workflows/regenerate-sprites.yml
 
 permissions:
@@ -24,7 +25,9 @@ jobs:
       - name: Install Pillow
         run: python -m pip install Pillow
       - name: Regenerate sprite sheets
-        run: python tools/gen_sprites.py
+        run: |
+          python tools/gen_sprites.py
+          python tools/gen_carrot_sprites.py
       - name: Commit generated artwork
         run: |
           git config user.name "github-actions[bot]"
