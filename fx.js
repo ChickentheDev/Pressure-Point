@@ -408,88 +408,90 @@
     const bw = Math.max(20, Math.min(34, Math.round(Math.min(WW, WH) * 0.035)));
     const ax = bw, ay = bw, aw = WW - bw * 2, ah = WH - bw * 2;
 
-    // 3. stone tile floor with per-tile variation
-    const TILE = 96;
-    g.fillStyle = 'rgb(' + TR[0] + ',' + TR[1] + ',' + TR[2] + ')'; g.fillRect(ax, ay, aw, ah);
-    for(let ty = ay; ty < ay + ah; ty += TILE){
-      for(let tx = ax; tx < ax + aw; tx += TILE){
-        const v = (rnd() - 0.5) * 14;
-        g.fillStyle = 'rgb(' + Math.round(TR[0] + v) + ',' + Math.round(TR[1] + v) + ',' + Math.round(TR[2] + v) + ')';
-        g.fillRect(tx + 1, ty + 1, TILE - 2, TILE - 2);
-        g.fillStyle = 'rgba(255,255,255,0.05)'; g.fillRect(tx + 1, ty + 1, TILE - 2, 3);
-        g.fillStyle = 'rgba(0,0,0,0.10)'; g.fillRect(tx + 1, ty + TILE - 5, TILE - 2, 3);
-        for(let s = 0; s < 6; s++){
-          g.fillStyle = rnd() < 0.5 ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)';
-          g.fillRect(tx + 4 + rnd() * (TILE - 8), ty + 4 + rnd() * (TILE - 8), 2, 2);
-        }
-      }
-    }
-    g.strokeStyle = 'rgba(20,22,30,0.55)'; g.lineWidth = 2;
-    g.beginPath();
-    for(let ty = ay; ty <= ay + ah + 1; ty += TILE){ g.moveTo(ax, ty); g.lineTo(ax + aw, ty); }
-    for(let tx = ax; tx <= ax + aw + 1; tx += TILE){ g.moveTo(tx, ay); g.lineTo(tx, ay + ah); }
-    g.stroke();
+    // 3. hand-painted field floor: lush grass with irregular dirt and gravel patches.
+    // The arena should read as an outdoor carrot-soldier battlefield, not a stone dungeon.
+    g.fillStyle = '#668d43';
+    g.fillRect(ax, ay, aw, ah);
 
-    // 4. debris: pebbles, crystal shards, cracks
-    const nPeb = Math.round(aw * ah / 9000);
-    for(let i = 0; i < nPeb; i++){
-      const x = ax + rnd() * aw, y = ay + rnd() * ah, r = 2 + rnd() * 4, sh = 90 + rnd() * 50;
-      g.fillStyle = 'rgb(' + (sh | 0) + ',' + ((sh * 0.98) | 0) + ',' + ((sh * 1.05) | 0) + ')';
-      g.beginPath(); g.ellipse(x, y, r, r * 0.7, rnd() * 3.14, 0, 6.29); g.fill();
-      g.fillStyle = 'rgba(255,255,255,0.10)';
-      g.beginPath(); g.ellipse(x - r * 0.25, y - r * 0.25, r * 0.45, r * 0.3, 0, 0, 6.29); g.fill();
+    // Soft grass color variation in broad organic patches.
+    for(let i = 0; i < Math.round(aw * ah / 18000); i++){
+      const x = ax + rnd() * aw, y = ay + rnd() * ah;
+      const rx = 35 + rnd() * 105, ry = 24 + rnd() * 75;
+      g.fillStyle = rnd() < 0.5 ? 'rgba(137,174,78,0.22)' : 'rgba(38,83,43,0.16)';
+      g.beginPath(); g.ellipse(x, y, rx, ry, rnd() * Math.PI, 0, Math.PI * 2); g.fill();
     }
-    const nSh = Math.round(aw * ah / 26000);
-    for(let i = 0; i < nSh; i++){
-      const x = ax + rnd() * aw, y = ay + rnd() * ah, s = 4 + rnd() * 7;
-      g.save(); g.translate(x, y); g.rotate(rnd() * 3.14);
-      g.fillStyle = TH.crystal;
-      g.beginPath(); g.moveTo(0, -s); g.lineTo(s * 0.45, s * 0.6); g.lineTo(-s * 0.45, s * 0.6); g.closePath(); g.fill();
-      g.fillStyle = 'rgba(255,255,255,0.35)';
-      g.beginPath(); g.moveTo(0, -s); g.lineTo(s * 0.18, s * 0.6); g.lineTo(-s * 0.12, s * 0.6); g.closePath(); g.fill();
+
+    // Irregular exposed-earth patches, with soft layered edges.
+    const dirtPatches = Math.max(18, Math.round(aw * ah / 52000));
+    for(let i = 0; i < dirtPatches; i++){
+      const x = ax + rnd() * aw, y = ay + rnd() * ah;
+      const rx = 24 + rnd() * 76, ry = 14 + rnd() * 48;
+      const rot = rnd() * Math.PI;
+      g.save(); g.translate(x, y); g.rotate(rot);
+      g.fillStyle = 'rgba(50,39,27,0.16)';
+      g.beginPath(); g.ellipse(2, 3, rx * 1.08, ry * 1.12, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = rnd() < 0.5 ? '#987044' : '#a77a49';
+      g.beginPath();
+      g.moveTo(-rx, -ry * 0.12);
+      g.bezierCurveTo(-rx * 1.05, -ry * 0.85, -rx * 0.2, -ry * 1.15, rx * 0.12, -ry * 0.82);
+      g.bezierCurveTo(rx * 0.95, -ry * 1.05, rx * 1.15, -ry * 0.15, rx * 0.78, ry * 0.38);
+      g.bezierCurveTo(rx * 0.55, ry * 1.12, -rx * 0.35, ry * 0.95, -rx * 0.72, ry * 0.62);
+      g.bezierCurveTo(-rx * 1.08, ry * 0.4, -rx * 1.12, 0, -rx, -ry * 0.12);
+      g.fill();
+      g.fillStyle = 'rgba(211,166,105,0.22)';
+      g.beginPath(); g.ellipse(-rx * 0.15, -ry * 0.22, rx * 0.58, ry * 0.27, -0.12, 0, Math.PI * 2); g.fill();
       g.restore();
     }
-    g.strokeStyle = 'rgba(25,20,25,0.5)'; g.lineWidth = 2;
-    const nCr = Math.round(aw * ah / 60000);
-    for(let i = 0; i < nCr; i++){
-      let x = ax + rnd() * aw, y = ay + rnd() * ah, a = rnd() * 6.28;
-      g.beginPath(); g.moveTo(x, y);
-      for(let k = 0; k < 5; k++){ a += (rnd() - 0.5) * 1.2; x += Math.cos(a) * (8 + rnd() * 14); y += Math.sin(a) * (8 + rnd() * 14); g.lineTo(x, y); }
-      g.stroke();
+
+    // Gravelly spots: compact gray-brown beds with individually drawn rounded stones.
+    const gravelPatches = Math.max(10, Math.round(aw * ah / 95000));
+    for(let i = 0; i < gravelPatches; i++){
+      const x = ax + rnd() * aw, y = ay + rnd() * ah;
+      const rx = 18 + rnd() * 42, ry = 12 + rnd() * 27;
+      g.save(); g.translate(x, y); g.rotate(rnd() * Math.PI);
+      g.fillStyle = 'rgba(55,53,43,0.18)';
+      g.beginPath(); g.ellipse(2, 2, rx, ry, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#8c8877';
+      g.beginPath(); g.ellipse(0, 0, rx * 0.94, ry * 0.92, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = 'rgba(205,198,170,0.25)';
+      g.beginPath(); g.ellipse(-rx * 0.15, -ry * 0.2, rx * 0.65, ry * 0.35, -0.15, 0, Math.PI * 2); g.fill();
+      for(let p = 0; p < 18; p++){
+        const px = (rnd() * 2 - 1) * rx * 0.85, py = (rnd() * 2 - 1) * ry * 0.78;
+        if((px*px)/(rx*rx)+(py*py)/(ry*ry) > 0.82) continue;
+        const s = 1.2 + rnd() * 3.2;
+        g.fillStyle = ['#b8b19b','#6e6b60','#d0c8ad','#777568'][Math.floor(rnd()*4)];
+        g.beginPath(); g.ellipse(px, py, s * 1.2, s * 0.78, rnd() * 3, 0, Math.PI * 2); g.fill();
+      }
+      g.restore();
     }
-    // legacy doodle decals for extra variety
-    const im = imgs.decals, cell = 130;
-    if(im && im.complete && im.naturalWidth){
-      g.imageSmoothingEnabled = false;
-      for(let gy = ay; gy < ay + ah; gy += cell){
-        for(let gx = ax; gx < ax + aw; gx += cell){
-          if(rnd() < 0.45) continue;
-          const f = Math.floor(rnd() * 8), x = gx + rnd() * cell, y = gy + rnd() * cell;
-          const flip = rnd() < 0.5;
-          g.save(); g.globalAlpha = 0.5 + rnd() * 0.3; g.translate(Math.round(x), Math.round(y)); if(flip) g.scale(-1, 1);
-          g.drawImage(im, f * 16, 0, 16, 16, -16, -16, 32, 32); g.restore();
-        }
+
+    // Fine grass blades and tiny field stones, scattered in small natural clusters.
+    for(let i = 0; i < Math.round(aw * ah / 1900); i++){
+      const x = ax + rnd() * aw, y = ay + rnd() * ah;
+      if(rnd() < 0.72){
+        const h = 2 + rnd() * 5;
+        g.strokeStyle = rnd() < 0.5 ? 'rgba(39,83,39,0.48)' : 'rgba(190,207,111,0.42)';
+        g.lineWidth = 1.2; g.lineCap = 'round';
+        g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x - 2 + rnd() * 4, y - h * 0.7, x - 2 + rnd() * 5, y - h); g.stroke();
+      } else {
+        g.fillStyle = rnd() < 0.5 ? 'rgba(74,69,56,0.45)' : 'rgba(210,196,158,0.45)';
+        g.beginPath(); g.ellipse(x, y, 1.8 + rnd() * 2, 1 + rnd() * 1.5, rnd() * 3, 0, Math.PI * 2); g.fill();
       }
     }
 
-    // 5. ornate border frame: dark rim, bronze diamond-studded band, light stone lip
-    g.fillStyle = TH.rim;
-    g.fillRect(0, 0, WW, bw); g.fillRect(0, WH - bw, WW, bw); g.fillRect(0, 0, bw, WH); g.fillRect(WW - bw, 0, bw, WH);
-    const bandW = Math.round(bw * 0.52), bandOff = Math.round((bw - bandW) / 2);
-    g.fillStyle = TH.band;
-    g.fillRect(bandOff, bandOff, WW - bandOff * 2, bandW);
-    g.fillRect(bandOff, WH - bandOff - bandW, WW - bandOff * 2, bandW);
-    g.fillRect(bandOff, bandOff, bandW, WH - bandOff * 2);
-    g.fillRect(WW - bandOff - bandW, bandOff, bandW, WH - bandOff * 2);
-    g.fillStyle = '#a8764f';
-    const step = 46;
-    const diamond = (x, y, s) => { g.beginPath(); g.moveTo(x, y - s); g.lineTo(x + s, y); g.lineTo(x, y + s); g.lineTo(x - s, y); g.closePath(); g.fill(); };
-    for(let x = bandOff + step / 2; x < WW - bandOff; x += step){ diamond(x, bandOff + bandW / 2, 5); diamond(x, WH - bandOff - bandW / 2, 5); }
-    for(let y = bandOff + step / 2; y < WH - bandOff; y += step){ diamond(bandOff + bandW / 2, y, 5); diamond(WW - bandOff - bandW / 2, y, 5); }
-    g.strokeStyle = TH.lip; g.lineWidth = 3;
+    // 5. natural grassy edge around the playable field; no ornate stone dungeon frame.
+    const edge = Math.max(12, Math.round(bw * 0.7));
+    g.fillStyle = '#456c37';
+    g.fillRect(0, 0, WW, edge); g.fillRect(0, WH - edge, WW, edge);
+    g.fillRect(0, 0, edge, WH); g.fillRect(WW - edge, 0, edge, WH);
+    g.strokeStyle = 'rgba(31,58,31,0.55)'; g.lineWidth = 3;
     g.strokeRect(ax - 1.5, ay - 1.5, aw + 3, ah + 3);
-    g.strokeStyle = 'rgba(0,0,0,0.45)'; g.lineWidth = 2;
-    g.strokeRect(1, 1, WW - 2, WH - 2);
+    for(let i = 0; i < Math.round((WW + WH) / 34); i++){
+      const x = rnd() * WW, y = rnd() * WH;
+      if(x > edge && x < WW-edge && y > edge && y < WH-edge) continue;
+      g.strokeStyle = 'rgba(173,197,105,0.45)'; g.lineWidth = 1.4;
+      g.beginPath(); g.moveTo(x, y); g.lineTo(x + (rnd()-0.5)*5, y - 3 - rnd()*4); g.stroke();
+    }
 
     // 6. soft inner shadow so the arena sits in the void
     const vig = g.createRadialGradient(WW / 2, WH / 2, Math.min(WW, WH) * 0.42, WW / 2, WH / 2, Math.max(WW, WH) * 0.72);
