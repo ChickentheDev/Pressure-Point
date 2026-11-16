@@ -1,4 +1,4 @@
-# Pressure Point — v1.3.1
+# Pressure Point — v1.3.0
 
 **[Play online](https://chickenthedev.github.io/Pressure-Point/)** — no download, full lighting and effects.
 
@@ -8,7 +8,7 @@ in order to get maximum performance use the zip file in releases and double clic
 
 A polished, local Brotato-inspired top-down arena shooter built with HTML5 Canvas and JavaScript.
 
-## Latest Changes (v1.3.1 — Carrot soldiers, zoomed camera, matching menu)
+## Latest Changes (v1.3.0 — Carrot soldiers, zoomed camera, matching menu)
 - **Carrot soldiers (from PR #12)**: all 12 classes are now vector carrot soldiers with per-class uniforms and props, rendered at 4x with smooth outlines; enemies, cosmetics, weapons and UI sheets regenerated to match; the stone arena is now a grassy field with dirt and gravel patches.
 - **Camera zoomed in 1.5x**: the player and enemies read clearly at a glance; mouse aim, minimap viewport and camera clamping all follow the zoom.
 - **Menu matches the new art**: landing hero and logo O are the Ironheart carrot soldier, class portraits show the carrot per class, and the menu background is fresh "Carrotfield Dawn" art.

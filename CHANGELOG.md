@@ -1,4 +1,4 @@
-## v1.3.1 — Carrot soldiers, zoomed camera, matching menu (pre-release)
+## v1.3.0 — Carrot soldiers, zoomed camera, matching menu
 
 - **Carrot soldiers (PR #12 merged)**: all 12 classes replaced with vector 'carrot soldier' art (orange carrot bodies, green leaves, per-class uniforms/props via tools/gen_carrot_sprites.py + shared carrot_class_atlas.svg); enemies, cosmetics, weapons, ground decals and trees regenerated at 4x with Lanczos antialiasing and bolder outlines; fx.js IMGSCALE 1→4 with high-quality smoothing; ui_items/ui_stats regenerated too.
 - **Stone arena → grassy field**: the arena floor is now lush grass with irregular dirt and gravel patches — the carrot-soldier battlefield, not a stone dungeon.
