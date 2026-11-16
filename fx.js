@@ -81,7 +81,7 @@
     ctx.drawImage(src, f * s.fw * sc, sy, s.fw * sc, s.fh * sc, ox, oy, dw, dh);
     if(opts && opts.flash > 0){
       ctx.globalAlpha = Math.min(1, opts.flash);
-      ctx.drawImage(tinted(k, '#ffffff'), f * s.fw * sc, 0, s.fw * sc, s.fh * sc, ox, oy, dw, dh);
+      ctx.drawImage(tinted(k, '#ffffff'), f * s.fw * sc, sy, s.fw * sc, s.fh * sc, ox, oy, dw, dh);
     }
     ctx.restore();
   }
