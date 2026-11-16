@@ -38,9 +38,13 @@
   };
   // v0.6.0 class sprites: one sheet per class per view. P2 uses the same sprite as P1
   // (the co-op ring distinguishes players); p1_/p2_ sheets stay as fallback.
-  for(const cid of ['ironheart','foxglove','gravelord','scrapjack','voltblade','circuitry','bulwark','redline','skylark','nightreap','glassjaw','engineer']){
+  const classSpriteOrder = ['ironheart','foxglove','gravelord','scrapjack','voltblade','circuitry','bulwark','redline','skylark','nightreap','glassjaw','engineer'];
+  const classViewRows = {down:0, up:1, side:2};
+  for(const cid of classSpriteOrder){
     for(const v of ['down','up','side']){
-      SHEETS['cls_'+cid+'_'+v] = {src:'assets/sprites/players/player_'+cid+'_'+v+'.svg', fw:16, fh:21, n:4, ax:8, ay:10.5};
+      // Each class/view occupies one 4-frame row in the shared SVG atlas.
+      const sy = (classSpriteOrder.indexOf(cid) * 3 + classViewRows[v]) * 84;
+      SHEETS['cls_'+cid+'_'+v] = {src:'assets/sprites/players/carrot_class_atlas.svg', fw:16, fh:21, n:4, ax:8, ay:10.5, sy};
     }
   }
   // paper-doll cosmetics: single-frame overlays drawn on the owning player
@@ -73,7 +77,8 @@
     if(opts && opts.flipX) ctx.scale(-1, 1);
     const src = opts && opts.tint ? tinted(k, opts.tint) : imgs[k];
     const sc = s.imgScale || IMGSCALE;
-    ctx.drawImage(src, f * s.fw * sc, 0, s.fw * sc, s.fh * sc, ox, oy, dw, dh);
+    const sy = s.sy || 0;
+    ctx.drawImage(src, f * s.fw * sc, sy, s.fw * sc, s.fh * sc, ox, oy, dw, dh);
     if(opts && opts.flash > 0){
       ctx.globalAlpha = Math.min(1, opts.flash);
       ctx.drawImage(tinted(k, '#ffffff'), f * s.fw * sc, 0, s.fw * sc, s.fh * sc, ox, oy, dw, dh);
