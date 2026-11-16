@@ -93,8 +93,15 @@ def sheet(frames, ramps, name, outline=True, outline_col=None):
     w, h = frames[0].w, frames[0].h
     out = Image.new('RGBA', (w * ART_SCALE * len(imgs), h * ART_SCALE), (0, 0, 0, 0))
     for i, im in enumerate(imgs): out.alpha_composite(im, (i * w * ART_SCALE, 0))
-    out.save(os.path.join(OUT, name), optimize=True)
-    return {'src': 'assets/sprites/' + name, 'fw': w, 'fh': h, 'frames': len(imgs)}
+    folder = ('players' if name.startswith('player_') else
+              'enemies' if name.startswith('enemy_') else
+              'cosmetics' if name.startswith('cosmetic_') else
+              'weapons' if name.startswith('weapon_') else
+              'ui' if name.startswith('ui_') else 'fx')
+    dest = os.path.join(OUT, folder)
+    os.makedirs(dest, exist_ok=True)
+    out.save(os.path.join(dest, name), optimize=True)
+    return {'src': 'assets/sprites/' + folder + '/' + name, 'fw': w, 'fh': h, 'frames': len(imgs)}
 
 # ------------------------------------------------------------------ player ----
 PLAYER_PAL = {
