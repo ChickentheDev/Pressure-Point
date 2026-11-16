@@ -1,4 +1,4 @@
-name: Regenerate smooth sprite sheets
+name: Regenerate smooth sprite sheets # carrot vector pass
 
 on:
   push:
