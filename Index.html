@@ -27,6 +27,12 @@
   <div id="ui">
     <canvas id="game"></canvas>
 
+    <!-- Splash: Critical Hit Studios logo, fades in, holds, fades out to the menu -->
+    <div id="splash" role="img" aria-label="Critical Hit Studios">
+      <img class="splash-logo" src="assets/ui/critical-hit-studios.png" alt="Critical Hit Studios">
+      <div class="splash-skip">Click or press any key to skip</div>
+    </div>
+
     <div id="menu" class="overlay">
       <h1>Pressure Point</h1>
       <div class="subtitle">Survive 20 waves. Beat the Overlord.</div>
@@ -55,7 +61,7 @@
             <button id="landingSetBtn" class="btn btn-secondary landing-menu-btn" type="button">Settings</button>
           </div>
         </div>
-        <div class="landing-version">v1.3.0</div>
+        <div class="landing-version">v1.3.1</div>
         <div class="landing-hint">P1: WASD + Shift (dash) &nbsp;•&nbsp; P2: Arrow keys + U (dash)</div>
       </div>
 
@@ -300,6 +306,7 @@
   <script src="js/menu.js"></script>
   <script src="js/render.js"></script>
   <script src="js/domui.js"></script>
+  <script src="js/splash.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

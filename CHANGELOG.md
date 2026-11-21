@@ -1,5 +1,7 @@
-## Unreleased
+## v1.3.1 — Splash screen + Carrotfield Night menu art (pre-release)
 
+- **Splash screen**: the Critical Hit Studios logo (official white-primary version) fades in on load, holds, then fades out to the main menu — about 2.8s total. Click/tap or any key skips it; reduced-motion users get a short static hold instead. Plays once per page load, never when returning to the menu from a run.
+- **New menu art**: Carrotfield Night — the carrot field under a full moon, stars, drifting fireflies, soldier silhouettes on the ridge (fresh art per the every-update rule).
 - **Gun sounds rebuilt**: gunfire no longer uses a square-wave beep — every shot is now a synthesized gunshot (a noise crack through a filter plus a low pitch-dropping thump), with a distinct profile per weapon kind: heavy cannons boom, shotguns crack wide, rifles snap, pistols pop, the railgun zaps, melee swings whoosh, and the flamethrower/sprayer hiss. UI, enemy, and explosion sounds are untouched.
 
 ## v1.3.0 — Carrot soldiers, zoomed camera, matching menu
